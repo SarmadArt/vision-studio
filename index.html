@@ -1032,7 +1032,7 @@
               <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/><path d="M12 3.5c-1.2 0-2.1.5-2.8 1.2L12 8.5l2.8-3.8C14.1 4 13.2 3.5 12 3.5zm0 17c1.2 0 2.1-.5 2.8-1.2L12 15.5l-2.8 3.8c.7.7 1.6 1.2 2.8 1.2z" opacity=".4"/></svg>
             </div>
             <div class="prov-name">Google</div>
-            <div class="prov-model">Gemini 1.5 Pro</div>
+            <div class="prov-model">Gemini 2.0 Flash</div>
             <div class="prov-status-dot" id="dot-gemini"></div>
           </div>
 
@@ -1094,7 +1094,7 @@
           <div class="key-block-header">
             <div style="display:flex;align-items:center;gap:8px;">
               <span class="key-brand-dot" style="background:#4285f4"></span>
-              <span style="font-size:13px;font-weight:500;">Google — Gemini 1.5 Pro</span>
+              <span style="font-size:13px;font-weight:500;">Google — Gemini 2.0 Flash</span>
             </div>
             <a href="https://aistudio.google.com/app/apikey" target="_blank" class="get-key-link">احصل على المفتاح ↗</a>
           </div>
@@ -1279,7 +1279,7 @@
 
     } else if (activeProvider === 'gemini') {
       const res = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=' + key,
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + key,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1363,37 +1363,36 @@
     const body = document.getElementById('idea-output-body');
     body.innerHTML = `<div class="loading-state"><div class="spinner"></div><span>جاري بناء الفكرة...</span></div>`;
 
-    const prompt = `أنت متخصص في بناء أفكار محتوى الفيديو القصير الاحترافية.
-
-المطلوب: بناء فكرة محتوى متكاملة بناءً على المعطيات التالية.
+    const prompt = `أنت كاتب محتوى فيديو محترف. مهمتك تحويل المعلومات إلى سكريبت فيديو جاهز للتصوير.
 
 المعطيات:
 - المنصة: ${platform}
 - المدة: ${duration} ثانية
 - النبرة: ${tone}
-- المعلومات أو الفكرة: ${content}
+- المحتوى: ${content}
 
-اكتب ناتج منظم ومفصل يحتوي على:
+اكتب الناتج بهذا الشكل بالضبط — بدون شرح أو تعليق إضافي:
 
-1. 🎯 العنوان
-عنوان جذاب وقوي للفيديو
+العنوان
+جملة واحدة بسيطة ومباشرة تصف الفيديو
 
-2. ⚡ الهوك (أول 3 ثواني)
-الجملة الافتتاحية التي تشد المشاهد فوراً
+الهوك
+جملة واحدة قصيرة وقوية تشد المشاهد في أول ثانيتين
 
-3. 📝 هيكل السكريبت
-مقسّم إلى مشاهد واضحة مع توقيت كل مشهد
+السكريبت
+${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes('علمي') ? 
+  'نقاط مرقمة — كل نقطة جملة مختصرة تعطي المعلومة مباشرة بدون مقدمات' : 
+  'الحوار أو الكلام كاملاً جملة جملة كما سيُقال أمام الكاميرا'}
 
-4. 🔑 النقاط الرئيسية
-أبرز ما يجب أن يخرج به المشاهد
+الخاتمة
+جملة أو جملتان — نهاية طبيعية تدفع للتفاعل
 
-5. 🎬 الخاتمة والـ CTA
-كيف ينتهي الفيديو ودعوة المشاهد للتفاعل
-
-6. #️⃣ هاشتاقات مقترحة
-5 هاشتاقات مناسبة للمنصة
-
-اكتب بشكل مباشر واحترافي باللغة العربية.`;
+قواعد صارمة:
+- لا هاشتاقات
+- لا توقيتات
+- لا شرح للهيكل
+- لا تعليقات جانبية
+- كل شيء مباشر وجاهز للاستخدام`;
 
     try {
       const result = await callAPI(prompt);
