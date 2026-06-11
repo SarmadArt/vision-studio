@@ -863,6 +863,38 @@
     word-break: break-word;
   }
 
+  /* --- SHOT REF NOTE --- */
+  .shot-ref-note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 12px;
+    background: rgba(200,240,96,0.04);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text2);
+    direction: rtl;
+  }
+  .shot-ref-note.shot-ref-warn {
+    background: rgba(255,160,0,0.05);
+    color: #ffaa00;
+  }
+  .shot-ref-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: var(--accent);
+    background: rgba(200,240,96,0.1);
+    border: 1px solid rgba(200,240,96,0.2);
+    border-radius: 3px;
+    padding: 1px 5px;
+    flex-shrink: 0;
+  }
+  .shot-ref-note.shot-ref-warn .shot-ref-label {
+    color: #ffaa00;
+    background: rgba(255,160,0,0.1);
+    border-color: rgba(255,160,0,0.3);
+  }
+
   .shot-card-footer {
     display: flex;
     align-items: center;
@@ -1194,6 +1226,10 @@
               <label>Script / Idea</label>
               <textarea id="shot-script" rows="4" placeholder="Paste your script or idea here..."></textarea>
             </div>
+            <div class="field" style="margin-bottom:0">
+              <label>Director's Note <span style="color:var(--text3);font-weight:400">— extra instructions for the system</span></label>
+              <textarea id="director-note" rows="2" placeholder="e.g: Doctor holds needle, patient looks nervous, warm reassuring atmosphere — stay consistent with this mood throughout..."></textarea>
+            </div>
           </div>
 
           <!-- LOCATION LOCK -->
@@ -1369,6 +1405,7 @@
             <div style="font-size:12px; color:var(--text3); text-transform:uppercase; letter-spacing:0.08em; font-weight:500;">Shot List</div>
             <div style="display:flex; gap:8px; align-items:center;">
               <span class="shots-count-badge" id="shots-badge" style="display:none"></span>
+              <button class="copy-all-btn" id="gen-panels-btn" onclick="generatePanelsPrompt()" style="display:none">⊞ Panels</button>
               <button class="copy-all-btn" id="copy-shots-btn" onclick="copyAllShots()" style="display:none">⎘ Copy All</button>
             </div>
           </div>
@@ -1388,6 +1425,19 @@
                 <input type="text" id="add-shot-desc" placeholder="Describe the shot briefly — e.g: product closeup rotating on table" style="flex:1; font-size:13px;">
                 <button class="btn btn-ghost" onclick="addSingleShot()" style="white-space:nowrap; font-size:12px;">Generate</button>
               </div>
+            </div>
+          </div>
+
+          <!-- PANELS PROMPT -->
+          <div id="panels-area" style="display:none; margin-top:10px;">
+            <div style="border:1px solid var(--border); border-radius:var(--radius); overflow:hidden;">
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 14px; background:var(--surface2); border-bottom:1px solid var(--border);">
+                <span style="font-size:11px; color:var(--text2); text-transform:uppercase; letter-spacing:0.08em; font-weight:500;">Panels Prompt</span>
+                <div style="display:flex; gap:6px;">
+                  <button class="shot-action-btn" onclick="copyPanelsPrompt()" id="copy-panels-btn">COPY</button>
+                </div>
+              </div>
+              <div id="panels-prompt-body" style="padding:12px 14px; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text); line-height:1.7; direction:ltr; word-break:break-word; background:var(--surface);"></div>
             </div>
           </div>
         </div>
@@ -2038,19 +2088,20 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
   }
 
   async function generateShots() {
-    const script   = document.getElementById('shot-script').value.trim();
+    const script       = document.getElementById('shot-script').value.trim();
     if (!script) { toast('Add your script or idea first'); return; }
 
-    const location = document.getElementById('location-desc').value.trim();
-    const charsCtx = buildCharsContext();
-    const charList = buildCharList();
-    const camera   = document.getElementById('camera-type').value;
-    const lighting = document.getElementById('lighting-type').value;
-    const mood     = document.getElementById('mood-type').value;
-    const noTalk   = document.getElementById('flag-no-talking').checked;
-    const noText   = document.getElementById('flag-no-text').checked;
-    const portrait = document.getElementById('flag-portrait').checked;
-    const slowmo   = document.getElementById('flag-slow').checked;
+    const directorNote = document.getElementById('director-note').value.trim();
+    const location     = document.getElementById('location-desc').value.trim();
+    const charsCtx     = buildCharsContext();
+    const charList     = buildCharList();
+    const camera       = document.getElementById('camera-type').value;
+    const lighting     = document.getElementById('lighting-type').value;
+    const mood         = document.getElementById('mood-type').value;
+    const noTalk       = document.getElementById('flag-no-talking').checked;
+    const noText       = document.getElementById('flag-no-text').checked;
+    const portrait     = document.getElementById('flag-portrait').checked;
+    const slowmo       = document.getElementById('flag-slow').checked;
 
     const flags = [
       noTalk  ? 'NO TALKING — cinematic acting only, no on-camera speech, visually express the script' : '',
@@ -2071,7 +2122,7 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
       cgi_realistic: 'CGI Realistic — photorealistic VFX, real actor, seamless compositing'
     };
 
-    globalContext = { script, location, charsCtx, camera, lighting, mood, flags, noTalk, videoType: videoTypeMap[currentVideoType], charList };
+    globalContext = { script, directorNote, location, charsCtx, camera, lighting, mood, flags, noTalk, videoType: videoTypeMap[currentVideoType], charList };
 
     const btn = document.getElementById('gen-shots-btn');
     btn.disabled = true;
@@ -2080,52 +2131,56 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
     const body = document.getElementById('shots-output-body');
     body.innerHTML = `<div class="loading-state"><div class="spinner"></div><span>Building ${currentShotCount} shots...</span></div>`;
 
+    // Build character names list for REF
+    const charNames = characters.filter(c=>c.role.trim()).map(c=>c.role.trim());
+    const hasLocation = !!location;
+
     const noTalkInstruction = noTalk ? `
 NO TALKING MODE:
-- Every shot must be a cinematic acting scene — no one speaks to the camera
-- Read each script line and create a visual scene that expresses it physically
-- e.g. script says "Have you heard of Baby Botox?" → Doctor holds vial toward camera with curiosity, ECU
-- If ${currentShotCount} shots > script lines: split key lines into A/B sub-shots (use shot_id like "3A", "3B")
-- sub-shots show different angles of the same moment` : `
-SHOT DISTRIBUTION:
-- Distribute ${currentShotCount} shots across the script intelligently
-- If shots > script lines: split important lines into A/B sub-shots (use shot_id like "3A", "3B")
-- sub-shots explore different angles of the same script moment`;
+- Every shot = cinematic acting scene, no one speaks to camera
+- Read each script line → create visual scene expressing it physically
+- e.g. "Have you heard about Baby Botox?" → Doctor holds vial toward camera, curious expression, ECU` : '';
 
-    const prompt = `You are a professional cinematographer and director. Generate exactly ${currentShotCount} production-ready shot prompts.
+    const abInstruction = `
+SMART A/B SPLIT RULES:
+- Total output must be exactly ${currentShotCount} shots (counting A and B as separate)
+- Decide WHICH shots need splitting based on scene complexity, NOT by position
+- Split a shot into A/B when: the action has 2 distinct visual moments (e.g. character stands + hand grabs object)
+- A/B label format: use shot_id "4A" "4B" — the number can be ANY shot you decide, not necessarily sequential
+- Simple shots = single shot_id like "1", "2", "3"
+- Never split more than needed — only when it genuinely adds cinematic value`;
+
+    const prompt = `You are a professional cinematographer and director. Generate exactly ${currentShotCount} shots total.
 
 VIDEO TYPE: ${videoTypeMap[currentVideoType]}
 SCRIPT:
 ${script}
+${directorNote ? `\nDIRECTOR'S NOTE (follow strictly throughout all shots):\n${directorNote}` : ''}
 ${location ? `\nLOCATION (consistent across ALL shots — vary angle/framing only): ${location}` : ''}
-${charsCtx ? `\nCHARACTERS (use exact names as given, keep consistent):\n${charsCtx}` : ''}
-${charList ? `Assign correct character(s) to each shot from: ${charList}` : ''}
+${charsCtx ? `\nCHARACTERS:\n${charsCtx}` : ''}
+${charList ? `Assign correct character(s) per shot: ${charList}` : ''}
 CAMERA: ${camera}
 LIGHTING: ${lighting}
 GRADE: ${mood}
 ${flags ? `FLAGS: ${flags}` : ''}
 ${noTalkInstruction}
+${abInstruction}
 
-PROMPT FORMAT for prompt_en (structured, no fluff):
-[Visual action — what happens physically in this shot]
-${location ? `[LOC: ${location.split(',')[0]}... — vary framing]` : ''}
-${charsCtx ? `[CHAR: name — match reference outfit]` : ''}
-[CAM: ${camera.split(',')[0]} | angle | movement]
-[LIGHT: lighting style]
-[GRADE: grade]
-${flags ? `[FLAGS: ${flags}]` : ''}
+PROMPT FORMAT for prompt_en — structured lines, no fluff:
+Line 1: Visual action (what happens physically)
+${charNames.length ? `Line 2: [CHAR: name — match reference outfit] — only for shots where that char appears` : ''}
+${hasLocation ? `Line 3: [LOC: vary framing/angle within same location]` : ''}
+Line 4: [CAM: ${camera.split(',')[0]} | angle | movement]
+Line 5: [LIGHT: lighting]
+Line 6: [GRADE: grade]
+${flags ? `Line 7: [FLAGS: ${flags}]` : ''}
 
-RULES:
-- shot_id: use "1","2","3" normally. Use "3A","3B" for sub-shots
-- chars_used: array of character names (as written by user, keep original language)
-- needs_loc_ref: true if shot needs location reference image
-- needs_extra_loc: true if shot needs a DIFFERENT location from main one
-- Vary angles: ECU, CU, MS, AS, WS, EWS, POV, Dutch, MACRO, MICRO
-- Shot types: Real / B-Roll / CGI / CGI-Real / Talking / Dialog / Comedy / Product
-- No "we see", no "the camera shows", no filler
+For chars_used: use exact character names as written (Arabic or English).
+For needs_extra_loc: true only when scene logically requires a completely different location.
+For ref_note: write a short reminder like "دكتورة ref + مراجعة ref + location" or "location جديد مطلوب" — in the same language the user wrote character names.
 
 Return ONLY valid JSON:
-{"shots":[{"shot_id":"1","shot_number":1,"scene_ar":"وصف بالعربي","angle":"CU","shot_type":"Real","duration":"3-4s","chars_used":[],"needs_loc_ref":false,"needs_extra_loc":false,"prompt_en":"structured prompt"}]}`;
+{"shots":[{"shot_id":"1","shot_number":1,"scene_ar":"وصف","angle":"CU","shot_type":"Real","duration":"3-4s","chars_used":[],"needs_loc_ref":false,"needs_extra_loc":false,"ref_note":"","prompt_en":"structured prompt"}]}`;
 
     try {
       const result = await callAPI(prompt);
@@ -2136,7 +2191,7 @@ Return ONLY valid JSON:
       addHistory('shot', script.slice(0,40)+'...');
     } catch(e) {
       body.innerHTML = e.message!=='no key'
-        ? `<div class="empty-state" style="color:var(--red)">${escapeHtml(e.message)||'Error parsing response — try again'}</div>`
+        ? `<div class="empty-state" style="color:var(--red)">${escapeHtml(e.message)||'Error — try again'}</div>`
         : `<div class="empty-state"><div>Add API key in Settings</div></div>`;
     }
     btn.disabled=false;
@@ -2147,42 +2202,14 @@ Return ONLY valid JSON:
   function renderAllShots() {
     const body = document.getElementById('shots-output-body');
     body.innerHTML = '';
-
-    // Build Reference Sheet
-    const refLines = shotsData.map(s => {
-      const parts = [];
-      if (s.chars_used && s.chars_used.length) parts.push(s.chars_used.map(n => `${n} ref`).join(' + '));
-      if (s.needs_loc_ref && globalContext.location) parts.push('location ref');
-      if (s.needs_extra_loc) parts.push('⚠ extra location ref needed');
-      const label = parts.length ? parts.join(' + ') : 'no reference';
-      const hasWarning = s.needs_extra_loc;
-      return `<div class="ref-sheet-row ${hasWarning?'ref-warn':''}">
-        <span class="ref-shot-id">SHOT ${s.shot_id || s.shot_number}</span>
-        <span class="ref-shot-needs">${label}</span>
-      </div>`;
-    }).join('');
-
-    const hasAnyRef = shotsData.some(s =>
-      (s.chars_used && s.chars_used.length) || s.needs_loc_ref || s.needs_extra_loc
-    );
-
-    if (hasAnyRef) {
-      const sheet = document.createElement('div');
-      sheet.className = 'ref-sheet';
-      sheet.innerHTML = `
-        <div class="ref-sheet-title">
-          <span>Reference Sheet</span>
-          <span style="font-size:10px;color:var(--text3);font-weight:400;">what to attach per shot</span>
-        </div>
-        ${refLines}`;
-      body.appendChild(sheet);
-    }
-
     shotsData.forEach((s,i) => body.appendChild(buildShotCard(s,i)));
     document.getElementById('shots-badge').style.display='inline';
     document.getElementById('shots-badge').textContent=shotsData.length+' shots';
     document.getElementById('copy-shots-btn').style.display='flex';
+    document.getElementById('gen-panels-btn').style.display='flex';
     document.getElementById('add-shot-area').style.display='block';
+    // Reset panels area
+    document.getElementById('panels-area').style.display='none';
   }
 
   function buildShotCard(s, idx) {
@@ -2195,27 +2222,28 @@ Return ONLY valid JSON:
       `<button class="stype-pill ${t===s.shot_type?'active':''}" onclick="changeShotType(${idx},'${t}',this)">${t}</button>`
     ).join('');
 
-    // Character badges — keep original name (Arabic or English)
-    const charsUsed = s.chars_used || [];
-    const charBadges = charsUsed.map(name => {
-      return `<span style="font-size:9px;padding:2px 7px;border-radius:3px;border:1px solid rgba(200,240,96,0.3);color:var(--accent);background:rgba(200,240,96,0.07);font-family:var(--font-sans);">${name}</span>`;
-    }).join('');
-
-    // Sub-shot label
+    // Sub-shot detection
     const shotLabel = s.shot_id || String(s.shot_number);
-    const isSubShot = String(shotLabel).match(/[AB]$/i);
+    const isSubShot = /[AB]$/i.test(String(shotLabel));
+
+    // REF note
+    const refNote = s.ref_note || '';
+    const hasExtraLoc = s.needs_extra_loc;
+    const refHtml = refNote ? `
+      <div class="shot-ref-note ${hasExtraLoc ? 'shot-ref-warn' : ''}">
+        <span class="shot-ref-label">REF</span>
+        <span>${escapeHtml(refNote)}</span>
+      </div>` : '';
 
     div.innerHTML = `
       <div class="shot-card-header">
-        <span class="shot-num-badge" style="${isSubShot?'color:#60a0f0':''}">
+        <span class="shot-num-badge" style="${isSubShot ? 'color:#60a0f0' : ''}">
           SHOT ${shotLabel}
         </span>
         <div class="angle-row">${aH}</div>
       </div>
-      <div class="stype-row">
-        ${tH}
-        ${charBadges ? `<div style="margin-right:auto;display:flex;gap:4px;flex-wrap:wrap;">${charBadges}</div>` : ''}
-      </div>
+      <div class="stype-row">${tH}</div>
+      ${refHtml}
       <div class="shot-card-body">
         <div class="shot-desc-ar">${escapeHtml(s.scene_ar||'')}</div>
         <div class="shot-prompt-en" id="prompt-text-${idx}">${escapeHtml(s.prompt_en||'')}</div>
@@ -2311,6 +2339,36 @@ Existing shots:${shotsData.length} | New shot:${desc}
       document.getElementById('add-shot-desc').value = '';
       toast('Shot ' + newNum + ' added ✓');
     } catch(e) { toast('Failed — try again'); }
+  }
+
+  function generatePanelsPrompt() {
+    if (!shotsData.length) return;
+    const panels = shotsData.map(s => {
+      const id = s.shot_id || s.shot_number;
+      // Strip structured tags to get clean action description
+      const cleanPrompt = (s.prompt_en || '')
+        .split('\n')[0]  // First line = action
+        .replace(/^\[.*?\]\s*/,'')  // Remove leading tags
+        .trim();
+      return `SH${id}: ${cleanPrompt}`;
+    }).join(' | ');
+
+    const panelsArea = document.getElementById('panels-area');
+    const panelsBody = document.getElementById('panels-prompt-body');
+    panelsArea.style.display = 'block';
+    panelsBody.textContent = panels;
+
+    // Scroll to panels
+    panelsArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function copyPanelsPrompt() {
+    const text = document.getElementById('panels-prompt-body').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('copy-panels-btn');
+      btn.textContent = 'COPIED ✓';
+      setTimeout(() => { btn.textContent = 'COPY'; }, 2000);
+    });
   }
 
   function copyIdea() {
