@@ -3534,7 +3534,7 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
             model: 'claude-haiku-4-5-20251001', max_tokens: 120,
             messages: [{ role:'user', content:[
               { type:'image', source:{ type:'base64', media_type:'image/jpeg', data: char.imageBase64 }},
-              { type:'text', text:'Describe this person for a film director in 4-6 words. Focus on role/profession if clear from uniform/context, otherwise appearance. Use Arabic if the context seems Arabic/Middle Eastern, otherwise English. Output the description only, no extra text. Examples: "دكتورة بمعطف أبيض", "Young man casual clothes", "شيف بزي رسمي".' }
+              { type:'text', text:'What is this person\'s role or profession? Answer in 1-3 words only. Focus on WHO they are, not what they wear. Use Arabic if context is Arabic/Middle Eastern. Examples: "دكتورة", "Doctor", "شيف", "Engineer", "مراجعة", "Client". Output the role only, nothing else.' }
             ]}]
           })
         });
@@ -3549,7 +3549,7 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
             model: 'gpt-4o', max_tokens: 60,
             messages: [{ role:'user', content:[
               { type:'image_url', image_url:{ url:`data:image/jpeg;base64,${char.imageBase64}`, detail:'low' }},
-              { type:'text', text:'Describe this person for a film director in 4-6 words. Focus on role/profession if clear from uniform/context, otherwise appearance. Use Arabic if the context seems Arabic/Middle Eastern, otherwise English. Output the description only, no extra text.' }
+              { type:'text', text:'What is this person\'s role or profession? Answer in 1-3 words only. Focus on WHO they are, not what they wear. Use Arabic if context is Arabic/Middle Eastern. Examples: "دكتورة", "Doctor", "شيف", "Engineer", "مراجعة", "Client". Output the role only, nothing else.' }
             ]}]
           })
         });
@@ -3623,7 +3623,7 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
     return active.map(c => {
       const latinRole = toLatinRole(c.role.trim());
       const label = c.imageBase64
-        ? `${latinRole} (Arabic name: "${c.role.trim()}") — has reference image, match outfit from reference exactly`
+        ? `${latinRole} (Arabic name: "${c.role.trim()}") — has reference image`
         : `${latinRole} (Arabic name: "${c.role.trim()}")`;
       return `CHAR_${c.id} [${label}]`;
     }).join('\n');
@@ -4000,7 +4000,7 @@ ${abInstruction}
 
 PROMPT FORMAT for prompt_en — MANDATORY structured format, every shot must follow this EXACTLY:
 Line 1: Visual action — describe WHO does WHAT physically (body language, gesture, expression, movement)
-${charNames.length ? `Line 2: [CHAR: CharName — match reference outfit | body state]
+${charNames.length ? `Line 2: [CHAR: CharName — body state]
   CRITICAL CHAR RULES:
   • Include [CHAR] line for EVERY character in chars_used — no exceptions
   • Use English name (Doctor, Patient, Engineer...)
