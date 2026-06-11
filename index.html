@@ -1344,6 +1344,7 @@
   <header class="topbar">
     <div class="logo">content<span>//</span>studio</div>
     <div class="topbar-right">
+      <a href="ideas.html" style="font-size:12px;padding:5px 12px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-family:'IBM Plex Sans Arabic',sans-serif;text-decoration:none;transition:all 0.15s;display:flex;align-items:center;gap:6px;">✦ Idea Studio</a>
       <div class="active-prov-pill" id="active-prov-pill">anthropic</div>
       <div class="token-display" id="token-display">
         <div class="token-dot"></div>
@@ -2019,6 +2020,28 @@
           </div>
         </div>
 
+        <!-- Perplexity Key (for Idea Studio trend search) -->
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+          <div class="key-block-header">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="key-brand-dot" style="background:#5f9de7;"></span>
+              <span style="font-size:13px;font-weight:500;color:var(--text);">Perplexity</span>
+              <span style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">للبحث عن ترندات في Idea Studio</span>
+            </div>
+            <a href="https://www.perplexity.ai/settings/api" target="_blank" class="get-key-link">← احصل على مفتاح</a>
+          </div>
+          <div class="key-input-row">
+            <input type="password" id="key-perplexity" placeholder="pplx-..." autocomplete="off" class="key-input">
+            <button class="key-eye-btn" onclick="toggleVis('key-perplexity')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <button class="key-save-btn" onclick="saveKeyGeneric('perplexity')">حفظ</button>
+          </div>
+          <div class="key-saved-badge" id="badge-perplexity" style="display:none">
+            <span class="dot" style="color:#5f9de7"></span> محفوظ
+          </div>
+        </div>
+
         <!-- Model Selectors -->
         <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border);">
           <div style="font-size:12px; color:var(--text2); font-weight:600; margin-bottom:10px;">🎛️ اختر النموذج لكل مزود</div>
@@ -2224,6 +2247,16 @@
     document.getElementById('dot-' + provider).classList.add('has-key');
     toast('تم حفظ مفتاح ' + provider);
   }
+  // Generic save for non-provider keys (e.g. Perplexity)
+  function saveKeyGeneric(provider) {
+    const val = document.getElementById('key-' + provider).value.trim();
+    if (!val) { toast('أدخل المفتاح أولاً'); return; }
+    localStorage.setItem('cs_key_' + provider, val);
+    const badge = document.getElementById('badge-' + provider);
+    if (badge) badge.style.display = 'flex';
+    toast('تم حفظ مفتاح ' + provider + ' ✓');
+  }
+
   function toggleVis(id) {
     const inp = document.getElementById(id);
     inp.type = inp.type === 'password' ? 'text' : 'password';
@@ -2377,7 +2410,40 @@
   }
 
   window.addEventListener('DOMContentLoaded', () => {
+    // ── Check if coming from Idea Studio ──
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('from_ideas') === '1') {
+      const pendingScript = localStorage.getItem('is_pending_script');
+      if (pendingScript) {
+        // Navigate to shots page and fill script
+        setTimeout(() => {
+          const shotsNav = document.querySelector('[onclick*="page-shots"]');
+          if (shotsNav) { navigate('page-shots', shotsNav); }
+          const scriptEl = document.getElementById('shot-script');
+          if (scriptEl) {
+            scriptEl.value = pendingScript;
+            scriptEl.focus();
+            scriptEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+          localStorage.removeItem('is_pending_script');
+          localStorage.removeItem('is_pending_idea_hook');
+          toast('السكريبت جاهز — عدّل الخيارات واضغط Generate ✓');
+        }, 300);
+        // Clear URL param
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
+
     activeProvider = localStorage.getItem('cs_active_provider') || 'anthropic';
+    // Load Perplexity key
+    const perpKey = localStorage.getItem('cs_key_perplexity');
+    if (perpKey) {
+      const perpInput = document.getElementById('key-perplexity');
+      if (perpInput) perpInput.value = perpKey;
+      const perpBadge = document.getElementById('badge-perplexity');
+      if (perpBadge) perpBadge.style.display = 'flex';
+    }
+
     ['anthropic','openai','gemini'].forEach(p => {
       const k = localStorage.getItem('cs_key_' + p);
       if (k) {
@@ -3961,6 +4027,7 @@ SCRIPT DISTRIBUTION RULE:
 For chars_used: EVERY character visible in the shot — use original names as typed.
 For loc_used: exact location name from LOCATIONS list.
 For ref_note: Arabic — ALL refs needed. Never omit a visible character.
+For scene_ar: Arabic description, 15-25 words minimum. Must mention: WHO is in the shot (use their actual name/role), WHAT they are doing physically, WHERE (location name if available). Be specific and cinematic. Example: "الدكتورة تمسك أمبولة البوتوكس وتفحصها أمام المراجعة في غرفة العلاج، تعبير واثق ومهني"
 CRITICAL: prompt_en = 100% English only. No Arabic characters anywhere in prompt_en.
 
 Return ONLY valid JSON:
@@ -4014,21 +4081,39 @@ Return ONLY valid JSON:
     const shotLabel = s.shot_id || String(s.shot_number);
     const isSubShot = /[AB]$/i.test(String(shotLabel));
 
-    // REF note — build from ref_note or fallback from chars_used + loc_used
-    let refNote = s.ref_note || '';
-    if (!refNote) {
-      const parts = [];
-      if (s.chars_used && s.chars_used.length) parts.push(...s.chars_used.map(n => `${n} ref`));
-      if (s.loc_used) parts.push(`${s.loc_used} ref`);
-      else if (globalContext.locsCtx && locations.length > 0) parts.push('location ref');
-      if (s.needs_extra_loc) parts.push('⚠ location جديد مطلوب');
-      refNote = parts.join(' + ');
-    }
+    // REF note — always build from actual data (chars_used + loc_used + characters/locations arrays)
     const hasExtraLoc = s.needs_extra_loc;
-    const refHtml = refNote ? `
+    const refParts = [];
+
+    // Characters — show role name clearly
+    if (s.chars_used && s.chars_used.length) {
+      s.chars_used.forEach(name => {
+        const charObj = characters.find(c => c.role.trim() === name.trim());
+        const hasImg = !!charObj?.imageBase64;
+        refParts.push(hasImg ? `📷 ${name}` : `👤 ${name}`);
+      });
+    }
+
+    // Location — show name clearly
+    if (s.loc_used && s.loc_used.trim()) {
+      const locObj = locations.find(l => l.name.trim() === s.loc_used.trim());
+      const hasImg = !!locObj?.imageBase64;
+      refParts.push(hasImg ? `📷 ${s.loc_used}` : `📍 ${s.loc_used}`);
+    } else if (locations.filter(l => l.name.trim()).length > 0 && !s.loc_used) {
+      // fallback — show all locations with images if only one location
+      const activeLocs = locations.filter(l => l.name.trim());
+      if (activeLocs.length === 1) {
+        const hasImg = !!activeLocs[0].imageBase64;
+        refParts.push(hasImg ? `📷 ${activeLocs[0].name}` : `📍 ${activeLocs[0].name}`);
+      }
+    }
+
+    if (s.needs_extra_loc) refParts.push('⚠ new location needed');
+
+    const refHtml = refParts.length ? `
       <div class="shot-ref-note ${hasExtraLoc ? 'shot-ref-warn' : ''}">
         <span class="shot-ref-label">REF</span>
-        <span>${escapeHtml(refNote)}</span>
+        <span>${refParts.join(' &nbsp;·&nbsp; ')}</span>
       </div>` : '';
 
     div.innerHTML = `
@@ -4115,15 +4200,18 @@ ${globalContext.charsCtx?'CHARS:\n'+globalContext.charsCtx:''}
 CAM:${globalContext.camera||''} | LIGHT:${globalContext.lighting||''} | GRADE:${globalContext.mood||''}
 ${globalContext.flags?'FLAGS:'+globalContext.flags:''}
 Shot ${s.shot_number} | Angle:${s.angle} | Type:${s.shot_type} | Scene:${s.scene_ar}
+${s.chars_used?.length ? 'Characters in shot: '+s.chars_used.join(', ') : ''}
+${s.loc_used ? 'Location: '+s.loc_used : ''}
 DIALOG RULE: If 2+ chars in frame, specify speaker vs listener.
 MANDATORY prompt_en FORMAT — use EXACTLY these structured lines separated by \\n:
 Line 1: Visual action (WHO does WHAT physically)
-Line 2: [CAM: \${globalContext.camera||'camera'} | \${s.angle} | movement]
-Line 3: [LIGHT: \${globalContext.lighting||'lighting'}]
-Line 4: [GRADE: \${globalContext.mood||'grade'}]
-\${globalContext.flags?'Line 5: [FLAGS: '+globalContext.flags+']':''}
+Line 2: [CAM: ${globalContext.camera||'camera'} | ${s.angle} | movement]
+Line 3: [LIGHT: ${globalContext.lighting||'lighting'}]
+Line 4: [GRADE: ${globalContext.mood||'grade'}]
+${globalContext.flags?'Line 5: [FLAGS: '+globalContext.flags+']':''}
 NEVER write a single sentence paragraph. Always use bracketed lines.
-{"scene_ar":"وصف جديد بالعربي","prompt_en":"Visual action here.\n[CAM: camera | angle | movement]\n[LIGHT: lighting]\n[GRADE: grade]"}`;
+scene_ar: Arabic, 15-25 words, mention character names + location + action. Example: "الدكتورة تشرح للمراجعة نتائج الجلسة في غرفة العيادة، تعبير واثق ومهني وهي تشير للشاشة"
+{"scene_ar":"وصف عربي مفصل يذكر الأشخاص والمكان","prompt_en":"Visual action here.\n[CAM: camera | angle | movement]\n[LIGHT: lighting]\n[GRADE: grade]"}`;
       const r = await callAPI(p);
       const parsed = safeParseJSON(r);
       if (!parsed) throw new Error('parse failed');

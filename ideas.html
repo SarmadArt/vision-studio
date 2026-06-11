@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Idea Studio</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #1a1a1a;
+    --border: #252525;
+    --border2: #333333;
+    --text: #f0ede8;
+    --text2: #888880;
+    --text3: #555550;
+    --accent: #c8f060;
+    --accent2: #8fb840;
+    --red: #ff4f4f;
+    --blue: #60a0f0;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* TOPBAR */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    height: 52px;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+  }
+  .logo span { color: var(--text2); }
+  .topbar-right {
+    margin-right: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .back-btn {
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    text-decoration: none;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .back-btn:hover { color: var(--text); border-color: var(--text3); }
+  .token-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text2);
+    direction: ltr;
+  }
+  .token-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  .token-cost { color: var(--accent); font-weight: 500; }
+
+  /* LAYOUT */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+
+  /* STEP HEADER */
+  .step-label {
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 6px;
+  }
+
+  /* CARD */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 14px;
+  }
+  .card-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* FORM */
+  label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 5px; font-weight: 500; }
+  input[type="text"], textarea, select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 13px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.15s;
+    direction: rtl;
+  }
+  input[type="text"]:focus, textarea:focus, select:focus { border-color: var(--accent2); }
+  input[type="text"]::placeholder, textarea::placeholder { color: var(--text3); }
+  textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+  select {
+    cursor: pointer; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23555550' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: left 12px center; padding-left: 32px;
+  }
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+  .row { display: grid; gap: 12px; }
+  .row-2 { grid-template-columns: 1fr 1fr; }
+  .row-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+  /* DIALECT PILLS */
+  .dialect-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .dialect-btn {
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    transition: all 0.15s;
+  }
+  .dialect-btn:hover { color: var(--text); border-color: var(--text3); }
+  .dialect-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(200,240,96,0.07);
+  }
+
+  /* CONTENT TYPE GRID */
+  .ctype-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .ctype-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    padding: 10px 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 11px;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    transition: all 0.12s;
+    text-align: center;
+  }
+  .ctype-btn:hover { color: var(--text); border-color: var(--text3); }
+  .ctype-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(200,240,96,0.06); }
+  .ctype-icon { font-size: 18px; }
+
+  /* TREND SECTION */
+  .trend-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+  .trend-tab {
+    flex: 1; padding: 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    text-align: center;
+    transition: all 0.15s;
+  }
+  .trend-tab.active { border-color: var(--accent); color: var(--accent); background: rgba(200,240,96,0.06); }
+  .trend-panel { display: none; }
+  .trend-panel.active { display: block; }
+
+  .trend-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .trend-chip {
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    transition: all 0.12s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .trend-chip:hover { border-color: var(--text3); color: var(--text); }
+  .trend-chip.selected { border-color: var(--accent); color: var(--accent); background: rgba(200,240,96,0.06); }
+  .trend-chip .chip-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+  /* PLATFORM TOGGLE */
+  .platform-row { display: flex; gap: 8px; }
+  .platform-btn {
+    flex: 1; padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    text-align: center;
+    transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .platform-btn:hover { color: var(--text); }
+  .platform-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(200,240,96,0.07); }
+
+  /* GENERATE BTN */
+  .btn-generate {
+    width: 100%; padding: 13px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--accent);
+    color: #0a0a0a;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 6px;
+  }
+  .btn-generate:hover { background: #d4f570; }
+  .btn-generate:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* SPINNER */
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(10,10,10,0.3);
+    border-top-color: #0a0a0a;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block; flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner-light {
+    border-color: var(--border2);
+    border-top-color: var(--accent);
+  }
+
+  /* IDEAS OUTPUT */
+  .ideas-section { margin-top: 24px; }
+  .ideas-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .ideas-title {
+    font-size: 12px; font-weight: 500; color: var(--text2);
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .regen-all-btn {
+    font-size: 11px; padding: 4px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: transparent; color: var(--text3);
+    cursor: pointer; font-family: 'IBM Plex Sans Arabic', sans-serif;
+    transition: all 0.12s;
+  }
+  .regen-all-btn:hover { color: var(--text); border-color: var(--text3); }
+
+  /* IDEA CARD */
+  .idea-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+    cursor: pointer;
+  }
+  .idea-card:hover { border-color: var(--border2); }
+  .idea-card.selected {
+    border-color: var(--accent);
+    background: rgba(200,240,96,0.03);
+  }
+  .idea-card-header {
+    padding: 10px 16px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px;
+  }
+  .idea-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px; color: var(--accent); font-weight: 500; flex-shrink: 0;
+  }
+  .idea-hook {
+    font-size: 13px; font-weight: 500; color: var(--text); flex: 1; line-height: 1.4;
+  }
+  .idea-select-badge {
+    font-size: 10px; padding: 2px 8px; border-radius: 4px;
+    border: 1px solid var(--border2); color: var(--text3);
+    font-family: 'IBM Plex Mono', monospace; flex-shrink: 0;
+    transition: all 0.12s;
+  }
+  .idea-card.selected .idea-select-badge {
+    border-color: var(--accent); color: var(--accent);
+    background: rgba(200,240,96,0.1);
+  }
+  .idea-card-body { padding: 14px 16px; }
+  .idea-script-preview {
+    font-size: 13px; color: var(--text2);
+    line-height: 1.7; white-space: pre-wrap;
+  }
+  .idea-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .idea-tag {
+    font-size: 10px; padding: 2px 8px; border-radius: 4px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text3); font-family: 'IBM Plex Mono', monospace;
+  }
+  .idea-tag.type-tag { color: var(--blue); border-color: rgba(96,160,240,0.3); background: rgba(96,160,240,0.06); }
+  .idea-tag.trend-tag { color: var(--accent); border-color: rgba(200,240,96,0.3); background: rgba(200,240,96,0.06); }
+
+  /* SELECTED IDEA ACTIONS */
+  .selected-actions {
+    display: none;
+    background: var(--surface);
+    border: 1px solid rgba(200,240,96,0.25);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-top: 16px;
+  }
+  .selected-actions.visible { display: block; }
+  .selected-title {
+    font-size: 12px; font-weight: 500; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+  }
+  .selected-title::after { content: ''; flex: 1; height: 1px; background: rgba(200,240,96,0.15); }
+
+  .action-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .action-btn {
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    text-align: center;
+  }
+  .action-btn:hover { color: var(--text); border-color: var(--text3); }
+  .action-btn.primary { border-color: var(--accent); color: var(--accent); background: rgba(200,240,96,0.06); }
+  .action-btn.primary:hover { background: rgba(200,240,96,0.12); }
+  .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* SCRIPT EDITOR */
+  .script-editor-wrap { display: none; margin-top: 14px; }
+  .script-editor-wrap.visible { display: block; }
+  .script-editor {
+    width: 100%; min-height: 180px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 13px;
+    padding: 14px;
+    outline: none; resize: vertical;
+    line-height: 1.8; direction: rtl;
+    transition: border-color 0.15s;
+  }
+  .script-editor:focus { border-color: var(--accent2); }
+  .editor-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 8px;
+  }
+  .editor-hint { font-size: 11px; color: var(--text3); font-family: 'IBM Plex Mono', monospace; }
+  .editor-actions { display: flex; gap: 8px; }
+  .btn-sm {
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text2);
+    font-size: 12px;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-sm:hover { color: var(--text); border-color: var(--text3); }
+  .btn-sm.accent { border-color: var(--accent); color: var(--accent); background: rgba(200,240,96,0.06); }
+  .btn-sm.accent:hover { background: rgba(200,240,96,0.12); }
+
+  /* SEND TO SHOT LIST */
+  .send-to-shots-btn {
+    width: 100%; padding: 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(200,240,96,0.35);
+    background: rgba(200,240,96,0.07);
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 12px;
+  }
+  .send-to-shots-btn:hover { background: rgba(200,240,96,0.14); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center; padding: 48px 20px;
+    color: var(--text3); font-size: 13px;
+  }
+  .empty-icon { font-size: 32px; margin-bottom: 10px; opacity: 0.35; }
+
+  /* LOADING */
+  .loading-state {
+    display: flex; align-items: center; gap: 12px;
+    padding: 32px 24px; color: var(--text2); font-size: 13px;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 10px 20px;
+    font-size: 13px; color: var(--text);
+    opacity: 0; transition: all 0.2s;
+    pointer-events: none; z-index: 999; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* KEY STATUS */
+  .key-status {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--text3);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .key-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border2); }
+  .key-dot.ok { background: var(--accent); }
+  .key-dot.warn { background: #ffaa00; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 10px; }
+
+  @media (max-width: 640px) {
+    .ctype-grid { grid-template-columns: repeat(3, 1fr); }
+    .action-row { grid-template-columns: 1fr 1fr; }
+    .row-2, .row-3 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="logo">idea<span>//</span>studio</div>
+  <div class="topbar-right">
+    <div class="key-status" id="key-status">
+      <div class="key-dot" id="key-dot"></div>
+      <span id="key-label">لا يوجد مفتاح</span>
+    </div>
+    <div class="token-display">
+      <div class="token-dot"></div>
+      <span id="td-calls">0 طلب</span>
+      &nbsp;·&nbsp;
+      <span class="token-cost" id="td-cost">$0.0000</span>
+    </div>
+    <a href="index.html" class="back-btn">◈ Shot List</a>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- STEP 1: SETTINGS -->
+  <div class="card">
+    <div class="card-title">⚙ الإعدادات</div>
+
+    <div class="row row-2" style="margin-bottom:14px;">
+      <div class="field">
+        <label>اللهجة</label>
+        <div class="dialect-row" id="dialect-row">
+          <button class="dialect-btn" data-v="خليجي" onclick="setDialect(this)">خليجي</button>
+          <button class="dialect-btn" data-v="سعودي" onclick="setDialect(this)">سعودي</button>
+          <button class="dialect-btn" data-v="كويتي" onclick="setDialect(this)">كويتي</button>
+          <button class="dialect-btn" data-v="عراقي" onclick="setDialect(this)">عراقي</button>
+          <button class="dialect-btn" data-v="مصري" onclick="setDialect(this)">مصري</button>
+          <button class="dialect-btn" data-v="فصيح" onclick="setDialect(this)">فصيح</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>المنصة</label>
+        <div class="platform-row">
+          <button class="platform-btn active" id="plat-insta" onclick="setPlatform('instagram',this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+            Instagram
+          </button>
+          <button class="platform-btn" id="plat-tiktok" onclick="setPlatform('tiktok',this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.36 6.36 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.79 1.54V6.78a4.85 4.85 0 01-1.02-.09z"/></svg>
+            TikTok
+          </button>
+          <button class="platform-btn" id="plat-yt" onclick="setPlatform('youtube',this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M23 7s-.3-2-1.2-2.8c-1.1-1.2-2.4-1.2-3-1.3C16.2 2.7 12 2.7 12 2.7s-4.2 0-6.8.2c-.6.1-1.9.1-3 1.3C1.3 5 1 7 1 7S.7 9.1.7 11.3v2c0 2.1.3 4.3.3 4.3s.3 2 1.2 2.8c1.1 1.2 2.6 1.1 3.3 1.2C7.4 21.8 12 22 12 22s4.2 0 6.8-.2c.6-.1 1.9-.1 3-1.3.9-.8 1.2-2.8 1.2-2.8s.3-2.1.3-4.3v-2C23.3 9.1 23 7 23 7zM9.7 15.5V8.3l8.1 3.6-8.1 3.6z"/></svg>
+            YouTube
+          </button>
+          <button class="platform-btn" id="plat-snap" onclick="setPlatform('snapchat',this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C7.69 2 5 4.7 5 8.5c0 1.3.1 2.1.3 2.8-.3.1-.6.2-1 .2-.5 0-.8-.2-1.2-.2-.4 0-.7.2-.7.5 0 .7.8 1.1 1.5 1.3.1 0 .5.1.6.5.1.3-.1.8-.3 1.3-.8 1.7-2.2 2.3-2.2 2.9 0 .4.4.5.7.5.4 0 .8-.1 1.5-.1.7 0 .9.3 1.8.3.5 0 1.1-.2 1.9-.8.5-.4 1.1-.7 1.9-.7 1 0 1.6.4 2.1.7.8.6 1.4.8 1.9.8.9 0 1.1-.3 1.8-.3.7 0 1.1.1 1.5.1.3 0 .7-.1.7-.5 0-.6-1.4-1.2-2.2-2.9-.2-.5-.4-1-.3-1.3.1-.4.5-.5.6-.5.7-.2 1.5-.6 1.5-1.3 0-.3-.3-.5-.7-.5-.4 0-.7.2-1.2.2-.4 0-.7-.1-1-.2.2-.7.3-1.5.3-2.8C19 4.7 16.31 2 12 2z"/></svg>
+            Snap
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>نوع المحتوى</label>
+      <div class="ctype-grid" id="ctype-grid">
+        <button class="ctype-btn active" data-v="شخصية تتكلم للكاميرا" onclick="setCtype(this)"><span class="ctype-icon">🎤</span>Talking Head</button>
+        <button class="ctype-btn" data-v="شخصيتين يتحاوران" onclick="setCtype(this)"><span class="ctype-icon">👥</span>Dialog</button>
+        <button class="ctype-btn" data-v="مشهد تمثيلي كوميدي" onclick="setCtype(this)"><span class="ctype-icon">😂</span>Comedy Skit</button>
+        <button class="ctype-btn" data-v="محتوى توعوي تعليمي" onclick="setCtype(this)"><span class="ctype-icon">📚</span>Educational</button>
+        <button class="ctype-btn" data-v="عرض منتج احترافي" onclick="setCtype(this)"><span class="ctype-icon">🛍️</span>Product</button>
+        <button class="ctype-btn" data-v="شخصية CGI متحركة" onclick="setCtype(this)"><span class="ctype-icon">✨</span>CGI Char</button>
+        <button class="ctype-btn" data-v="قصة سينمائية درامية" onclick="setCtype(this)"><span class="ctype-icon">🎬</span>Cinematic</button>
+        <button class="ctype-btn" data-v="توكينج هيد مع B-Roll" onclick="setCtype(this)"><span class="ctype-icon">🎥</span>Head + B-Roll</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: TOPIC + TREND -->
+  <div class="card">
+    <div class="card-title">✦ الموضوع والترند</div>
+
+    <div class="field">
+      <label>الموضوع أو المجال</label>
+      <input type="text" id="topic-input" placeholder="مثال: عيادة تجميل، منتج عطر، مطعم فاخر، تطبيق تقني..." />
+    </div>
+
+    <div class="field">
+      <label>الترند</label>
+      <div class="trend-tabs">
+        <button class="trend-tab active" id="tab-search" onclick="switchTrendTab('search')">🔍 ابحث عن ترند</button>
+        <button class="trend-tab" id="tab-manual" onclick="switchTrendTab('manual')">✏️ أدخل يدوياً</button>
+        <button class="trend-tab" id="tab-skip" onclick="switchTrendTab('skip')">◇ بدون ترند</button>
+      </div>
+
+      <!-- SEARCH TAB -->
+      <div class="trend-panel active" id="panel-search">
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="trend-query" placeholder="مثال: رمضان 2025، صحة وجمال، ذكاء اصطناعي..." style="flex:1;" />
+          <button class="btn-sm" id="trend-search-btn" onclick="searchTrends()" style="white-space:nowrap;padding:8px 16px;">بحث</button>
+        </div>
+        <div id="trend-results" style="margin-top:8px;"></div>
+        <div id="selected-trends-preview" class="trend-chips" style="margin-top:8px;"></div>
+      </div>
+
+      <!-- MANUAL TAB -->
+      <div class="trend-panel" id="panel-manual">
+        <textarea id="trend-manual" placeholder="اكتب الترند أو الفكرة اللي تبي تبني عليها...&#10;مثال: ترند الناس تشارك تجربة أول مرة..." style="min-height:70px;margin-top:0;"></textarea>
+      </div>
+
+      <!-- SKIP TAB -->
+      <div class="trend-panel" id="panel-skip">
+        <div style="padding:14px;background:var(--surface2);border-radius:var(--radius-sm);border:1px solid var(--border);color:var(--text3);font-size:12px;">
+          سيعتمد النظام على الموضوع فقط لإنشاء أفكار إبداعية بدون ارتباط بترند معين
+        </div>
+      </div>
+    </div>
+
+    <div class="field" style="margin-bottom:0;">
+      <label>تفاصيل إضافية <span style="color:var(--text3);font-weight:400;">(اختياري)</span></label>
+      <textarea id="extra-details" placeholder="أي معلومات تساعد النظام... مثال: الجمهور المستهدف، رسالة معينة، منتج أو شخصية محددة..."></textarea>
+    </div>
+  </div>
+
+  <!-- GENERATE -->
+  <button class="btn-generate" id="gen-btn" onclick="generateIdeas()">
+    <span id="gen-spinner" style="display:none;" class="spinner"></span>
+    <span id="gen-label">✦ أنشئ 3 أفكار</span>
+  </button>
+
+  <!-- OUTPUT -->
+  <div class="ideas-section" id="ideas-section" style="display:none;">
+    <div class="ideas-header">
+      <div class="ideas-title">الأفكار المقترحة</div>
+      <button class="regen-all-btn" onclick="generateIdeas()">↺ أعد التوليد</button>
+    </div>
+    <div id="ideas-list"></div>
+  </div>
+
+  <!-- SELECTED IDEA ACTIONS -->
+  <div class="selected-actions" id="selected-actions">
+    <div class="selected-title">✦ الفكرة المختارة</div>
+
+    <div id="selected-preview" style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.7;padding:12px 14px;background:var(--surface2);border-radius:var(--radius-sm);border:1px solid var(--border);white-space:pre-wrap;"></div>
+
+    <div class="action-row">
+      <button class="action-btn primary" id="btn-develop" onclick="developIdea()">
+        <span id="dev-spinner" style="display:none;" class="spinner spinner-light" style="width:13px;height:13px;border-width:1.5px;"></span>
+        ✎ طوّر النص
+      </button>
+      <button class="action-btn" id="btn-script" onclick="generateFullScript()">
+        <span id="script-spinner" style="display:none;" class="spinner spinner-light"></span>
+        📄 سكريبت كامل
+      </button>
+      <button class="action-btn" id="btn-regen-idea" onclick="regenSelectedIdea()">
+        <span id="ri-spinner" style="display:none;" class="spinner spinner-light"></span>
+        ↺ بديل لهذه الفكرة
+      </button>
+    </div>
+
+    <!-- SCRIPT EDITOR -->
+    <div class="script-editor-wrap" id="script-editor-wrap">
+      <textarea class="script-editor" id="script-editor" placeholder="النص سيظهر هنا، يمكنك التعديل عليه..."></textarea>
+      <div class="editor-footer">
+        <span class="editor-hint" id="script-word-count"></span>
+        <div class="editor-actions">
+          <button class="btn-sm" onclick="copyScript()">نسخ</button>
+          <button class="btn-sm" onclick="improveScript()">
+            <span id="improve-spinner" style="display:none;" class="spinner spinner-light" style="width:12px;height:12px;border-width:1.5px;"></span>
+            ✨ حسّن
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <button class="send-to-shots-btn" id="send-to-shots-btn" onclick="sendToShotList()" style="display:none;">
+      ◈ أرسل النص لنظام Shot List
+    </button>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ─── STATE ───
+  let dialect = '';
+  let platform = 'instagram';
+  let contentType = 'شخصية تتكلم للكاميرا';
+  let trendMode = 'search';
+  let selectedTrends = [];
+  let generatedIdeas = [];
+  let selectedIdeaIdx = -1;
+  let sessionCalls = 0, sessionCost = 0;
+
+  // ─── PRICING (لكل مليون token) ───
+  const PRICING = {
+    anthropic: { in: 1.00, out: 5.00 },
+    openai:    { in: 0.15, out: 0.60 },
+    perplexity:{ in: 1.00, out: 1.00 },
+    gemini:    { in: 0.30, out: 2.50 },
+  };
+
+  // ─── API KEYS (shared with index.html via localStorage) ───
+  function getKey(p) { return localStorage.getItem('cs_key_' + p) || ''; }
+  function getActiveProvider() { return localStorage.getItem('cs_active_provider') || 'anthropic'; }
+  function getModel(p) {
+    const saved = localStorage.getItem('cs_model_' + p);
+    const defaults = { anthropic:'claude-haiku-4-5-20251001', openai:'gpt-4o-mini', gemini:'gemini-2.5-flash' };
+    return saved || defaults[p] || '';
+  }
+
+  function checkKeys() {
+    const dot = document.getElementById('key-dot');
+    const lbl = document.getElementById('key-label');
+    const prov = getActiveProvider();
+    const key = getKey(prov);
+    if (key) {
+      dot.className = 'key-dot ok';
+      lbl.textContent = prov;
+    } else {
+      const anyKey = getKey('anthropic') || getKey('openai') || getKey('gemini');
+      if (anyKey) {
+        dot.className = 'key-dot warn';
+        lbl.textContent = 'مفتاح متاح (غير نشط)';
+      } else {
+        dot.className = 'key-dot';
+        lbl.textContent = 'أضف مفتاح في index.html';
+      }
+    }
+  }
+
+  function trackUsage(inp, out, prov) {
+    const p = PRICING[prov] || PRICING.anthropic;
+    const cost = (inp * p.in + out * p.out) / 1_000_000;
+    sessionCost += cost; sessionCalls++;
+    document.getElementById('td-calls').textContent = sessionCalls + ' طلب';
+    document.getElementById('td-cost').textContent = '$' + sessionCost.toFixed(4);
+  }
+
+  // ─── UNIFIED API CALL ───
+  async function callMainAPI(prompt, systemPrompt = '') {
+    const prov = getActiveProvider();
+    const key = getKey(prov) || getKey('anthropic') || getKey('openai') || getKey('gemini');
+    if (!key) { toast('أضف مفتاح API في الإعدادات (index.html)'); throw new Error('no key'); }
+
+    const useProv = getKey(prov) ? prov : (getKey('anthropic') ? 'anthropic' : getKey('openai') ? 'openai' : 'gemini');
+    const useKey = getKey(useProv);
+
+    let resp = '', inp = 0, out = 0;
+
+    if (useProv === 'anthropic') {
+      const messages = [{ role: 'user', content: prompt }];
+      const body = { model: getModel('anthropic'), max_tokens: 2000, messages };
+      if (systemPrompt) body.system = systemPrompt;
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json','x-api-key':useKey,'anthropic-version':'2023-06-01' },
+        body: JSON.stringify(body)
+      });
+      const d = await res.json();
+      if (d.error) throw new Error(d.error.message);
+      resp = d.content.map(c=>c.text||'').join('');
+      inp = d.usage?.input_tokens||0; out = d.usage?.output_tokens||0;
+
+    } else if (useProv === 'openai') {
+      const msgs = systemPrompt
+        ? [{ role:'system', content:systemPrompt }, { role:'user', content:prompt }]
+        : [{ role:'user', content:prompt }];
+      const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json','Authorization':'Bearer '+useKey },
+        body: JSON.stringify({ model: getModel('openai'), max_tokens: 2000, messages: msgs })
+      });
+      const d = await res.json();
+      if (d.error) throw new Error(d.error.message);
+      resp = d.choices?.[0]?.message?.content || '';
+      inp = d.usage?.prompt_tokens||0; out = d.usage?.completion_tokens||0;
+
+    } else if (useProv === 'gemini') {
+      const parts = systemPrompt
+        ? [{ text: systemPrompt + '\n\n' + prompt }]
+        : [{ text: prompt }];
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${getModel('gemini')}:generateContent?key=${useKey}`,
+        { method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ contents:[{parts}], generationConfig:{maxOutputTokens:2000} }) }
+      );
+      const d = await res.json();
+      if (d.error) throw new Error(d.error.message);
+      resp = d.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      inp = d.usageMetadata?.promptTokenCount||0; out = d.usageMetadata?.candidatesTokenCount||0;
+    }
+
+    trackUsage(inp, out, useProv);
+    return resp;
+  }
+
+  // ─── PERPLEXITY SEARCH (for trends) ───
+  async function callPerplexity(query) {
+    const key = getKey('perplexity');
+    if (!key) return null;
+    try {
+      const res = await fetch('https://api.perplexity.ai/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json','Authorization':'Bearer '+key },
+        body: JSON.stringify({
+          model: 'sonar',
+          max_tokens: 600,
+          messages: [
+            { role: 'system', content: 'You are a social media trend analyst. Return results in Arabic. Be concise and direct.' },
+            { role: 'user', content: query }
+          ]
+        })
+      });
+      const d = await res.json();
+      if (d.error) throw new Error(d.error.message);
+      const text = d.choices?.[0]?.message?.content || '';
+      const inp = d.usage?.prompt_tokens||0, out = d.usage?.completion_tokens||0;
+      trackUsage(inp, out, 'perplexity');
+      return text;
+    } catch(e) { return null; }
+  }
+
+  // ─── UI SETTERS ───
+  function setDialect(el) {
+    document.querySelectorAll('.dialect-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    dialect = el.dataset.v;
+    localStorage.setItem('is_dialect', dialect);
+  }
+  function setPlatform(p, el) {
+    platform = p;
+    document.querySelectorAll('.platform-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+  }
+  function setCtype(el) {
+    document.querySelectorAll('.ctype-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    contentType = el.dataset.v;
+  }
+  function switchTrendTab(mode) {
+    trendMode = mode;
+    ['search','manual','skip'].forEach(t => {
+      document.getElementById('tab-'+t).classList.toggle('active', t===mode);
+      document.getElementById('panel-'+t).classList.toggle('active', t===mode);
+    });
+  }
+
+  // ─── TREND SEARCH ───
+  async function searchTrends() {
+    const query = document.getElementById('trend-query').value.trim();
+    const topic = document.getElementById('topic-input').value.trim();
+    if (!query && !topic) { toast('اكتب موضوع أو كلمة بحث أولاً'); return; }
+
+    const btn = document.getElementById('trend-search-btn');
+    btn.textContent = '...'; btn.disabled = true;
+    const resultsEl = document.getElementById('trend-results');
+    resultsEl.innerHTML = `<div style="display:flex;align-items:center;gap:8px;padding:10px 0;color:var(--text2);font-size:12px;"><div class="spinner spinner-light" style="width:13px;height:13px;border-width:1.5px;"></div> جاري البحث...</div>`;
+
+    const searchQ = query || topic;
+    const platform_label = { instagram:'Instagram Reels', tiktok:'TikTok', youtube:'YouTube Shorts', snapchat:'Snapchat' }[platform] || 'social media';
+
+    const perplexityKey = getKey('perplexity');
+
+    let trendsText = '';
+    if (perplexityKey) {
+      // Real search via Perplexity
+      trendsText = await callPerplexity(
+        `ابحث عن أحدث ترندات وأفكار محتوى فيديو عن "${searchQ}" على ${platform_label} في 2025-2026. ` +
+        `أعطني 5-7 ترندات أو أفكار شائعة، كل ترند في سطر مع وصف مختصر جداً. ` +
+        `اكتب بالعربية. لا تكتب مقدمة أو خاتمة، فقط القائمة.`
+      );
+    }
+
+    if (!trendsText) {
+      // Fallback: generate via main API
+      trendsText = await callMainAPI(
+        `اقترح 6 أفكار ترند لمحتوى فيديو عن "${searchQ}" على ${platform_label} في 2025-2026. ` +
+        `كل فكرة في سطر منفصل. لا مقدمة أو ترقيم.`
+      ).catch(() => '');
+    }
+
+    if (!trendsText) {
+      resultsEl.innerHTML = `<div style="color:var(--red);font-size:12px;padding:8px 0;">فشل البحث — تحقق من مفتاح Perplexity في الإعدادات</div>`;
+      btn.textContent = 'بحث'; btn.disabled = false;
+      return;
+    }
+
+    // Parse lines into chips
+    const lines = trendsText.split('\n').map(l => l.trim()).filter(l => l.length > 5 && l.length < 200).slice(0,8);
+    // Clean lines: remove leading dashes, numbers, etc.
+    const cleaned = lines.map(l => l.replace(/^[-•*\d\.]+\s*/, '').trim()).filter(Boolean);
+
+    resultsEl.innerHTML = `
+      <div style="font-size:11px;color:var(--text3);margin-bottom:6px;font-family:'IBM Plex Mono',monospace;">${perplexityKey ? '● نتائج حقيقية من الإنترنت' : '● أفكار مقترحة (لا يوجد مفتاح Perplexity)'}</div>
+      <div class="trend-chips">
+        ${cleaned.map((t,i) => `<button class="trend-chip" onclick="toggleTrend(this,'${escapeAttr(t)}')" title="${escapeAttr(t)}"><span class="chip-dot"></span>${escapeHtml(t.length > 55 ? t.slice(0,55)+'...' : t)}</button>`).join('')}
+      </div>`;
+
+    btn.textContent = 'بحث'; btn.disabled = false;
+    updateSelectedTrendsPreview();
+  }
+
+  function toggleTrend(el, val) {
+    const idx = selectedTrends.indexOf(val);
+    if (idx > -1) {
+      selectedTrends.splice(idx,1);
+      el.classList.remove('selected');
+    } else {
+      if (selectedTrends.length >= 3) { toast('اختر 3 ترندات كحد أقصى'); return; }
+      selectedTrends.push(val);
+      el.classList.add('selected');
+    }
+    updateSelectedTrendsPreview();
+  }
+
+  function updateSelectedTrendsPreview() {
+    const el = document.getElementById('selected-trends-preview');
+    if (!selectedTrends.length) { el.innerHTML=''; return; }
+    el.innerHTML = `<div style="font-size:11px;color:var(--accent);font-family:'IBM Plex Mono',monospace;margin-bottom:4px;">المختار:</div>` +
+      selectedTrends.map(t => `<span class="trend-chip selected" style="cursor:default;"><span class="chip-dot"></span>${escapeHtml(t)}</span>`).join('');
+  }
+
+  // ─── BUILD CONTEXT ───
+  function buildContext() {
+    const topic = document.getElementById('topic-input').value.trim();
+    const extra = document.getElementById('extra-details').value.trim();
+    const plat = { instagram:'Instagram Reels', tiktok:'TikTok', youtube:'YouTube Shorts', snapchat:'Snapchat' }[platform];
+    const dialectStr = dialect || 'خليجي';
+
+    let trendCtx = '';
+    if (trendMode === 'search' && selectedTrends.length) {
+      trendCtx = 'الترندات المختارة: ' + selectedTrends.join(' | ');
+    } else if (trendMode === 'manual') {
+      const m = document.getElementById('trend-manual').value.trim();
+      if (m) trendCtx = 'الترند/الفكرة: ' + m;
+    }
+
+    return { topic, extra, plat, dialectStr, trendCtx, contentType };
+  }
+
+  // ─── GENERATE 3 IDEAS ───
+  async function generateIdeas() {
+    const { topic, extra, plat, dialectStr, trendCtx, contentType } = buildContext();
+    if (!topic) { toast('اكتب الموضوع أولاً'); document.getElementById('topic-input').focus(); return; }
+
+    const btn = document.getElementById('gen-btn');
+    btn.disabled = true;
+    document.getElementById('gen-spinner').style.display = 'inline-block';
+    document.getElementById('gen-label').textContent = 'جاري التوليد...';
+    document.getElementById('ideas-section').style.display = 'none';
+    document.getElementById('selected-actions').classList.remove('visible');
+    selectedIdeaIdx = -1;
+
+    const systemPrompt = `أنت منتج محتوى رقمي محترف متخصص في ${plat}. مهمتك توليد أفكار فيديو إبداعية وجذابة.
+اللهجة المطلوبة: ${dialectStr} — التزم بها بدقة في كل الكلام والحوار.
+نوع المحتوى: ${contentType}.
+لا تستخدم لهجة مختلفة أو فصحى إلا إذا طُلب ذلك صراحة.`;
+
+    const prompt = `الموضوع: ${topic}
+${trendCtx ? trendCtx + '\n' : ''}${extra ? 'تفاصيل إضافية: ' + extra + '\n' : ''}
+أنشئ 3 أفكار فيديو مختلفة تماماً لـ ${plat}.
+
+لكل فكرة اتبع هذا الهيكل بالضبط:
+IDEA_1
+HOOK: جملة الهوك (أول 2-3 ثواني تشد المشاهد)
+SCRIPT: السكريبت الكامل كما سيُقال أمام الكاميرا — جملة جملة — ${dialectStr} — لا توقيتات لا هاشتاقات
+ANGLE: كيف هذه الفكرة مختلفة ومثيرة (جملة واحدة)
+---
+IDEA_2
+HOOK: ...
+SCRIPT: ...
+ANGLE: ...
+---
+IDEA_3
+HOOK: ...
+SCRIPT: ...
+ANGLE: ...
+
+قواعد صارمة:
+- اللهجة ${dialectStr} في كل السكريبت بدون استثناء
+- SCRIPT يكون النص الكامل الجاهز للتصوير (مش ملاحظات أو شرح)
+- كل فكرة مختلفة في الأسلوب والزاوية
+- لا مقدمة لا خاتمة — فقط الهيكل المطلوب`;
+
+    try {
+      const result = await callMainAPI(prompt, systemPrompt);
+      parseAndRenderIdeas(result);
+    } catch(e) {
+      if (e.message !== 'no key') toast('حدث خطأ: ' + e.message);
+    }
+
+    btn.disabled = false;
+    document.getElementById('gen-spinner').style.display = 'none';
+    document.getElementById('gen-label').textContent = '✦ أنشئ 3 أفكار';
+  }
+
+  function parseAndRenderIdeas(raw) {
+    // Parse IDEA_N blocks
+    const blocks = raw.split(/---+/).map(b => b.trim()).filter(Boolean);
+    generatedIdeas = [];
+
+    blocks.forEach((block, i) => {
+      const hookMatch  = block.match(/HOOK:\s*([\s\S]*?)(?=\nSCRIPT:|$)/i);
+      const scriptMatch = block.match(/SCRIPT:\s*([\s\S]*?)(?=\nANGLE:|$)/i);
+      const angleMatch  = block.match(/ANGLE:\s*([\s\S]*?)$/i);
+
+      if (!hookMatch && !scriptMatch) return;
+
+      generatedIdeas.push({
+        hook:   (hookMatch?.[1]||'').trim(),
+        script: (scriptMatch?.[1]||'').trim(),
+        angle:  (angleMatch?.[1]||'').trim(),
+      });
+    });
+
+    if (!generatedIdeas.length) {
+      // Fallback: try to split by line groups
+      toast('تم التوليد — قد يكون التنسيق مختلفاً');
+      generatedIdeas = [{ hook: 'الفكرة', script: raw.trim(), angle: '' }];
+    }
+
+    renderIdeas();
+  }
+
+  function renderIdeas() {
+    const section = document.getElementById('ideas-section');
+    const list = document.getElementById('ideas-list');
+    section.style.display = 'block';
+
+    list.innerHTML = generatedIdeas.map((idea, i) => `
+      <div class="idea-card ${selectedIdeaIdx===i?'selected':''}" id="idea-card-${i}" onclick="selectIdea(${i})">
+        <div class="idea-card-header">
+          <span class="idea-num">IDEA ${i+1}</span>
+          <span class="idea-hook">${escapeHtml(idea.hook)}</span>
+          <span class="idea-select-badge">${selectedIdeaIdx===i?'✓ محدد':'اختر'}</span>
+        </div>
+        <div class="idea-card-body">
+          <div class="idea-script-preview">${escapeHtml(idea.script.length > 280 ? idea.script.slice(0,280)+'...' : idea.script)}</div>
+          <div class="idea-tags">
+            <span class="idea-tag type-tag">${contentType}</span>
+            ${selectedTrends.length ? `<span class="idea-tag trend-tag">ترند</span>` : ''}
+            <span class="idea-tag">${{ instagram:'Reels', tiktok:'TikTok', youtube:'YouTube', snapchat:'Snap' }[platform]||platform}</span>
+            ${idea.angle ? `<span class="idea-tag">${escapeHtml(idea.angle.slice(0,40))}</span>` : ''}
+          </div>
+        </div>
+      </div>`).join('');
+
+    section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function selectIdea(idx) {
+    selectedIdeaIdx = idx;
+    // Update cards
+    document.querySelectorAll('.idea-card').forEach((c,i) => {
+      c.classList.toggle('selected', i===idx);
+      c.querySelector('.idea-select-badge').textContent = i===idx ? '✓ محدد' : 'اختر';
+    });
+    // Show actions
+    const idea = generatedIdeas[idx];
+    document.getElementById('selected-preview').textContent = idea.hook + '\n\n' + idea.script;
+    const actions = document.getElementById('selected-actions');
+    actions.classList.add('visible');
+    // Reset editor
+    document.getElementById('script-editor-wrap').classList.remove('visible');
+    document.getElementById('send-to-shots-btn').style.display = 'none';
+    actions.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  // ─── DEVELOP IDEA ───
+  async function developIdea() {
+    if (selectedIdeaIdx < 0) return;
+    const idea = generatedIdeas[selectedIdeaIdx];
+    const { dialectStr, contentType, plat } = buildContext();
+
+    const btn = document.getElementById('btn-develop');
+    btn.disabled = true;
+    document.getElementById('dev-spinner').style.display = 'inline-block';
+
+    try {
+      const result = await callMainAPI(
+        `طوّر وحسّن هذه الفكرة — اجعل السكريبت أقوى وأكثر إقناعاً وطبيعية.
+اللهجة: ${dialectStr}. النوع: ${contentType}. المنصة: ${plat}.
+
+الفكرة الحالية:
+${idea.hook}
+${idea.script}
+
+أعطني السكريبت المطوّر فقط — بدون عنوان أو شرح. جاهز للتصوير مباشرة.`,
+        `أنت محرر سكريبت محترف. اكتب بلهجة ${dialectStr} فقط.`
+      );
+
+      const clean = result.replace(/^(السكريبت|النص|المطوّر|:)+\s*/i, '').trim();
+      generatedIdeas[selectedIdeaIdx].script = clean;
+      document.getElementById('selected-preview').textContent = idea.hook + '\n\n' + clean;
+      showScriptEditor(clean);
+      toast('تم التطوير ✓');
+    } catch(e) { if (e.message !== 'no key') toast('حدث خطأ'); }
+
+    btn.disabled = false;
+    document.getElementById('dev-spinner').style.display = 'none';
+  }
+
+  // ─── FULL SCRIPT ───
+  async function generateFullScript() {
+    if (selectedIdeaIdx < 0) return;
+    const idea = generatedIdeas[selectedIdeaIdx];
+    const { dialectStr, contentType, plat, topic, extra } = buildContext();
+
+    const btn = document.getElementById('btn-script');
+    btn.disabled = true;
+    document.getElementById('script-spinner').style.display = 'inline-block';
+
+    try {
+      const result = await callMainAPI(
+        `اكتب سكريبت فيديو كامل ومفصّل بناءً على الفكرة التالية.
+الموضوع: ${topic}
+الفكرة: ${idea.hook}
+النوع: ${contentType} | المنصة: ${plat} | اللهجة: ${dialectStr}
+${extra ? 'تفاصيل: ' + extra : ''}
+
+اكتب السكريبت الكامل جاهزاً للتصوير:
+- الهوك أول 3 ثواني
+- جسم المحتوى كاملاً
+- الخاتمة
+
+اكتب الكلام كما سيُقال فعلاً أمام الكاميرا. ${dialectStr} فقط. لا توقيتات لا هاشتاقات لا شرح.`,
+        `أنت كاتب سكريبت محترف. اكتب بلهجة ${dialectStr} فقط، بشكل طبيعي وعفوي.`
+      );
+
+      const clean = result.trim();
+      generatedIdeas[selectedIdeaIdx].script = clean;
+      document.getElementById('selected-preview').textContent = idea.hook + '\n\n' + clean;
+      showScriptEditor(clean);
+      toast('السكريبت جاهز ✓');
+    } catch(e) { if (e.message !== 'no key') toast('حدث خطأ'); }
+
+    btn.disabled = false;
+    document.getElementById('script-spinner').style.display = 'none';
+  }
+
+  // ─── REGEN SELECTED ───
+  async function regenSelectedIdea() {
+    if (selectedIdeaIdx < 0) return;
+    const { dialectStr, contentType, plat, topic, trendCtx } = buildContext();
+
+    const btn = document.getElementById('btn-regen-idea');
+    btn.disabled = true;
+    document.getElementById('ri-spinner').style.display = 'inline-block';
+
+    const otherIdeas = generatedIdeas.filter((_,i)=>i!==selectedIdeaIdx).map(x=>x.hook).join(' | ');
+
+    try {
+      const result = await callMainAPI(
+        `أنشئ فكرة فيديو بديلة جديدة تختلف كلياً عن:
+${otherIdeas}
+
+الموضوع: ${topic}
+${trendCtx}
+النوع: ${contentType} | المنصة: ${plat}
+
+اتبع هذا الهيكل:
+HOOK: ...
+SCRIPT: السكريبت الكامل باللهجة ${dialectStr}
+ANGLE: ...`,
+        `أنت منتج محتوى. اكتب بلهجة ${dialectStr} فقط.`
+      );
+
+      const hookM  = result.match(/HOOK:\s*([\s\S]*?)(?=\nSCRIPT:|$)/i);
+      const scriptM = result.match(/SCRIPT:\s*([\s\S]*?)(?=\nANGLE:|$)/i);
+      const angleM  = result.match(/ANGLE:\s*([\s\S]*?)$/i);
+
+      generatedIdeas[selectedIdeaIdx] = {
+        hook:   (hookM?.[1]||'').trim(),
+        script: (scriptM?.[1]||result).trim(),
+        angle:  (angleM?.[1]||'').trim(),
+      };
+      renderIdeas();
+      selectIdea(selectedIdeaIdx);
+      toast('بديل جديد ✓');
+    } catch(e) { if (e.message !== 'no key') toast('حدث خطأ'); }
+
+    btn.disabled = false;
+    document.getElementById('ri-spinner').style.display = 'none';
+  }
+
+  // ─── SCRIPT EDITOR ───
+  function showScriptEditor(text) {
+    const wrap = document.getElementById('script-editor-wrap');
+    const editor = document.getElementById('script-editor');
+    wrap.classList.add('visible');
+    editor.value = text;
+    updateWordCount();
+    document.getElementById('send-to-shots-btn').style.display = 'flex';
+    editor.addEventListener('input', updateWordCount);
+    wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function updateWordCount() {
+    const text = document.getElementById('script-editor').value;
+    const words = text.trim().split(/\s+/).filter(Boolean).length;
+    document.getElementById('script-word-count').textContent = words + ' كلمة';
+  }
+
+  function copyScript() {
+    const text = document.getElementById('script-editor').value;
+    navigator.clipboard.writeText(text).then(() => toast('تم النسخ ✓'));
+  }
+
+  async function improveScript() {
+    const editor = document.getElementById('script-editor');
+    const text = editor.value.trim();
+    if (!text) return;
+    const { dialectStr } = buildContext();
+
+    document.getElementById('improve-spinner').style.display = 'inline-block';
+
+    try {
+      const result = await callMainAPI(
+        `حسّن هذا السكريبت — اجعله أكثر طبيعية وجاذبية، مع الحفاظ على نفس المحتوى والمعنى.
+اللهجة: ${dialectStr} فقط.
+السكريبت:
+${text}
+
+أعطني السكريبت المحسّن مباشرة بدون أي شرح.`
+      );
+      editor.value = result.trim();
+      updateWordCount();
+      toast('تم التحسين ✓');
+    } catch(e) { if (e.message !== 'no key') toast('حدث خطأ'); }
+
+    document.getElementById('improve-spinner').style.display = 'none';
+  }
+
+  // ─── SEND TO SHOT LIST ───
+  function sendToShotList() {
+    const script = document.getElementById('script-editor').value.trim();
+    if (!script) { toast('السكريبت فارغ'); return; }
+    // Save to localStorage for index.html to pick up
+    localStorage.setItem('is_pending_script', script);
+    localStorage.setItem('is_pending_idea_hook', generatedIdeas[selectedIdeaIdx]?.hook || '');
+    toast('جاري الانتقال لـ Shot List...');
+    setTimeout(() => { window.location.href = 'index.html?from_ideas=1'; }, 700);
+  }
+
+  // ─── HELPERS ───
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function escapeAttr(str) {
+    if (!str) return '';
+    return str.replace(/'/g,'&#39;').replace(/"/g,'&quot;');
+  }
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg; el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2600);
+  }
+
+  // ─── INIT ───
+  window.addEventListener('DOMContentLoaded', () => {
+    checkKeys();
+    // Restore dialect
+    const saved = localStorage.getItem('is_dialect');
+    if (saved) {
+      const btn = [...document.querySelectorAll('.dialect-btn')].find(b => b.dataset.v === saved);
+      if (btn) { btn.classList.add('active'); dialect = saved; }
+    }
+  });
+</script>
+</body>
+</html>
