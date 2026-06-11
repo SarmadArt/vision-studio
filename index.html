@@ -3395,23 +3395,25 @@ Return ONLY valid JSON:
       }).join('');
 
       slot.innerHTML = `
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-          <span class="angle-slot-num">SH ${i+1}</span>
-          ${excerpt ? `<span style="font-size:11px;color:var(--text2);flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${escapeHtml(excerpt)}</span>` : ''}
-          <div style="display:flex;align-items:center;gap:5px;cursor:pointer;flex-shrink:0;" onclick="toggleAngleGrid(${i})">
-            ${ANGLE_IMAGES[prev]
-              ? `<img src="${ANGLE_IMAGES[prev]}" style="width:24px;height:24px;object-fit:cover;border-radius:3px;border:1px solid var(--accent);">`
-              : ''}
-            <span style="font-size:10px;color:var(--accent);font-family:'IBM Plex Mono',monospace;">${ANGLE_LABELS[prev]||prev}</span>
-            <span style="font-size:9px;color:var(--text3);">▾</span>
+        <div style="margin-bottom:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+            <span class="angle-slot-num">SH ${i+1}</span>
+            <div onclick="toggleAngleGrid(${i})" style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:3px 8px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);">
+              ${ANGLE_IMAGES[prev]
+                ? `<img src="${ANGLE_IMAGES[prev]}" style="width:22px;height:22px;object-fit:cover;border-radius:2px;">`
+                : `<span style="font-size:9px;color:var(--text3);">${prev}</span>`}
+              <span style="font-size:10px;color:var(--accent);font-family:'IBM Plex Mono',monospace;">${ANGLE_LABELS[prev]||prev}</span>
+              <span style="font-size:9px;color:var(--text3);">▾</span>
+            </div>
           </div>
+          ${excerpt ? `<div style="font-size:12px;color:var(--text2);line-height:1.5;padding:4px 0 0 0;">${escapeHtml(excerpt)}</div>` : ''}
         </div>
-        <div id="angle-grid-${i}" style="display:none;margin-bottom:8px;">
+        <div id="angle-grid-${i}" style="display:none;margin-bottom:10px;">
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;">
             ${imgGrid}
           </div>
         </div>
-        <div style="height:1px;background:var(--border);margin-bottom:6px;"></div>`;
+        <div style="height:1px;background:var(--border);margin-bottom:8px;"></div>`;
       container.appendChild(slot);
     }
   }
