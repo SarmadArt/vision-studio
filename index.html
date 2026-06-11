@@ -3218,6 +3218,7 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
       document.getElementById(`loc-badge-${id}`).style.display = 'inline';
       document.getElementById(`loc-extract-btn-${id}`).style.display = 'inline';
       saveSessionState();
+      autoAnalyzeLocImage(id);
     });
   }
 
@@ -3233,7 +3234,92 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
       document.getElementById(`loc-badge-${id}`).style.display = 'inline';
       document.getElementById(`loc-extract-btn-${id}`).style.display = 'inline';
       saveSessionState();
+      autoAnalyzeLocImage(id);
     });
+  }
+
+  async function autoAnalyzeLocImage(id) {
+    const loc = locations.find(l => l.id === id);
+    if (!loc?.imageBase64) return;
+    // Show analyzing state on the image area
+    const area = document.getElementById(`loc-img-area-${id}`);
+    const overlay = document.createElement('div');
+    overlay.id = `loc-overlay-${id}`;
+    overlay.style.cssText = 'position:absolute;inset:0;background:rgba(10,10,10,0.65);display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--accent);font-family:"IBM Plex Mono",monospace;z-index:2;';
+    overlay.innerHTML = '<div class="spinner" style="width:12px;height:12px;border-width:1.5px"></div> Analyzing...';
+    area.style.position = 'relative';
+    area.appendChild(overlay);
+
+    try {
+      const key = getKey(activeProvider) || getKey('anthropic') || getKey('openai');
+      if (!key) { overlay.remove(); return; }
+
+      let result = '';
+      // Use vision-capable model based on active provider
+      if (activeProvider === 'anthropic' || getKey('anthropic')) {
+        const useKey = getKey('anthropic');
+        if (!useKey) throw new Error('no key');
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json','x-api-key':useKey,'anthropic-version':'2023-06-01' },
+          body: JSON.stringify({
+            model: 'claude-haiku-4-5-20251001', max_tokens: 200,
+            messages: [{ role:'user', content:[
+              { type:'image', source:{ type:'base64', media_type:'image/jpeg', data: loc.imageBase64 }},
+              { type:'text', text:'Look at this location image. Return JSON only, no extra text:\n{"name":"short location name in the same language as visible text (or English if none)","desc":"physical elements, max 12 words","lighting":"one of: Natural Soft / Natural Harsh / Golden Hour / Studio Soft / Studio Hard / Neon / Fluorescent / Candlelight / Backlit / Low Key / High Key","mood":"one of: Cinematic Dark / Warm Cozy / Clean Minimal / Vibrant Energetic / Moody Dramatic / Natural Airy / Industrial Raw / Luxury Premium"}\nOutput JSON only.' }
+            ]}]
+          })
+        });
+        const data = await res.json();
+        result = data.content?.[0]?.text?.trim() || '';
+        trackUsage(data.usage?.input_tokens||0, data.usage?.output_tokens||0);
+      } else if (activeProvider === 'openai' || getKey('openai')) {
+        const useKey = getKey('openai');
+        if (!useKey) throw new Error('no key');
+        const res = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json','Authorization':'Bearer '+useKey },
+          body: JSON.stringify({
+            model: 'gpt-4o', max_tokens: 200,
+            messages: [{ role:'user', content:[
+              { type:'image_url', image_url:{ url:`data:image/jpeg;base64,${loc.imageBase64}`, detail:'low' }},
+              { type:'text', text:'Look at this location image. Return JSON only, no extra text:\n{"name":"short location name in the same language as visible text (or English if none)","desc":"physical elements, max 12 words","lighting":"one of: Natural Soft / Natural Harsh / Golden Hour / Studio Soft / Studio Hard / Neon / Fluorescent / Candlelight / Backlit / Low Key / High Key","mood":"one of: Cinematic Dark / Warm Cozy / Clean Minimal / Vibrant Energetic / Moody Dramatic / Natural Airy / Industrial Raw / Luxury Premium"}\nOutput JSON only.' }
+            ]}]
+          })
+        });
+        const data = await res.json();
+        result = data.choices?.[0]?.message?.content?.trim() || '';
+        trackUsage(data.usage?.prompt_tokens||0, data.usage?.completion_tokens||0);
+      }
+
+      const parsed = safeParseJSON(result);
+      if (parsed) {
+        const nameEl = document.getElementById(`loc-name-${id}`);
+        const descEl = document.getElementById(`loc-desc-${id}`);
+        if (parsed.name && nameEl && !nameEl.value.trim()) {
+          nameEl.value = parsed.name;
+          locations.find(l=>l.id===id).name = parsed.name;
+        }
+        if (parsed.desc && descEl) {
+          descEl.value = parsed.desc;
+          locations.find(l=>l.id===id).desc = parsed.desc;
+        }
+        // Auto-fill lighting and mood if fields are empty
+        if (parsed.lighting) {
+          const lightEl = document.getElementById('lighting-type');
+          if (lightEl && !lightEl.value) lightEl.value = parsed.lighting;
+          // Update look system if needed
+          saveSessionState();
+        }
+        if (parsed.mood) {
+          const moodEl = document.getElementById('mood-type');
+          if (moodEl && !moodEl.value) moodEl.value = parsed.mood;
+        }
+        saveSessionState();
+        toast('Location analyzed ✓');
+      }
+    } catch(e) { /* silent fail — user still has the image */ }
+    overlay.remove();
   }
 
   function updateLoc(id, field, val) {
@@ -3305,6 +3391,8 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
       if (idx > -1) characters[idx].imageBase64 = base64;
       document.getElementById(`char-img-area-${id}`).innerHTML = `<img src="${src}" alt="char ref">`;
       document.getElementById(`char-badge-${id}`).style.display = 'inline';
+      saveSessionState();
+      autoAnalyzeCharImage(id);
     });
   }
 
@@ -3351,7 +3439,69 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
       document.getElementById(`char-img-area-${id}`).innerHTML = `<img src="${src}" alt="char ref">`;
       document.getElementById(`char-badge-${id}`).style.display = 'inline';
       saveSessionState();
+      autoAnalyzeCharImage(id);
     });
+  }
+
+  async function autoAnalyzeCharImage(id) {
+    const char = characters.find(c => c.id === id);
+    if (!char?.imageBase64) return;
+    // Only auto-fill role if it's empty
+    const roleEl = document.getElementById(`char-role-${id}`);
+    if (roleEl?.value?.trim()) return; // user already typed something — don't overwrite
+
+    const area = document.getElementById(`char-img-area-${id}`);
+    const overlay = document.createElement('div');
+    overlay.id = `char-overlay-${id}`;
+    overlay.style.cssText = 'position:absolute;inset:0;background:rgba(10,10,10,0.65);display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--accent);font-family:"IBM Plex Mono",monospace;z-index:2;';
+    overlay.innerHTML = '<div class="spinner" style="width:12px;height:12px;border-width:1.5px"></div> Analyzing...';
+    area.style.position = 'relative';
+    area.appendChild(overlay);
+
+    try {
+      let result = '';
+      if (getKey('anthropic')) {
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json','x-api-key':getKey('anthropic'),'anthropic-version':'2023-06-01' },
+          body: JSON.stringify({
+            model: 'claude-haiku-4-5-20251001', max_tokens: 120,
+            messages: [{ role:'user', content:[
+              { type:'image', source:{ type:'base64', media_type:'image/jpeg', data: char.imageBase64 }},
+              { type:'text', text:'Describe this person for a film director in 4-6 words. Focus on role/profession if clear from uniform/context, otherwise appearance. Use Arabic if the context seems Arabic/Middle Eastern, otherwise English. Output the description only, no extra text. Examples: "دكتورة بمعطف أبيض", "Young man casual clothes", "شيف بزي رسمي".' }
+            ]}]
+          })
+        });
+        const data = await res.json();
+        result = data.content?.[0]?.text?.trim() || '';
+        trackUsage(data.usage?.input_tokens||0, data.usage?.output_tokens||0);
+      } else if (getKey('openai')) {
+        const res = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json','Authorization':'Bearer '+getKey('openai') },
+          body: JSON.stringify({
+            model: 'gpt-4o', max_tokens: 60,
+            messages: [{ role:'user', content:[
+              { type:'image_url', image_url:{ url:`data:image/jpeg;base64,${char.imageBase64}`, detail:'low' }},
+              { type:'text', text:'Describe this person for a film director in 4-6 words. Focus on role/profession if clear from uniform/context, otherwise appearance. Use Arabic if the context seems Arabic/Middle Eastern, otherwise English. Output the description only, no extra text.' }
+            ]}]
+          })
+        });
+        const data = await res.json();
+        result = data.choices?.[0]?.message?.content?.trim() || '';
+        trackUsage(data.usage?.prompt_tokens||0, data.usage?.completion_tokens||0);
+      }
+
+      if (result && roleEl && !roleEl.value.trim()) {
+        // Clean up any quotes
+        result = result.replace(/^["']|["']$/g, '').trim();
+        roleEl.value = result;
+        characters.find(c=>c.id===id).role = result;
+        saveSessionState();
+        toast('Character analyzed ✓');
+      }
+    } catch(e) { /* silent fail */ }
+    overlay.remove();
   }
 
   function updateCharRole(id, val) {
