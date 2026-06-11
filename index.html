@@ -1507,72 +1507,75 @@
           <div class="card">
             <div class="card-title">Video Type</div>
 
-            <!-- Current selection display -->
-            <div id="vtype-selected" style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--surface2);border:1px solid var(--accent);border-radius:var(--radius-sm);cursor:pointer;margin-bottom:8px;" onclick="toggleVtypePopup()">
-              <img id="vtype-sel-img" style="width:40px;height:40px;object-fit:cover;border-radius:4px;" src="" alt="">
-              <div>
-                <div id="vtype-sel-name" style="font-size:13px;font-weight:500;color:var(--accent);">Cinematic</div>
-                <div style="font-size:10px;color:var(--text3);">tap to change</div>
+            <!-- Current selection display — shows multiple -->
+            <div id="vtype-selected" style="display:flex;align-items:center;gap:6px;padding:8px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);cursor:pointer;margin-bottom:8px;flex-wrap:wrap;" onclick="toggleVtypePopup()">
+              <div id="vtype-sel-chips" style="display:flex;gap:4px;flex-wrap:wrap;flex:1;">
+                <div style="display:flex;align-items:center;gap:4px;background:rgba(200,240,96,0.1);border:1px solid rgba(200,240,96,0.3);border-radius:4px;padding:3px 7px;">
+                  <img id="vtype-sel-img" style="width:18px;height:18px;object-fit:cover;border-radius:2px;" src="" alt="">
+                  <span id="vtype-sel-name" style="font-size:11px;font-weight:500;color:var(--accent);">Cinematic</span>
+                </div>
               </div>
-              <span style="margin-right:auto;font-size:10px;color:var(--text3);">▾</span>
+              <span style="font-size:10px;color:var(--text3);flex-shrink:0;">▾ multi-select</span>
             </div>
 
-            <!-- Popup grid -->
+            <!-- Popup grid — multi-select -->
             <div id="vtype-popup" style="display:none;">
+              <div style="font-size:10px;color:var(--text3);margin-bottom:6px;font-family:'IBM Plex Mono',monospace;">Tap to select/deselect — choose up to 3</div>
               <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">
-                <div class="vtype-img-btn active" data-type="cinematic" onclick="setVideoTypeImg(this,'cinematic','Cinematic')">
+                <div class="vtype-img-btn active" data-type="cinematic" onclick="toggleVideoType('cinematic','Cinematic')">
                   <img src="" id="vtimg-cinematic" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;">
                   <div class="vtype-img-label">Cinematic</div>
                 </div>
-                <div class="vtype-img-btn" data-type="talking_head" onclick="setVideoTypeImg(this,'talking_head','Talking Head')">
+                <div class="vtype-img-btn" data-type="talking_head" onclick="toggleVideoType('talking_head','Talking Head')">
                   <img src="" id="vtimg-talking_head" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;">
                   <div class="vtype-img-label">Talking Head</div>
                 </div>
-                <div class="vtype-img-btn" data-type="dialog" onclick="setVideoTypeImg(this,'dialog','Dialog')">
+                <div class="vtype-img-btn" data-type="dialog" onclick="toggleVideoType('dialog','Dialog')">
                   <img src="" id="vtimg-dialog" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;">
                   <div class="vtype-img-label">Dialog</div>
                 </div>
-                <div class="vtype-img-btn" data-type="talking_broll" onclick="setVideoTypeImg(this,'talking_broll','Talking + B-Roll')">
+                <div class="vtype-img-btn" data-type="talking_broll" onclick="toggleVideoType('talking_broll','Talking + B-Roll')">
                   <img src="" id="vtimg-talking_broll" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;">
                   <div class="vtype-img-label">Talking + B-Roll</div>
                 </div>
-                <div class="vtype-img-btn" data-type="educational" onclick="setVideoTypeImg(this,'educational','Educational')">
+                <div class="vtype-img-btn" data-type="educational" onclick="toggleVideoType('educational','Educational')">
                   <img src="" id="vtimg-educational" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;">
                   <div class="vtype-img-label">Educational</div>
                 </div>
-                <div class="vtype-img-btn" data-type="comedy" onclick="setVideoTypeImg(this,'comedy','Comedy / Skit')">
+                <div class="vtype-img-btn" data-type="comedy" onclick="toggleVideoType('comedy','Comedy / Skit')">
                   <img src="" id="vtimg-comedy" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;">
                   <div class="vtype-img-label">Comedy / Skit</div>
                 </div>
-                <div class="vtype-img-btn" data-type="product" onclick="setVideoTypeImg(this,'product','Product')">
+                <div class="vtype-img-btn" data-type="product" onclick="toggleVideoType('product','Product')">
                   <img src="" id="vtimg-product" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;">
                   <div class="vtype-img-label">Product</div>
                 </div>
-                <div class="vtype-img-btn" data-type="cgi" onclick="setVideoTypeImg(this,'cgi','CGI / 3D')">
+                <div class="vtype-img-btn" data-type="cgi" onclick="toggleVideoType('cgi','CGI / 3D')">
                   <img src="" id="vtimg-cgi" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;">
                   <div class="vtype-img-label">CGI / 3D</div>
                 </div>
-                <div class="vtype-img-btn" data-type="cgi_character" onclick="setVideoTypeImg(this,'cgi_character','CGI Character')">
+                <div class="vtype-img-btn" data-type="cgi_character" onclick="toggleVideoType('cgi_character','CGI Character')">
                   <img src="" id="vtimg-cgi_character" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;">
                   <div class="vtype-img-label">CGI Character</div>
                 </div>
-                <div class="vtype-img-btn" data-type="cgi_human" onclick="setVideoTypeImg(this,'cgi_human','CGI + Human')">
+                <div class="vtype-img-btn" data-type="cgi_human" onclick="toggleVideoType('cgi_human','CGI + Human')">
                   <img src="" id="vtimg-cgi_human" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;">
                   <div class="vtype-img-label">CGI + Human</div>
                 </div>
-                <div class="vtype-img-btn" data-type="cgi_stylized" onclick="setVideoTypeImg(this,'cgi_stylized','CGI Stylized')">
+                <div class="vtype-img-btn" data-type="cgi_stylized" onclick="toggleVideoType('cgi_stylized','CGI Stylized')">
                   <img src="" id="vtimg-cgi_stylized" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;">
                   <div class="vtype-img-label">CGI Stylized</div>
                 </div>
-                <div class="vtype-img-btn" data-type="vfx" onclick="setVideoTypeImg(this,'vfx','VFX')">
+                <div class="vtype-img-btn" data-type="vfx" onclick="toggleVideoType('vfx','VFX')">
                   <img src="" id="vtimg-vfx" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;">
                   <div class="vtype-img-label">VFX</div>
                 </div>
-                <div class="vtype-img-btn" data-type="demonstration" onclick="setVideoTypeImg(this,'demonstration','Demonstration')">
+                <div class="vtype-img-btn" data-type="demonstration" onclick="toggleVideoType('demonstration','Demonstration')">
                   <img src="" id="vtimg-demonstration" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;">
                   <div class="vtype-img-label">Demonstration</div>
                 </div>
               </div>
+              <button class="btn btn-ghost" style="width:100%;margin-top:8px;font-size:11px;" onclick="document.getElementById('vtype-popup').style.display='none'">Done ✓</button>
             </div>
 
             <!-- STYLE REFERENCE -->
@@ -1651,10 +1654,32 @@
                 <span style="margin-right:auto;font-size:10px;color:var(--text3);">▾</span>
               </div>
 
-              <!-- Sub-option (Indoor/Outdoor) -->
+              <!-- Sub-option (Indoor/Outdoor) — hidden when custom image used -->
               <div id="look-subopts" style="display:flex;gap:6px;margin-bottom:6px;">
                 <button class="look-sub-btn active" id="look-sub-0" onclick="setLookSub(0)"></button>
                 <button class="look-sub-btn" id="look-sub-1" onclick="setLookSub(1)"></button>
+              </div>
+
+              <!-- Custom Look Image Upload -->
+              <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                  <span style="font-size:10px;color:var(--text3);">Or upload your own Look reference</span>
+                  <button id="clear-look-img-btn" onclick="clearCustomLook()" style="display:none;font-size:10px;padding:2px 8px;border-radius:3px;border:1px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer;">✕ Clear</button>
+                </div>
+                <div class="img-upload-zone" id="look-img-zone" style="min-height:50px;"
+                  onclick="document.getElementById('look-img-input').click()"
+                  ondragover="handleDragOver(event,this)"
+                  ondragleave="handleDragLeave(event,this)"
+                  ondrop="handleDropLookImg(event,this)">
+                  <input type="file" id="look-img-input" accept="image/*" style="display:none" onchange="handleLookImgUpload(this)">
+                  <div id="look-img-placeholder">
+                    <div style="font-size:14px;opacity:0.3;">⊕</div>
+                    <div style="font-size:10px;color:var(--text3);">Click or drag — AI extracts Look</div>
+                  </div>
+                </div>
+                <div id="look-img-extracted" style="display:none;margin-top:6px;">
+                  <div style="font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--text2);padding:6px 8px;background:var(--surface2);border-radius:var(--radius-sm);border:1px solid var(--border2);" id="look-img-text"></div>
+                </div>
               </div>
 
               <!-- Popup grid -->
@@ -1705,12 +1730,18 @@
 
             <!-- MANUAL ANGLE GRID — hidden by default -->
             <div id="manual-angles-area" style="display:none;">
-              <div style="font-size:11px; color:var(--text3); margin-bottom:8px; font-family:'IBM Plex Mono',monospace;">
-                Assign an angle to each shot — system writes the rest
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                <div style="font-size:11px; color:var(--text3); font-family:'IBM Plex Mono',monospace;">
+                  Pick angle per shot — AI splits script for you
+                </div>
+                <button class="btn btn-ghost" id="analyze-script-btn" onclick="analyzeScriptForSlots()" style="font-size:10px;padding:4px 10px;white-space:nowrap;">
+                  <span id="analyze-spinner" style="display:none" class="spinner" style="width:10px;height:10px;"></span>
+                  ⊙ Split Script
+                </button>
               </div>
               <div id="manual-angle-slots"></div>
-              <button class="btn btn-ghost" onclick="syncManualSlots()" style="width:100%; margin-top:6px; font-size:11px; color:var(--text3);">
-                ↺ Sync with shot count
+              <button class="btn btn-ghost" onclick="syncManualSlots()" style="width:100%; margin-top:6px; font-size:10px; color:var(--text3);">
+                ↺ Refresh slots
               </button>
             </div>
           </div>
@@ -2100,7 +2131,7 @@
   function saveSessionState() {
     try {
       const state = {
-        activePage: document.querySelector('.page.active')?.id || 'page-ideas',
+        activePage: document.querySelector('.page.active')?.id || 'page-shots',
         platform: currentPlatform,
         ideaContent: document.getElementById('idea-content')?.value || '',
         ideaDuration: document.getElementById('duration-val')?.value || '60',
@@ -2110,6 +2141,7 @@
         directorNote: document.getElementById('director-note')?.value || '',
         shotCount: currentShotCount,
         videoType: currentVideoType,
+        selectedVideoTypes: [...selectedVideoTypes],
         camera: document.getElementById('camera-type')?.value || '',
         lighting: document.getElementById('lighting-type')?.value || '',
         mood: document.getElementById('mood-type')?.value || '',
@@ -2118,16 +2150,38 @@
         flagNoText: document.getElementById('flag-no-text')?.checked || false,
         flagPortrait: document.getElementById('flag-portrait')?.checked || false,
         flagSlow: document.getElementById('flag-slow')?.checked || false,
-        // Store chars without images (images are heavy — restore separately)
-        characters: characters.map(c => ({ id: c.id, role: c.role, imageBase64: c.imageBase64 })),
+        // Exclude imageBase64 to avoid sessionStorage size limit — save metadata only
+        characters: characters.map(c => ({ id: c.id, role: c.role, hasImage: !!c.imageBase64 })),
         charCounter,
-        locations: locations.map(l => ({ id: l.id, name: l.name, desc: l.desc, imageBase64: l.imageBase64 })),
+        locations: locations.map(l => ({ id: l.id, name: l.name, desc: l.desc, hasImage: !!l.imageBase64 })),
         locCounter,
-        shotsData,
+        // Save shots without full prompt to save space — just key fields
+        shotsData: shotsData.map(s => ({
+          shot_id: s.shot_id, shot_number: s.shot_number, scene_ar: s.scene_ar,
+          angle: s.angle, shot_type: s.shot_type, duration: s.duration,
+          chars_used: s.chars_used, loc_used: s.loc_used, ref_note: s.ref_note,
+          prompt_en: (s.prompt_en||'').slice(0, 500), // truncate to save space
+        })),
         currentProjectId,
+        genMode,
+        manualAngles: genMode === 'manual' ? getManualAngles() : [],
+        styleRefText: window._styleRefText || '',
       };
-      sessionStorage.setItem('cs_session', JSON.stringify(state));
-    } catch(e) { /* sessionStorage full — ignore */ }
+      const json = JSON.stringify(state);
+      sessionStorage.setItem('cs_session', json);
+    } catch(e) {
+      // If still too large, save without shots
+      try {
+        const minimal = {
+          activePage: document.querySelector('.page.active')?.id || 'page-shots',
+          shotScript: document.getElementById('shot-script')?.value || '',
+          directorNote: document.getElementById('director-note')?.value || '',
+          currentLook, currentLookSub, currentVideoType, currentShotCount,
+          genMode, manualAngles: genMode==='manual'?getManualAngles():[],
+        };
+        sessionStorage.setItem('cs_session', JSON.stringify(minimal));
+      } catch(e2) { /* give up */ }
+    }
   }
 
   function restoreSessionState() {
@@ -2329,12 +2383,12 @@
     const mp=[...document.querySelectorAll('.shot-pill')].find(p=>parseInt(p.textContent)===currentShotCount);
     if(mp) mp.classList.add('active');
     currentVideoType = state.videoType||'cinematic';
-    document.querySelectorAll('.vtype-img-btn').forEach(b => b.classList.toggle('active', b.dataset.type === currentVideoType));
-    const selImg = document.getElementById('vtype-sel-img');
-    const selName = document.getElementById('vtype-sel-name');
-    if (selImg && VTYPE_IMAGES[currentVideoType]) selImg.src = VTYPE_IMAGES[currentVideoType];
-    const vtypeLabels = { cinematic:'Cinematic', talking_head:'Talking Head', dialog:'Dialog', talking_broll:'Talking + B-Roll', educational:'Educational', comedy:'Comedy / Skit', product:'Product', cgi:'CGI / 3D', cgi_character:'CGI Character', cgi_human:'CGI + Human', cgi_stylized:'CGI Stylized', vfx:'VFX', demonstration:'Demonstration' };
-    if (selName) selName.textContent = vtypeLabels[currentVideoType] || currentVideoType;
+    if (state.selectedVideoTypes?.length) {
+      selectedVideoTypes = new Set(state.selectedVideoTypes);
+    } else {
+      selectedVideoTypes = new Set([currentVideoType]);
+    }
+    updateVtypeDisplay();
     if(state.camera)   document.getElementById('camera-type').value  =state.camera;
     if(state.lighting) document.getElementById('lighting-type').value=state.lighting;
     if(state.mood)     document.getElementById('mood-type').value    =state.mood;
@@ -2512,6 +2566,7 @@
     document.getElementById('loc-cards-list').innerHTML  = '';
     // Reset video type to default
     currentVideoType = 'cinematic';
+    selectedVideoTypes = new Set(['cinematic']);
     document.querySelectorAll('.vtype-btn').forEach(b => b.classList.toggle('active', b.dataset.type === 'cinematic'));
     // Reset shot count
     currentShotCount = 5;
@@ -2660,7 +2715,8 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
   }
 
   // --- VIDEO TYPE ---
-  let currentVideoType = 'cinematic';
+  let currentVideoType = 'cinematic'; // legacy single — kept for compatibility
+  let selectedVideoTypes = new Set(['cinematic']); // multi-select
 
   const VIDEO_TYPE_MAP = {
     cinematic:     'Cinematic narrative, dramatic storytelling, film-quality visuals, deep shadows and highlights, emotional scenes',
@@ -2675,10 +2731,149 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
     cgi_human:     'Real human interacting with CGI character, seamless compositing, photorealistic integration, warm natural lighting',
     cgi_stylized:  'Fully CGI stylized world, no real footage, stylized 3D render, artistic animation quality',
     vfx:           'Visual effects compositing, real actor with dramatic VFX elements, particle effects, energy bolts, Hollywood blockbuster quality',
-    demonstration: 'Show & Tell demonstration style, person actively engaged in task with hands working, subject not looking at camera, candid observational style, action-focused not speech-focused, camera follows the work being done',
+    demonstration: 'Show & Tell demonstration style, person actively engaged in task with hands working, subject not looking at camera, candid observational style, action-focused',
   };
 
-  // --- LOOK SYSTEM (Lighting + Color Grade combined) ---
+  function getVideoTypeDescription() {
+    const types = [...selectedVideoTypes];
+    return types.map(t => VIDEO_TYPE_MAP[t] || t).join(' + ');
+  }
+
+  function initVtypeImages() {
+    Object.keys(VTYPE_IMAGES).forEach(key => {
+      const el = document.getElementById(`vtimg-${key}`);
+      if (el) el.src = VTYPE_IMAGES[key];
+    });
+    updateVtypeDisplay();
+  }
+
+  function toggleVtypePopup() {
+    const popup = document.getElementById('vtype-popup');
+    popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
+  }
+
+  function toggleVideoType(type, label) {
+    if (selectedVideoTypes.has(type)) {
+      if (selectedVideoTypes.size > 1) selectedVideoTypes.delete(type);
+    } else {
+      if (selectedVideoTypes.size >= 3) {
+        toast('Max 3 styles'); return;
+      }
+      selectedVideoTypes.add(type);
+    }
+    currentVideoType = [...selectedVideoTypes][0]; // primary
+    updateVtypeDisplay();
+    saveSessionState();
+  }
+
+  function updateVtypeDisplay() {
+    // Update active states in grid
+    document.querySelectorAll('.vtype-img-btn').forEach(b => {
+      b.classList.toggle('active', selectedVideoTypes.has(b.dataset.type));
+    });
+    // Update chips display
+    const chips = document.getElementById('vtype-sel-chips');
+    const selImg = document.getElementById('vtype-sel-img');
+    const selName = document.getElementById('vtype-sel-name');
+    const types = [...selectedVideoTypes];
+    if (chips) {
+      chips.innerHTML = types.map(t => {
+        const imgSrc = VTYPE_IMAGES[t] || '';
+        const name = Object.keys(VIDEO_TYPE_MAP).find(k=>k===t) ? t.replace(/_/g,' ') : t;
+        const label = {cinematic:'Cinematic',talking_head:'Talking Head',dialog:'Dialog',talking_broll:'Talking+B-Roll',educational:'Educational',comedy:'Comedy',product:'Product',cgi:'CGI/3D',cgi_character:'CGI Char',cgi_human:'CGI+Human',cgi_stylized:'CGI Style',vfx:'VFX',demonstration:'Demo'}[t]||t;
+        return `<div style="display:flex;align-items:center;gap:4px;background:rgba(200,240,96,0.1);border:1px solid rgba(200,240,96,0.3);border-radius:4px;padding:3px 7px;">
+          ${imgSrc?`<img src="${imgSrc}" style="width:16px;height:16px;object-fit:cover;border-radius:2px;">`:'' }
+          <span style="font-size:10px;font-weight:500;color:var(--accent);">${label}</span>
+        </div>`;
+      }).join('');
+    }
+    // Also update legacy single selectors for backward compat
+    if (selImg && VTYPE_IMAGES[types[0]]) selImg.src = VTYPE_IMAGES[types[0]];
+    if (selName) selName.textContent = types.map(t=>({cinematic:'Cinematic',talking_head:'Talking Head',dialog:'Dialog',talking_broll:'Talking+B-Roll',educational:'Educational',comedy:'Comedy',product:'Product',cgi:'CGI/3D',cgi_character:'CGI Char',cgi_human:'CGI+Human',cgi_stylized:'CGI Style',vfx:'VFX',demonstration:'Demo'}[t]||t)).join(' + ');
+  }
+
+  // Legacy compat
+  function setVideoTypeImg(el, type, label) { toggleVideoType(type, label); }
+  function setVideoType(el) { if (el?.dataset?.type) toggleVideoType(el.dataset.type, el.dataset.type); }
+
+  // --- CUSTOM LOOK IMAGE ---
+  let customLookBase64 = null;
+  let customLookText   = '';
+
+  function handleLookImgUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    readImageFile(file, (base64, src) => {
+      customLookBase64 = base64;
+      const zone = document.getElementById('look-img-zone');
+      zone.classList.add('has-image');
+      zone.innerHTML = `<img src="${src}" style="width:100%;height:60px;object-fit:cover;border-radius:4px;">`;
+      document.getElementById('clear-look-img-btn').style.display = 'inline';
+      extractCustomLook(base64);
+    });
+  }
+
+  function handleDropLookImg(e, el) {
+    e.preventDefault(); e.stopPropagation();
+    el.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (!file || !file.type.startsWith('image/')) { toast('Drop an image'); return; }
+    readImageFile(file, (base64, src) => {
+      customLookBase64 = base64;
+      const zone = document.getElementById('look-img-zone');
+      zone.classList.add('has-image');
+      zone.innerHTML = `<img src="${src}" style="width:100%;height:60px;object-fit:cover;border-radius:4px;">`;
+      document.getElementById('clear-look-img-btn').style.display = 'inline';
+      extractCustomLook(base64);
+    });
+  }
+
+  async function extractCustomLook(base64) {
+    try {
+      const key = getKey('anthropic') || getKey(activeProvider);
+      if (!key) { toast('Add API key first'); return; }
+      toast('Extracting look...');
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514', max_tokens: 120,
+          messages: [{ role:'user', content:[
+            { type:'image', source:{ type:'base64', media_type:'image/jpeg', data: base64 }},
+            { type:'text', text:'Extract the cinematic Look from this image: lighting style + color grade only, max 20 words, English phrase only. No descriptions of people or content. Example: "warm golden hour light, teal-orange color grade, soft shadows"' }
+          ]}]
+        })
+      });
+      const data = await res.json();
+      const extracted = data.content?.[0]?.text?.trim() || '';
+      if (extracted) {
+        customLookText = extracted;
+        document.getElementById('look-img-text').textContent = extracted;
+        document.getElementById('look-img-extracted').style.display = 'block';
+        // Override lighting/mood inputs
+        document.getElementById('lighting-type').value = extracted;
+        document.getElementById('mood-type').value = extracted;
+        toast('Look extracted ✓');
+        saveSessionState();
+      }
+    } catch(e) { toast('Extraction failed'); }
+  }
+
+  function clearCustomLook() {
+    customLookBase64 = null; customLookText = '';
+    const zone = document.getElementById('look-img-zone');
+    zone.classList.remove('has-image');
+    zone.innerHTML = `
+      <input type="file" id="look-img-input" accept="image/*" style="display:none" onchange="handleLookImgUpload(this)">
+      <div id="look-img-placeholder">
+        <div style="font-size:14px;opacity:0.3;">⊕</div>
+        <div style="font-size:10px;color:var(--text3);">Click or drag — AI extracts Look</div>
+      </div>`;
+    document.getElementById('look-img-extracted').style.display = 'none';
+    document.getElementById('clear-look-img-btn').style.display = 'none';
+    syncLookToInputs(); // Restore preset look
+    saveSessionState();
+  }
   const LOOKS = {
     golden_warm:      { name:'Golden Warm',      subs:['Indoor — Window Light','Outdoor — Sunset'], lighting:['warm golden light streaming through window, amber tones','golden hour sunlight, long warm shadows, outdoor magic hour'], grade:'warm amber color grade, skin glowing, soft shadows, intimate cozy atmosphere' },
     teal_orange:      { name:'Teal & Orange',    subs:['Day Scene','Night Scene'], lighting:['dramatic side lighting, cool shadows, warm highlights','harsh artificial lighting, cool night tones'], grade:'teal and orange color grade, cool shadows contrasting warm skin tones, desaturated midtones, cinematic film look' },
@@ -3144,6 +3339,36 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
     saveSessionState();
   }
 
+  // Script excerpts per slot (populated by analyzeScriptForSlots)
+  let slotExcerpts = [];
+
+  async function analyzeScriptForSlots() {
+    const script = document.getElementById('shot-script').value.trim();
+    if (!script) { toast('Add your script first'); return; }
+    const btn     = document.getElementById('analyze-script-btn');
+    const spinner = document.getElementById('analyze-spinner');
+    btn.disabled  = true;
+    spinner.style.display = 'inline-block';
+    try {
+      const prompt = `Split this script into exactly ${currentShotCount} shot descriptions. Each description must be 1 short sentence (max 8 words) describing what happens visually in that shot moment. Keep the original language (Arabic or English).
+
+Script:
+${script}
+
+Return ONLY valid JSON:
+{"shots":[{"shot":1,"excerpt":"short visual description"},{"shot":2,"excerpt":"..."}]}`;
+      const result = await callAPI(prompt);
+      const parsed = safeParseJSON(result);
+      if (parsed?.shots) {
+        slotExcerpts = parsed.shots.map(s => s.excerpt || '');
+        syncManualSlots();
+        toast('Script split into ' + currentShotCount + ' shots ✓');
+      }
+    } catch(e) { toast('Failed — try again'); }
+    btn.disabled = false;
+    spinner.style.display = 'none';
+  }
+
   function syncManualSlots() {
     const container = document.getElementById('manual-angle-slots');
     const existing  = [...container.querySelectorAll('.angle-slot')];
@@ -3151,62 +3376,73 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
     container.innerHTML = '';
 
     for (let i = 0; i < currentShotCount; i++) {
-      const prev  = existingAngles[i] || ANGLE_OPTIONS[i % ANGLE_OPTIONS.length];
-      const slot  = document.createElement('div');
-      slot.className    = 'angle-slot';
+      const prev    = existingAngles[i] || ANGLE_OPTIONS[i % ANGLE_OPTIONS.length];
+      const excerpt = slotExcerpts[i] || '';
+      const slot    = document.createElement('div');
+      slot.className     = 'angle-slot';
       slot.dataset.angle = prev;
       slot.dataset.idx   = i;
 
+      // Grid: 4 columns, all angles with image + label
       const imgGrid = ANGLE_OPTIONS.map(a => {
-        const img   = ANGLE_IMAGES[a] ? `<img src="${ANGLE_IMAGES[a]}" style="width:44px;height:44px;object-fit:cover;border-radius:4px;display:block;">` : `<div style="width:44px;height:44px;border-radius:4px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text3);">${a}</div>`;
-        return `<div class="angle-img-btn ${a === prev ? 'active' : ''}" data-angle="${a}"
-          onclick="selectSlotAngle(this,${i},'${a}')"
-          title="${ANGLE_LABELS[a]||a}">
-          ${img}
-          <div style="font-size:8px;text-align:center;margin-top:2px;color:${a===prev?'var(--accent)':'var(--text3)'};">${a}</div>
+        const imgSrc = ANGLE_IMAGES[a];
+        const inner  = imgSrc
+          ? `<img src="${imgSrc}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:3px;display:block;">`
+          : `<div style="width:100%;aspect-ratio:1;border-radius:3px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--text3);">${a}</div>`;
+        return `<div class="angle-img-btn ${a===prev?'active':''}" data-angle="${a}"
+          onclick="selectSlotAngle(${i},'${a}')"
+          title="${ANGLE_LABELS[a]||a}"
+          style="cursor:pointer;border-radius:4px;border:2px solid ${a===prev?'var(--accent)':'var(--border2)'};overflow:hidden;transition:all 0.1s;">
+          ${inner}
+          <div style="font-size:8px;text-align:center;padding:2px 1px;color:${a===prev?'var(--accent)':'var(--text3)'};font-family:'IBM Plex Mono',monospace;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${ANGLE_LABELS[a]||a}</div>
         </div>`;
       }).join('');
 
       slot.innerHTML = `
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
           <span class="angle-slot-num">SH ${i+1}</span>
-          <div style="display:flex;align-items:center;gap:6px;">
-            ${ANGLE_IMAGES[prev] ? `<img src="${ANGLE_IMAGES[prev]}" style="width:28px;height:28px;object-fit:cover;border-radius:3px;border:1px solid var(--accent);">` : ''}
-            <span style="font-size:11px;color:var(--accent);font-family:'IBM Plex Mono',monospace;">${prev}</span>
+          ${excerpt ? `<span style="font-size:11px;color:var(--text2);flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${escapeHtml(excerpt)}</span>` : ''}
+          <div style="display:flex;align-items:center;gap:5px;cursor:pointer;flex-shrink:0;" onclick="toggleAngleGrid(${i})">
+            ${ANGLE_IMAGES[prev]
+              ? `<img src="${ANGLE_IMAGES[prev]}" style="width:24px;height:24px;object-fit:cover;border-radius:3px;border:1px solid var(--accent);">`
+              : ''}
+            <span style="font-size:10px;color:var(--accent);font-family:'IBM Plex Mono',monospace;">${ANGLE_LABELS[prev]||prev}</span>
+            <span style="font-size:9px;color:var(--text3);">▾</span>
           </div>
         </div>
-        <div class="angle-img-grid" id="angle-grid-${i}" style="display:none;">
-          <div style="display:grid;grid-template-columns:repeat(7,48px);gap:4px;padding:8px 0;">
+        <div id="angle-grid-${i}" style="display:none;margin-bottom:8px;">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;">
             ${imgGrid}
           </div>
         </div>
-        <button onclick="toggleAngleGrid(${i})" style="font-size:10px;padding:2px 8px;border-radius:3px;border:1px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer;margin-bottom:6px;">
-          change ▾
-        </button>
-        <div style="height:1px;background:var(--border);margin-bottom:4px;"></div>`;
+        <div style="height:1px;background:var(--border);margin-bottom:6px;"></div>`;
       container.appendChild(slot);
     }
   }
 
   function toggleAngleGrid(idx) {
     const grid = document.getElementById(`angle-grid-${idx}`);
-    if (grid) grid.style.display = grid.style.display === 'none' ? 'block' : 'none';
+    if (!grid) return;
+    // Close all other grids first
+    document.querySelectorAll('[id^="angle-grid-"]').forEach(g => {
+      if (g.id !== `angle-grid-${idx}`) g.style.display = 'none';
+    });
+    grid.style.display = grid.style.display === 'none' ? 'block' : 'none';
   }
 
-  function selectSlotAngle(el, slotIdx, angle) {
-    const slot = document.getElementById('manual-angle-slots').children[slotIdx];
-    if (!slot) return;
-    slot.dataset.angle = angle;
-    // Update preview
-    const preview = slot.querySelector('img[style*="28px"]') || slot.querySelector('span[style*="accent"]');
-    slot.innerHTML = slot.innerHTML; // Re-render via syncManualSlots partial
-    // Easier: just rebuild this slot
-    const existingAngles = [...document.getElementById('manual-angle-slots').querySelectorAll('.angle-slot')].map(s => s.dataset.angle);
-    existingAngles[slotIdx] = angle;
+  function selectSlotAngle(slotIdx, angle) {
+    // Get current angles
+    const slots = [...document.getElementById('manual-angle-slots').querySelectorAll('.angle-slot')];
+    const angles = slots.map(s => s.dataset.angle || 'MS');
+    angles[slotIdx] = angle;
+    // Update data
+    if (slots[slotIdx]) slots[slotIdx].dataset.angle = angle;
+    // Rebuild just this slot by re-rendering all (keeps order)
     syncManualSlots();
-    // Re-open grid
+    // Close the grid after selection
     const grid = document.getElementById(`angle-grid-${slotIdx}`);
-    if (grid) grid.style.display = 'block';
+    if (grid) grid.style.display = 'none';
+    saveSessionState();
   }
 
   function getManualAngles() {
@@ -3316,8 +3552,11 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
       slowmo  ? '120fps slowmo' : '',
     ].filter(Boolean).join(' | ');
 
-    const videoType = VIDEO_TYPE_MAP[currentVideoType] || VIDEO_TYPE_MAP.cinematic;
-    globalContext = { script, directorNote, locsCtx, locList, charsCtx, camera, lighting, mood, flags, noTalk, videoType, charList };
+    const videoType = getVideoTypeDescription();
+    // Use custom look if uploaded, otherwise use preset
+    const lightingVal = customLookText || document.getElementById('lighting-type').value;
+    const moodVal     = customLookText || document.getElementById('mood-type').value;
+    globalContext = { script, directorNote, locsCtx, locList, charsCtx, camera, lighting: lightingVal, mood: moodVal, flags, noTalk, videoType, charList };
 
     const btn = document.getElementById('gen-shots-btn');
     btn.disabled = true;
