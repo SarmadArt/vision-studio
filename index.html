@@ -965,6 +965,59 @@
   .ref-shot-needs { color: var(--text2); }
   .ref-sheet-row.ref-warn .ref-shot-needs { color: #ffaa00; }
 
+  /* --- PROJECT CARDS --- */
+  .proj-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .proj-card:hover { border-color: var(--border2); }
+  .proj-card.active-proj { border-color: var(--accent); }
+  .proj-card-info { flex: 1; min-width: 0; }
+  .proj-card-name {
+    font-size: 14px; font-weight: 500; color: var(--text);
+    margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .proj-card-meta { font-size: 11px; color: var(--text3); font-family: 'IBM Plex Mono', monospace; }
+  .proj-card-tags { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .proj-tag {
+    font-size: 10px; padding: 2px 8px;
+    border-radius: 3px; border: 1px solid var(--border2);
+    color: var(--text3); font-family: 'IBM Plex Mono', monospace;
+  }
+  .proj-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .proj-btn {
+    font-size: 11px; padding: 4px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: transparent; color: var(--text2);
+    cursor: pointer; font-family: 'IBM Plex Sans Arabic', sans-serif;
+    transition: all 0.1s; white-space: nowrap;
+  }
+  .proj-btn:hover { color: var(--text); border-color: var(--text3); }
+  .proj-btn.load { color: var(--accent); border-color: rgba(200,240,96,0.3); }
+  .proj-btn.load:hover { background: rgba(200,240,96,0.07); }
+  .proj-btn.del:hover { color: var(--red); border-color: rgba(255,79,79,0.3); }
+
+  /* --- SESSION LOG --- */
+  .session-item {
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12px;
+  }
+  .session-item:last-child { border-bottom: none; }
+  .session-date { color: var(--text2); }
+  .session-stats { display: flex; gap: 12px; }
+  .session-stat { color: var(--text3); font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+  .session-stat span { color: var(--accent); }
+
   /* --- LOCATION CARDS --- */
   .loc-card {
     border: 1px solid var(--border2);
@@ -1171,6 +1224,11 @@
     </div>
     <div class="nav-section">
       <div class="nav-label">النظام</div>
+      <div class="nav-item" onclick="navigate('page-projects', this)">
+        <div class="nav-icon">◫</div>
+        <span>المشاريع</span>
+        <span id="proj-count-badge" style="margin-right:auto;font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;"></span>
+      </div>
       <div class="nav-item" onclick="navigate('page-stats', this)">
         <div class="nav-icon">▦</div>
         <span>الإحصائيات</span>
@@ -1487,24 +1545,76 @@
     </div>
 
     <!-- PAGE: STATS -->
+    <!-- PAGE: PROJECTS -->
+    <div id="page-projects" class="page">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+        <div>
+          <div class="page-title">المشاريع</div>
+          <div class="page-sub">كل مشروع يحفظ السكريبت والشخصيات والمواقع والخيارات واللقطات</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost" onclick="newProject()" style="font-size:13px;">
+            + مشروع جديد
+          </button>
+          <button class="btn btn-accent" onclick="saveCurrentProject()" style="width:auto;padding:10px 20px;font-size:13px;">
+            <span id="save-proj-spinner" style="display:none" class="spinner"></span>
+            ⊙ حفظ المشروع الحالي
+          </button>
+        </div>
+      </div>
+
+      <div id="projects-list">
+        <div class="empty-state" style="padding:60px 20px;">
+          <div class="empty-icon">◫</div>
+          <div>لا يوجد مشاريع محفوظة بعد</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:8px;">اضغط "حفظ المشروع الحالي" لحفظ عملك</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: STATS -->
     <div id="page-stats" class="page">
       <div class="page-header">
         <div class="page-title">الإحصائيات</div>
-        <div class="page-sub">استخدامك لهذه الجلسة</div>
+        <div class="page-sub">استخدامك وتاريخ الجلسات</div>
       </div>
 
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-val" id="stat-calls">0</div>
-          <div class="stat-label">إجمالي الطلبات</div>
+          <div class="stat-label">طلبات الجلسة</div>
         </div>
         <div class="stat-card">
           <div class="stat-val" id="stat-tokens">0</div>
+          <div class="stat-label">توكنز الجلسة</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="stat-cost">$0.000</div>
+          <div class="stat-label">تكلفة الجلسة</div>
+        </div>
+      </div>
+
+      <div class="stats-grid" style="margin-top:12px;">
+        <div class="stat-card">
+          <div class="stat-val" id="stat-total-calls" style="color:var(--text2)">0</div>
+          <div class="stat-label">إجمالي الطلبات</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="stat-total-tokens" style="color:var(--text2)">0</div>
           <div class="stat-label">إجمالي التوكنز</div>
         </div>
         <div class="stat-card">
-          <div class="stat-val" id="stat-cost">$0.00</div>
-          <div class="stat-label">التكلفة الكلية</div>
+          <div class="stat-val" id="stat-total-cost" style="color:var(--text2)">$0.000</div>
+          <div class="stat-label">إجمالي التكلفة</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <div class="card-title">سجل الجلسات</div>
+        <div id="sessions-list">
+          <div class="empty-state" style="padding:24px">
+            <div>لا يوجد سجل بعد</div>
+          </div>
         </div>
       </div>
 
@@ -1671,20 +1781,7 @@
     gemini:    { in: 1.25, out: 5    }
   };
 
-  // --- INIT ---
-  window.addEventListener('DOMContentLoaded', () => {
-    activeProvider = localStorage.getItem('cs_active_provider') || 'anthropic';
-    ['anthropic','openai','gemini'].forEach(p => {
-      const k = localStorage.getItem('cs_key_' + p);
-      if (k) {
-        document.getElementById('key-' + p).value = k;
-        document.getElementById('badge-' + p).style.display = 'flex';
-        document.getElementById('dot-' + p).classList.add('has-key');
-      }
-    });
-    refreshProviderUI();
-  });
-
+  // --- PROVIDER ---
   function refreshProviderUI() {
     ['anthropic','openai','gemini'].forEach(p => {
       document.getElementById('prov-' + p).classList.toggle('active', p === activeProvider);
@@ -1694,14 +1791,12 @@
     });
     document.getElementById('active-prov-pill').textContent = activeProvider;
   }
-
   function setActiveProvider(p) {
     activeProvider = p;
     localStorage.setItem('cs_active_provider', p);
     refreshProviderUI();
     toast('المزود النشط: ' + p);
   }
-
   function saveKey(provider) {
     const val = document.getElementById('key-' + provider).value.trim();
     if (!val) { toast('أدخل المفتاح أولاً'); return; }
@@ -1710,12 +1805,10 @@
     document.getElementById('dot-' + provider).classList.add('has-key');
     toast('تم حفظ مفتاح ' + provider);
   }
-
   function toggleVis(id) {
     const inp = document.getElementById(id);
     inp.type = inp.type === 'password' ? 'text' : 'password';
   }
-
   function getKey(provider) {
     return localStorage.getItem('cs_key_' + provider) || '';
   }
@@ -1727,112 +1820,61 @@
     document.getElementById(pageId).classList.add('active');
     el.classList.add('active');
   }
+  window.addEventListener('DOMContentLoaded', () => {
+    activeProvider = localStorage.getItem('cs_active_provider') || 'anthropic';
+    ['anthropic','openai','gemini'].forEach(p => {
+      const k = localStorage.getItem('cs_key_' + p);
+      if (k) {
+        document.getElementById('key-' + p).value = k;
+        document.getElementById('badge-' + p).style.display = 'flex';
+        document.getElementById('dot-' + p).classList.add('has-key');
+      }
+    });
+    refreshProviderUI();
+    loadTotalStats();
+    renderProjectsList();
+    window.addEventListener('beforeunload', saveSessionStats);
+  });
 
-  // --- PLATFORM ---
-  function setPlatform(p) {
-    currentPlatform = p;
-    document.getElementById('plat-insta').classList.toggle('active', p === 'instagram');
-    document.getElementById('plat-yt').classList.toggle('active', p === 'youtube');
+  function loadTotalStats() {
+    const t = JSON.parse(localStorage.getItem('cs_total_stats') || '{"calls":0,"tokens":0,"cost":0}');
+    document.getElementById('stat-total-calls').textContent  = t.calls.toLocaleString();
+    document.getElementById('stat-total-tokens').textContent = t.tokens.toLocaleString();
+    document.getElementById('stat-total-cost').textContent   = '$' + t.cost.toFixed(3);
+    renderSessionsLog();
   }
 
-  // --- SHOT COUNT ---
-  function setShotCount(n, el) {
-    currentShotCount = n;
-    document.querySelectorAll('.shot-pill').forEach(p => p.classList.remove('active'));
-    el.classList.add('active');
-    document.getElementById('custom-shot-count').value = '';
-  }
-  function setCustomShotCount(v) {
-    if (!v) return;
-    currentShotCount = parseInt(v);
-    document.querySelectorAll('.shot-pill').forEach(p => p.classList.remove('active'));
+  function saveSessionStats() {
+    if (!sessionCalls) return;
+    const t = JSON.parse(localStorage.getItem('cs_total_stats') || '{"calls":0,"tokens":0,"cost":0}');
+    t.calls += sessionCalls; t.tokens += sessionTokens; t.cost += sessionCost;
+    localStorage.setItem('cs_total_stats', JSON.stringify(t));
+    const sessions = JSON.parse(localStorage.getItem('cs_sessions') || '[]');
+    sessions.unshift({ date: new Date().toISOString(), calls: sessionCalls, tokens: sessionTokens, cost: sessionCost, provider: activeProvider });
+    localStorage.setItem('cs_sessions', JSON.stringify(sessions.slice(0,50)));
   }
 
-  // --- UNIFIED API CALL ---
-  async function callAPI(prompt) {
-    const key = getKey(activeProvider);
-    if (!key) {
-      toast('أضف مفتاح ' + activeProvider + ' في الإعدادات أولاً');
-      throw new Error('no key');
-    }
-
-    let responseText = '';
-    let inputTokens = 0, outputTokens = 0;
-
-    if (activeProvider === 'anthropic') {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': key,
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 4000,
-          messages: [{ role: 'user', content: prompt }]
-        })
-      });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error.message);
-      responseText = data.content.map(c => c.text || '').join('');
-      inputTokens  = data.usage?.input_tokens  || 0;
-      outputTokens = data.usage?.output_tokens || 0;
-
-    } else if (activeProvider === 'openai') {
-      const res = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + key
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o',
-          max_tokens: 4000,
-          messages: [{ role: 'user', content: prompt }]
-        })
-      });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error.message);
-      responseText = data.choices?.[0]?.message?.content || '';
-      inputTokens  = data.usage?.prompt_tokens     || 0;
-      outputTokens = data.usage?.completion_tokens || 0;
-
-    } else if (activeProvider === 'gemini') {
-      const res = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + key,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { maxOutputTokens: 1500 }
-          })
-        }
-      );
-      const data = await res.json();
-      if (data.error) throw new Error(data.error.message);
-      responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      inputTokens  = data.usageMetadata?.promptTokenCount    || 0;
-      outputTokens = data.usageMetadata?.candidatesTokenCount || 0;
-    }
-
-    trackUsage(inputTokens, outputTokens);
-    return responseText;
+  function renderSessionsLog() {
+    const el = document.getElementById('sessions-list');
+    const sessions = JSON.parse(localStorage.getItem('cs_sessions') || '[]');
+    if (!sessions.length) { el.innerHTML = '<div class="empty-state" style="padding:24px"><div>لا يوجد سجل بعد</div></div>'; return; }
+    el.innerHTML = sessions.slice(0,20).map(s => {
+      const d = new Date(s.date);
+      const ds = d.toLocaleDateString('ar-SA') + ' ' + d.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
+      return `<div class="session-item"><span class="session-date">${ds}</span><div class="session-stats"><span class="session-stat"><span>${s.calls}</span> طلب</span><span class="session-stat"><span>${s.tokens.toLocaleString()}</span> token</span><span class="session-stat"><span>$${s.cost.toFixed(4)}</span></span><span class="session-stat" style="color:var(--text3)">${s.provider}</span></div></div>`;
+    }).join('');
   }
 
   // --- TRACK USAGE ---
   function trackUsage(inp, out) {
     const price = PRICING[activeProvider] || PRICING.anthropic;
     const cost = (inp * price.in + out * price.out) / 1_000_000;
-    sessionTokens += inp + out;
-    sessionCost   += cost;
-    sessionCalls++;
+    sessionTokens += inp + out; sessionCost += cost; sessionCalls++;
     document.getElementById('td-calls').textContent = sessionCalls + ' طلب';
     document.getElementById('td-cost').textContent  = '$' + sessionCost.toFixed(4);
     document.getElementById('stat-calls').textContent  = sessionCalls;
     document.getElementById('stat-tokens').textContent = sessionTokens.toLocaleString();
-    document.getElementById('stat-cost').textContent   = '$' + sessionCost.toFixed(4);
+    document.getElementById('stat-cost').textContent   = '$' + sessionCost.toFixed(3);
   }
 
   function addHistory(type, label) {
@@ -1842,30 +1884,202 @@
 
   function renderHistory() {
     const el = document.getElementById('history-list');
-    if (!history.length) {
-      el.innerHTML = '<div class="empty-state" style="padding:24px"><div>لا يوجد سجل بعد</div></div>';
-      return;
-    }
-    el.innerHTML = history.slice(0, 20).map(h => `
-      <div class="history-item">
-        <div style="display:flex; align-items:center; gap:10px;">
-          <span class="history-type ${h.type}">${h.type === 'idea' ? 'فكرة' : 'لقطات'}</span>
-          <span style="color:var(--text2); font-size:13px">${h.label}</span>
-        </div>
-        <span style="color:var(--text3); font-family:'IBM Plex Mono',monospace; font-size:11px">${h.provider}</span>
-      </div>
-    `).join('');
+    if (!history.length) { el.innerHTML = '<div class="empty-state" style="padding:24px"><div>لا يوجد سجل بعد</div></div>'; return; }
+    el.innerHTML = history.slice(0,20).map(h => `<div class="history-item"><div style="display:flex;align-items:center;gap:10px;"><span class="history-type ${h.type}">${h.type==='idea'?'فكرة':'لقطات'}</span><span style="color:var(--text2);font-size:13px">${h.label}</span></div><span style="color:var(--text3);font-family:'IBM Plex Mono',monospace;font-size:11px">${h.provider}</span></div>`).join('');
   }
 
   function resetSession() {
-    sessionCalls = 0; sessionTokens = 0; sessionCost = 0; history = [];
-    document.getElementById('td-calls').textContent   = '0 طلب';
-    document.getElementById('td-cost').textContent    = '$0.0000';
+    sessionCalls=0; sessionTokens=0; sessionCost=0; history=[];
+    document.getElementById('td-calls').textContent  = '0 طلب';
+    document.getElementById('td-cost').textContent   = '$0.0000';
     document.getElementById('stat-calls').textContent  = '0';
     document.getElementById('stat-tokens').textContent = '0';
-    document.getElementById('stat-cost').textContent   = '$0.00';
+    document.getElementById('stat-cost').textContent   = '$0.000';
     renderHistory();
     toast('تم تصفير الجلسة');
+  }
+
+  // --- PROJECTS SYSTEM ---
+  let currentProjectId = null;
+
+  function collectCurrentState() {
+    return {
+      platform: currentPlatform,
+      ideaContent: document.getElementById('idea-content').value,
+      ideaDuration: document.getElementById('duration-val').value,
+      ideaTone: document.getElementById('idea-tone').value,
+      ideaOutput: lastIdeaText,
+      shotScript: document.getElementById('shot-script').value,
+      directorNote: document.getElementById('director-note').value,
+      shotCount: currentShotCount,
+      videoType: currentVideoType,
+      camera: document.getElementById('camera-type').value,
+      lighting: document.getElementById('lighting-type').value,
+      mood: document.getElementById('mood-type').value,
+      flagNoTalk: document.getElementById('flag-no-talking').checked,
+      flagNoText: document.getElementById('flag-no-text').checked,
+      flagPortrait: document.getElementById('flag-portrait').checked,
+      flagSlow: document.getElementById('flag-slow').checked,
+      characters: characters.map(c=>({id:c.id,role:c.role,imageBase64:c.imageBase64})),
+      charCounter,
+      locations: locations.map(l=>({id:l.id,name:l.name,desc:l.desc,imageBase64:l.imageBase64})),
+      locCounter,
+      shotsData,
+    };
+  }
+
+  function applyState(state) {
+    if (!state) return;
+    setPlatform(state.platform||'instagram');
+    document.getElementById('idea-content').value  = state.ideaContent||'';
+    document.getElementById('duration-val').value  = state.ideaDuration||'60';
+    document.getElementById('idea-tone').value     = state.ideaTone||'';
+    lastIdeaText = state.ideaOutput||'';
+    if (lastIdeaText) {
+      document.getElementById('idea-output-body').innerHTML=`<div class="idea-result">${escapeHtml(lastIdeaText)}</div>`;
+      document.getElementById('copy-idea-btn').style.display='flex';
+    }
+    document.getElementById('shot-script').value   = state.shotScript||'';
+    document.getElementById('director-note').value = state.directorNote||'';
+    currentShotCount = state.shotCount||5;
+    document.querySelectorAll('.shot-pill').forEach(p=>p.classList.remove('active'));
+    const mp=[...document.querySelectorAll('.shot-pill')].find(p=>parseInt(p.textContent)===currentShotCount);
+    if(mp) mp.classList.add('active');
+    currentVideoType = state.videoType||'cinematic';
+    document.querySelectorAll('.vtype-btn').forEach(b=>b.classList.toggle('active',b.dataset.type===currentVideoType));
+    if(state.camera)   document.getElementById('camera-type').value  =state.camera;
+    if(state.lighting) document.getElementById('lighting-type').value=state.lighting;
+    if(state.mood)     document.getElementById('mood-type').value    =state.mood;
+    document.getElementById('flag-no-talking').checked=!!state.flagNoTalk;
+    document.getElementById('flag-no-text').checked   =!!state.flagNoText;
+    document.getElementById('flag-portrait').checked  =!!state.flagPortrait;
+    document.getElementById('flag-slow').checked      =!!state.flagSlow;
+    // Restore characters
+    characters=[]; charCounter=state.charCounter||0;
+    document.getElementById('char-cards-list').innerHTML='';
+    (state.characters||[]).forEach(c=>{
+      characters.push({id:c.id,role:c.role,imageBase64:c.imageBase64});
+      const card=document.createElement('div'); card.className='char-card'; card.id=`char-card-${c.id}`;
+      const img=c.imageBase64?`<img src="data:image/jpeg;base64,${c.imageBase64}" alt="char">`:`<div class="char-card-img-placeholder"><span>＋</span><div>Click or drag</div></div>`;
+      card.innerHTML=`<input type="file" id="char-img-input-${c.id}" accept="image/*" style="display:none" onchange="handleCharImage(${c.id},this)">
+        <div class="char-card-img-area" id="char-img-area-${c.id}" onclick="document.getElementById('char-img-input-${c.id}').click()" ondragover="handleDragOver(event,this)" ondragleave="handleDragLeave(event,this)" ondrop="handleDropChar(event,${c.id},this)">${img}</div>
+        <div class="char-card-body"><input class="char-role-input" id="char-role-${c.id}" value="${escapeHtml(c.role||'')}" placeholder="Role..." oninput="updateCharRole(${c.id},this.value)">
+        <span class="char-ref-badge" id="char-badge-${c.id}" style="${c.imageBase64?'display:inline':'display:none'}">ref_${c.id}</span>
+        <button class="char-remove-btn" onclick="removeCharCard(${c.id})">×</button></div>`;
+      document.getElementById('char-cards-list').appendChild(card);
+    });
+    // Restore locations
+    locations=[]; locCounter=state.locCounter||0;
+    document.getElementById('loc-cards-list').innerHTML='';
+    (state.locations||[]).forEach(l=>{
+      locations.push({id:l.id,name:l.name,desc:l.desc,imageBase64:l.imageBase64});
+      const card=document.createElement('div'); card.className='loc-card'; card.id=`loc-card-${l.id}`;
+      const img=l.imageBase64?`<img src="data:image/jpeg;base64,${l.imageBase64}" alt="loc">`:`<div class="loc-card-img-placeholder"><span>⊕</span><div>Click or drag</div></div>`;
+      card.innerHTML=`<input type="file" id="loc-img-input-${l.id}" accept="image/*" style="display:none" onchange="handleLocImage(${l.id},this)">
+        <div class="loc-card-img-area" id="loc-img-area-${l.id}" onclick="document.getElementById('loc-img-input-${l.id}').click()" ondragover="handleDragOver(event,this)" ondragleave="handleDragLeave(event,this)" ondrop="handleDropLoc(event,${l.id},this)">${img}</div>
+        <div class="loc-card-body"><div class="loc-card-inputs">
+          <input class="loc-name-input" id="loc-name-${l.id}" value="${escapeHtml(l.name||'')}" placeholder="Location name..." oninput="updateLoc(${l.id},'name',this.value)">
+          <input class="loc-desc-input" id="loc-desc-${l.id}" value="${escapeHtml(l.desc||'')}" placeholder="Elements..." oninput="updateLoc(${l.id},'desc',this.value)">
+        </div><div class="loc-card-actions">
+          <span class="loc-ref-badge" id="loc-badge-${l.id}" style="${l.imageBase64?'display:inline':'display:none'}">ref</span>
+          <button class="loc-extract-btn" id="loc-extract-btn-${l.id}" onclick="extractLocImage(${l.id})" style="${l.imageBase64?'display:inline':'display:none'}">⊙ Extract</button>
+          <button class="char-remove-btn" onclick="removeLocCard(${l.id})">×</button>
+        </div></div>`;
+      document.getElementById('loc-cards-list').appendChild(card);
+    });
+    // Restore shots
+    shotsData=state.shotsData||[];
+    if(shotsData.length) renderAllShots();
+  }
+
+  async function saveCurrentProject() {
+    const script = document.getElementById('shot-script').value.trim()||document.getElementById('idea-content').value.trim();
+    if(!script){ toast('أضف سكريبت أو فكرة أولاً'); return; }
+    const spinner=document.getElementById('save-proj-spinner'); spinner.style.display='inline-block';
+    let projName=script.slice(0,60).replace(/\n/g,' ');
+    try {
+      const key=getKey(activeProvider);
+      if(key){ const res=await callAPI(`Give a short project name (max 5 Arabic words, no punctuation) for:\n"${script.slice(0,150)}"\nOutput name only.`); if(res&&res.trim().length<60) projName=res.trim(); }
+    } catch(e){}
+    const state=collectCurrentState();
+    const projects=JSON.parse(localStorage.getItem('cs_projects')||'[]');
+    const now=new Date().toISOString();
+    if(currentProjectId){
+      const idx=projects.findIndex(p=>p.id===currentProjectId);
+      if(idx>-1){ projects[idx]={...projects[idx],name:projName,updated:now,shots:shotsData.length,chars:characters.length,locs:locations.length,state}; toast('تم تحديث المشروع ✓'); }
+    } else {
+      const id='proj_'+Date.now(); currentProjectId=id;
+      projects.unshift({id,name:projName,created:now,updated:now,shots:shotsData.length,chars:characters.length,locs:locations.length,state});
+      toast('تم حفظ المشروع ✓');
+    }
+    localStorage.setItem('cs_projects',JSON.stringify(projects));
+    spinner.style.display='none';
+    renderProjectsList();
+  }
+
+  function loadProject(id) {
+    const projects=JSON.parse(localStorage.getItem('cs_projects')||'[]');
+    const proj=projects.find(p=>p.id===id);
+    if(!proj) return;
+    currentProjectId=id;
+    applyState(proj.state);
+    toast('تم تحميل: '+proj.name);
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    document.getElementById('page-shots').classList.add('active');
+    const shotsNavEl=document.querySelector('[onclick*="page-shots"]');
+    if(shotsNavEl) shotsNavEl.classList.add('active');
+  }
+
+  function deleteProject(id) {
+    if(!confirm('حذف هذا المشروع نهائياً؟')) return;
+    const projects=JSON.parse(localStorage.getItem('cs_projects')||'[]').filter(p=>p.id!==id);
+    localStorage.setItem('cs_projects',JSON.stringify(projects));
+    if(currentProjectId===id) currentProjectId=null;
+    renderProjectsList();
+    toast('تم الحذف');
+  }
+
+  function newProject() {
+    if(!confirm('بدء مشروع جديد؟ المشاريع المحفوظة لن تُحذف.')) return;
+    currentProjectId=null;
+    document.getElementById('idea-content').value='';
+    document.getElementById('shot-script').value='';
+    document.getElementById('director-note').value='';
+    document.getElementById('idea-output-body').innerHTML='<div class="empty-state"><div class="empty-icon">✦</div><div>اكتب المعلومات واضغط أنشئ الفكرة</div></div>';
+    document.getElementById('copy-idea-btn').style.display='none';
+    lastIdeaText=''; shotsData=[]; characters=[]; charCounter=0; locations=[]; locCounter=0;
+    document.getElementById('char-cards-list').innerHTML='';
+    document.getElementById('loc-cards-list').innerHTML='';
+    document.getElementById('shots-output-body').innerHTML='<div class="empty-state" style="padding:60px 20px;"><div class="empty-icon">◈</div><div>Fill in the details and hit Generate</div></div>';
+    ['add-shot-area','panels-area','shots-badge','copy-shots-btn','gen-panels-btn'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
+    toast('مشروع جديد ✓');
+  }
+
+  function renderProjectsList() {
+    const projects=JSON.parse(localStorage.getItem('cs_projects')||'[]');
+    const badge=document.getElementById('proj-count-badge');
+    if(badge) badge.textContent=projects.length?projects.length:'';
+    const el=document.getElementById('projects-list');
+    if(!projects.length){ el.innerHTML='<div class="empty-state" style="padding:60px 20px;"><div class="empty-icon">◫</div><div>لا يوجد مشاريع محفوظة بعد</div><div style="font-size:12px;color:var(--text3);margin-top:8px;">اضغط "حفظ المشروع الحالي" لحفظ عملك</div></div>'; return; }
+    el.innerHTML=projects.map(p=>{
+      const d=new Date(p.updated||p.created);
+      const ds=d.toLocaleDateString('ar-SA');
+      const isA=p.id===currentProjectId;
+      return `<div class="proj-card ${isA?'active-proj':''}">
+        <div class="proj-card-info">
+          <div class="proj-card-name">${escapeHtml(p.name)}</div>
+          <div class="proj-card-meta">${ds}</div>
+          <div class="proj-card-tags">
+            ${p.shots?`<span class="proj-tag">${p.shots} لقطة`:''}${p.chars?`<span class="proj-tag">${p.chars} شخصية</span>`:''}${p.locs?`<span class="proj-tag">${p.locs} موقع</span>`:''}
+          </div>
+        </div>
+        <div class="proj-actions">
+          <button class="proj-btn load" onclick="loadProject('${p.id}')">تحميل</button>
+          <button class="proj-btn del" onclick="deleteProject('${p.id}')">حذف</button>
+        </div>
+      </div>`;
+    }).join('');
   }
 
   // --- GENERATE IDEA ---
