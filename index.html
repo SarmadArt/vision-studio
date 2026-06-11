@@ -1402,6 +1402,35 @@
                 <span class="vtype-icon">🔬</span><span>CGI Realistic — Real Human + VFX</span>
               </div>
             </div>
+
+            <!-- STYLE REFERENCE -->
+            <div style="border-top:1px solid var(--border); padding-top:12px; margin-top:12px;">
+              <label style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                <span style="font-size:12px; color:var(--text2); font-weight:500;">Style Reference</span>
+                <span style="font-size:10px; color:var(--text3); font-family:'IBM Plex Mono',monospace;">optional — overrides grade/lighting</span>
+              </label>
+              <div class="img-upload-zone" id="style-ref-zone"
+                onclick="document.getElementById('style-ref-input').click()"
+                ondragover="handleDragOver(event,this)"
+                ondragleave="handleDragLeave(event,this)"
+                ondrop="handleDropStyleRef(event,this)">
+                <input type="file" id="style-ref-input" accept="image/*" style="display:none" onchange="handleStyleRefImage(this)">
+                <div id="style-ref-content">
+                  <div style="font-size:16px; opacity:0.4; margin-bottom:4px;">⊕</div>
+                  <div style="font-size:11px; color:var(--text3);">Drop a reference frame — AI extracts the visual style</div>
+                </div>
+              </div>
+              <div id="style-ref-extracted" style="display:none; margin-top:8px;">
+                <div style="display:flex; align-items:flex-start; gap:8px;">
+                  <div style="flex:1; font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--text2); line-height:1.6; padding:8px 10px; background:var(--surface2); border-radius:var(--radius-sm); border:1px solid var(--border2);" id="style-ref-text"></div>
+                  <button onclick="clearStyleRef()" style="flex-shrink:0; font-size:10px; padding:4px 8px; border-radius:4px; border:1px solid var(--border2); background:transparent; color:var(--text3); cursor:pointer;">✕</button>
+                </div>
+              </div>
+              <button id="style-ref-extract-btn" onclick="extractStyleRef()" style="display:none; width:100%; margin-top:8px;" class="btn btn-ghost">
+                <span id="style-ref-spinner" style="display:none" class="spinner"></span>
+                ⊙ Extract Visual Style
+              </button>
+            </div>
           </div>
 
           <!-- SHOT COUNT -->
@@ -2077,6 +2106,8 @@
       locations: locations.map(l=>({id:l.id,name:l.name,desc:l.desc,imageBase64:l.imageBase64})),
       locCounter,
       shotsData,
+      styleRefBase64: window._styleRefBase64,
+      styleRefText:   window._styleRefText,
     };
   }
 
@@ -2142,6 +2173,18 @@
     // Restore shots
     shotsData=state.shotsData||[];
     if(shotsData.length) renderAllShots();
+    // Restore style ref
+    if (state.styleRefText) {
+      window._styleRefText   = state.styleRefText;
+      window._styleRefBase64 = state.styleRefBase64 || null;
+      document.getElementById('style-ref-text').textContent = state.styleRefText;
+      document.getElementById('style-ref-extracted').style.display = 'block';
+      if (state.styleRefBase64) {
+        const zone = document.getElementById('style-ref-zone');
+        zone.classList.add('has-image');
+        zone.innerHTML = `<img src="data:image/jpeg;base64,${state.styleRefBase64}" style="width:100%;height:70px;object-fit:cover;border-radius:4px;" alt="style ref">`;
+      }
+    }
   }
 
   async function saveCurrentProject() {
@@ -2652,6 +2695,86 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
     return active.map(c => `CHAR_${c.id}="${toLatinRole(c.role.trim())}"`).join(', ');
   }
 
+  // --- STYLE REFERENCE ---
+  window._styleRefBase64 = null;
+  window._styleRefText   = '';
+
+  function handleStyleRefImage(input) {
+    const file = input.files[0];
+    if (!file) return;
+    readImageFile(file, (base64, src) => {
+      window._styleRefBase64 = base64;
+      const zone = document.getElementById('style-ref-zone');
+      zone.classList.add('has-image');
+      zone.innerHTML = `<img src="${src}" style="width:100%;height:70px;object-fit:cover;border-radius:4px;" alt="style ref">`;
+      document.getElementById('style-ref-extract-btn').style.display = 'block';
+      saveSessionState();
+    });
+  }
+
+  function handleDropStyleRef(e, el) {
+    e.preventDefault(); e.stopPropagation();
+    el.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (!file || !file.type.startsWith('image/')) { toast('Drop an image file'); return; }
+    readImageFile(file, (base64, src) => {
+      window._styleRefBase64 = base64;
+      const zone = document.getElementById('style-ref-zone');
+      zone.classList.add('has-image');
+      zone.innerHTML = `<img src="${src}" style="width:100%;height:70px;object-fit:cover;border-radius:4px;" alt="style ref">`;
+      document.getElementById('style-ref-extract-btn').style.display = 'block';
+      saveSessionState();
+    });
+  }
+
+  async function extractStyleRef() {
+    if (!window._styleRefBase64) return;
+    const btn = document.getElementById('style-ref-extract-btn');
+    const spinner = document.getElementById('style-ref-spinner');
+    btn.disabled = true; spinner.style.display = 'inline-block';
+    try {
+      const key = getKey('anthropic') || getKey(activeProvider);
+      if (!key) { toast('Add API key in Settings'); btn.disabled=false; spinner.style.display='none'; return; }
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514', max_tokens: 200,
+          messages: [{ role:'user', content:[
+            { type:'image', source:{ type:'base64', media_type:'image/jpeg', data: window._styleRefBase64 }},
+            { type:'text', text:`Analyze this video/photo frame and extract ONLY the cinematic visual style in a compact English phrase (max 25 words). Focus on: color grade, lighting style, film look, mood/atmosphere, camera feel. Do NOT describe the content or people. Output the style phrase only. Example: "warm teal-orange grade, soft studio lighting, shallow depth of field, cinematic anamorphic, intimate close-up feel"` }
+          ]}]
+        })
+      });
+      const data = await res.json();
+      const extracted = data.content?.[0]?.text?.trim() || '';
+      if (extracted) {
+        window._styleRefText = extracted;
+        document.getElementById('style-ref-text').textContent = extracted;
+        document.getElementById('style-ref-extracted').style.display = 'block';
+        btn.style.display = 'none';
+        toast('Style extracted ✓');
+        saveSessionState();
+      }
+    } catch(e) { toast('Extraction failed'); }
+    btn.disabled = false; spinner.style.display = 'none';
+  }
+
+  function clearStyleRef() {
+    window._styleRefBase64 = null;
+    window._styleRefText   = '';
+    document.getElementById('style-ref-zone').classList.remove('has-image');
+    document.getElementById('style-ref-zone').innerHTML = `
+      <input type="file" id="style-ref-input" accept="image/*" style="display:none" onchange="handleStyleRefImage(this)">
+      <div id="style-ref-content">
+        <div style="font-size:16px;opacity:0.4;margin-bottom:4px;">⊕</div>
+        <div style="font-size:11px;color:var(--text3);">Drop a reference frame — AI extracts the visual style</div>
+      </div>`;
+    document.getElementById('style-ref-extracted').style.display = 'none';
+    document.getElementById('style-ref-extract-btn').style.display = 'none';
+    saveSessionState();
+  }
+
   async function generateShots() {
     const script       = document.getElementById('shot-script').value.trim();
     if (!script) { toast('Add your script or idea first'); return; }
@@ -2700,6 +2823,7 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
     const charNames = characters.filter(c=>c.role.trim()).map(c=>c.role.trim());
     const activeLocations = locations.filter(l=>l.name.trim());
     const multiLoc = activeLocations.length > 1;
+    const styleRefText = window._styleRefText || '';
 
     const noTalkInstruction = noTalk ? `
 NO TALKING MODE:
@@ -2741,20 +2865,27 @@ ${abInstruction}
 
 PROMPT FORMAT for prompt_en — structured lines, no fluff:
 Line 1: Visual action — describe WHO does WHAT physically (body language, gesture, expression)
-${charNames.length ? `Line 2: [CHAR: name — match reference outfit | body state: speaking/listening/reacting]
-  DIALOG BODY LANGUAGE RULE — when 2+ chars in frame:
-  • Speaker: mouth open, leaning forward, gesturing hand
-  • Listener: mouth closed, nodding, leaning slightly back` : ''}
+${charNames.length ? `Line 2: [CHAR: CharName — match reference outfit | body state]
+  CRITICAL CHAR RULES:
+  • Include [CHAR] line for EVERY character in chars_used — no exceptions
+  • Use English name (Doctor, Patient, Engineer...)
+  • Always specify body state: speaking (mouth open, leaning forward, gesturing) OR listening (mouth closed, nodding) OR acting (describe action)` : ''}
 ${activeLocations.length ? `Line 3: [LOC: ${multiLoc ? 'location name' : activeLocations[0]?.name || 'location'} — vary framing/angle]` : ''}
 Line 4: [CAM: ${camera.split(',')[0]} | angle | movement]
 Line 5: [LIGHT: lighting]
-Line 6: [GRADE: grade]
+Line 6: [GRADE: grade${styleRefText ? ` — STYLE REF: ${styleRefText}` : ''}]
 ${flags ? `Line 7: [FLAGS: ${flags}]` : ''}
 
-For chars_used: list ALL characters physically present — use original names as typed.
-For loc_used: the location name where this shot takes place (match exactly from LOCATIONS list).
-For ref_note: Arabic — list all refs e.g. "دكتورة ref + مراجعة ref + غرفة المراجعة ref". Never omit.
-CRITICAL: prompt_en must be 100% English — no Arabic characters. Translate all names.
+SCRIPT DISTRIBUTION RULE:
+- Script has multiple lines/points. You have exactly ${currentShotCount} shots.
+- If shots < script lines: GROUP nearby script lines together into one shot (never skip content)
+- If shots > script lines: SPLIT key moments into A/B sub-shots
+- Every script point must be covered — no point gets ignored
+
+For chars_used: EVERY character visible in the shot — use original names as typed.
+For loc_used: exact location name from LOCATIONS list.
+For ref_note: Arabic — ALL refs needed. Never omit a visible character.
+CRITICAL: prompt_en = 100% English only. No Arabic characters anywhere in prompt_en.
 
 Return ONLY valid JSON:
 {"shots":[{"shot_id":"1","shot_number":1,"scene_ar":"وصف","angle":"CU","shot_type":"Real","duration":"3-4s","chars_used":[],"loc_used":"","needs_extra_loc":false,"ref_note":"","prompt_en":"structured prompt"}]}`;
