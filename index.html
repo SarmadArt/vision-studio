@@ -965,6 +965,68 @@
   .ref-shot-needs { color: var(--text2); }
   .ref-sheet-row.ref-warn .ref-shot-needs { color: #ffaa00; }
 
+  /* --- LOCATION CARDS --- */
+  .loc-card {
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .loc-card-img-area {
+    position: relative;
+    width: 100%;
+    height: 70px;
+    background: var(--surface2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .loc-card-img-area img { width:100%; height:100%; object-fit:cover; }
+  .loc-card-img-placeholder {
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    color:var(--text3); font-size:10px;
+  }
+  .loc-card-img-placeholder span { font-size:16px; opacity:0.4; }
+  .loc-card-body {
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+  }
+  .loc-card-inputs { flex:1; display:flex; flex-direction:column; gap:4px; }
+  .loc-name-input {
+    background: transparent; border: none; outline: none;
+    color: var(--text); font-size: 12px; font-weight: 500;
+    font-family: 'IBM Plex Sans Arabic', sans-serif; padding: 0;
+  }
+  .loc-name-input::placeholder { color: var(--text3); }
+  .loc-desc-input {
+    background: transparent; border: none; outline: none;
+    color: var(--text2); font-size: 11px;
+    font-family: 'IBM Plex Sans Arabic', sans-serif; padding: 0;
+  }
+  .loc-desc-input::placeholder { color: var(--text3); }
+  .loc-card-actions { display:flex; flex-direction:column; gap:4px; align-items:flex-end; }
+  .loc-extract-btn {
+    font-size:9px; padding:2px 7px; border-radius:3px;
+    border:1px solid var(--border2); background:transparent;
+    color:var(--text3); cursor:pointer; font-family:'IBM Plex Mono',monospace;
+    white-space:nowrap; transition:all 0.1s;
+    display:none;
+  }
+  .loc-extract-btn:hover { color:var(--accent); border-color:var(--accent); }
+  .loc-ref-badge {
+    font-size:9px; padding:2px 6px; border-radius:3px;
+    background:rgba(96,160,240,0.1); color:#60a0f0;
+    border:1px solid rgba(96,160,240,0.2);
+    font-family:'IBM Plex Mono',monospace; white-space:nowrap; flex-shrink:0;
+    display:none;
+  }
+
   /* --- CHARACTER CARDS --- */
   .char-card {
     border: 1px solid var(--border2);
@@ -1232,34 +1294,13 @@
             </div>
           </div>
 
-          <!-- LOCATION LOCK -->
+          <!-- LOCATIONS -->
           <div class="card">
-            <div class="card-title">Location Lock</div>
-            <div class="field">
-              <label>Location Description <span style="color:var(--text3);font-weight:400">— kept across all shots</span></label>
-              <textarea id="location-desc" rows="2" placeholder="e.g: modern Arabic clinic, white textured walls, wood desk left, large window right, marble floor..."></textarea>
-            </div>
-            <div style="border-top:1px solid var(--border); padding-top:12px; margin-top:4px;">
-              <label style="margin-bottom:8px; display:flex; align-items:center; justify-content:space-between;">
-                <span>Extract from image</span>
-                <span style="font-size:10px; color:var(--text3); font-family:'IBM Plex Mono',monospace;">elements only — no lighting/color</span>
-              </label>
-              <div class="img-upload-zone" id="loc-upload-zone"
-                onclick="document.getElementById('loc-img-input').click()"
-                ondragover="handleDragOver(event, this)"
-                ondragleave="handleDragLeave(event, this)"
-                ondrop="handleDropLocation(event, this)">
-                <input type="file" id="loc-img-input" accept="image/*" style="display:none" onchange="handleLocationImage(this)">
-                <div id="loc-upload-content">
-                  <div style="font-size:18px; margin-bottom:4px; opacity:0.4;">⊕</div>
-                  <div style="font-size:11px; color:var(--text3);">Click or drag image here</div>
-                </div>
-              </div>
-              <button class="btn btn-ghost" id="extract-loc-btn" onclick="extractLocation()" style="width:100%; margin-top:8px; display:none;">
-                <span id="extract-loc-spinner" style="display:none" class="spinner" style="width:12px;height:12px;"></span>
-                Extract Location Elements
-              </button>
-            </div>
+            <div class="card-title">Locations <span style="color:var(--text3);font-size:10px;font-weight:400;font-family:'IBM Plex Mono',monospace;">optional — multiple</span></div>
+            <div id="loc-cards-list"></div>
+            <button class="btn btn-ghost" onclick="addLocCard()" style="width:100%; margin-top:4px; font-size:12px;">
+              + Add Location
+            </button>
           </div>
 
           <!-- CHARACTERS -->
@@ -1405,7 +1446,7 @@
             <div style="font-size:12px; color:var(--text3); text-transform:uppercase; letter-spacing:0.08em; font-weight:500;">Shot List</div>
             <div style="display:flex; gap:8px; align-items:center;">
               <span class="shots-count-badge" id="shots-badge" style="display:none"></span>
-              <button class="copy-all-btn" id="gen-panels-btn" onclick="generatePanelsPrompt()" style="display:none">⊞ Panels</button>
+              <button class="copy-all-btn" id="gen-panels-btn" onclick="generatePanelsPrompt()" style="display:none">⊞ Storyboard</button>
               <button class="copy-all-btn" id="copy-shots-btn" onclick="copyAllShots()" style="display:none">⎘ Copy All</button>
             </div>
           </div>
@@ -1428,11 +1469,11 @@
             </div>
           </div>
 
-          <!-- PANELS PROMPT -->
+          <!-- STORYBOARD -->
           <div id="panels-area" style="display:none; margin-top:10px;">
             <div style="border:1px solid var(--border); border-radius:var(--radius); overflow:hidden;">
               <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 14px; background:var(--surface2); border-bottom:1px solid var(--border);">
-                <span style="font-size:11px; color:var(--text2); text-transform:uppercase; letter-spacing:0.08em; font-weight:500;">Panels Prompt</span>
+                <span style="font-size:11px; color:var(--text2); text-transform:uppercase; letter-spacing:0.08em; font-weight:500;">Storyboard</span>
                 <div style="display:flex; gap:6px;">
                   <button class="shot-action-btn" onclick="copyPanelsPrompt()" id="copy-panels-btn">COPY</button>
                 </div>
@@ -1904,115 +1945,167 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
   const ANGLES = ['ECU','CU','MS','AS','WS','EWS','POV','Dutch','MACRO','MICRO'];
   let shotsData = [];
   let globalContext = {};
-  let locationImageBase64 = null;
 
   // --- DRAG AND DROP HELPERS ---
   function handleDragOver(e, el) {
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault(); e.stopPropagation();
     el.classList.add('drag-over');
   }
-
   function handleDragLeave(e, el) {
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault(); e.stopPropagation();
     el.classList.remove('drag-over');
-  }
-
-  function handleDropLocation(e, el) {
-    e.preventDefault();
-    e.stopPropagation();
-    el.classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (!file || !file.type.startsWith('image/')) { toast('Please drop an image file'); return; }
-    readImageFile(file, (base64, src) => {
-      locationImageBase64 = base64;
-      const zone = document.getElementById('loc-upload-zone');
-      zone.classList.add('has-image');
-      zone.innerHTML = `<img class="loc-img-preview" src="${src}" alt="location ref">`;
-      document.getElementById('extract-loc-btn').style.display = 'block';
-    });
-  }
-
-  function handleDropChar(e, id, el) {
-    e.preventDefault();
-    e.stopPropagation();
-    el.classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (!file || !file.type.startsWith('image/')) { toast('Please drop an image file'); return; }
-    readImageFile(file, (base64, src) => {
-      const idx = characters.findIndex(c => c.id === id);
-      if (idx > -1) characters[idx].imageBase64 = base64;
-      const area = document.getElementById(`char-img-area-${id}`);
-      area.innerHTML = `<img src="${src}" alt="char ref">`;
-      document.getElementById(`char-badge-${id}`).style.display = 'inline';
-    });
   }
 
   function readImageFile(file, callback) {
     const reader = new FileReader();
     reader.onload = (e) => {
       const src = e.target.result;
-      const base64 = src.split(',')[1];
-      callback(base64, src);
+      callback(src.split(',')[1], src);
     };
     reader.readAsDataURL(file);
   }
 
-  // --- LOCATION IMAGE HANDLING ---
-  function handleLocationImage(input) {
+  // --- MULTI-LOCATION SYSTEM ---
+  let locations = []; // [{id, name, desc, imageBase64}]
+  let locCounter = 0;
+
+  function addLocCard() {
+    const id = ++locCounter;
+    locations.push({ id, name: '', desc: '', imageBase64: null });
+    const list = document.getElementById('loc-cards-list');
+    const card = document.createElement('div');
+    card.className = 'loc-card';
+    card.id = `loc-card-${id}`;
+    card.innerHTML = `
+      <input type="file" id="loc-img-input-${id}" accept="image/*" style="display:none"
+        onchange="handleLocImage(${id}, this)">
+      <div class="loc-card-img-area" id="loc-img-area-${id}"
+        onclick="document.getElementById('loc-img-input-${id}').click()"
+        ondragover="handleDragOver(event, this)"
+        ondragleave="handleDragLeave(event, this)"
+        ondrop="handleDropLoc(event, ${id}, this)">
+        <div class="loc-card-img-placeholder">
+          <span>⊕</span>
+          <div>Click or drag image</div>
+        </div>
+      </div>
+      <div class="loc-card-body">
+        <div class="loc-card-inputs">
+          <input class="loc-name-input" id="loc-name-${id}"
+            placeholder="Location name — e.g: غرفة المراجعة, Living Room..."
+            oninput="updateLoc(${id}, 'name', this.value)">
+          <input class="loc-desc-input" id="loc-desc-${id}"
+            placeholder="Elements description (optional — or extract from image)"
+            oninput="updateLoc(${id}, 'desc', this.value)">
+        </div>
+        <div class="loc-card-actions">
+          <span class="loc-ref-badge" id="loc-badge-${id}">ref</span>
+          <button class="loc-extract-btn" id="loc-extract-btn-${id}" onclick="extractLocImage(${id})">⊙ Extract</button>
+          <button class="char-remove-btn" onclick="removeLocCard(${id})">×</button>
+        </div>
+      </div>`;
+    list.appendChild(card);
+  }
+
+  function handleLocImage(id, input) {
     const file = input.files[0];
     if (!file) return;
     readImageFile(file, (base64, src) => {
-      locationImageBase64 = base64;
-      const zone = document.getElementById('loc-upload-zone');
-      zone.classList.add('has-image');
-      zone.innerHTML = `<img class="loc-img-preview" src="${src}" alt="location ref">`;
-      document.getElementById('extract-loc-btn').style.display = 'block';
+      const idx = locations.findIndex(l => l.id === id);
+      if (idx > -1) locations[idx].imageBase64 = base64;
+      document.getElementById(`loc-img-area-${id}`).innerHTML = `<img src="${src}" alt="loc ref">`;
+      document.getElementById(`loc-badge-${id}`).style.display = 'inline';
+      document.getElementById(`loc-extract-btn-${id}`).style.display = 'inline';
     });
   }
 
-  async function extractLocation() {
-    if (!locationImageBase64) return;
-    const btn = document.getElementById('extract-loc-btn');
-    const spinner = document.getElementById('extract-loc-spinner');
-    btn.disabled = true;
-    spinner.style.display = 'inline-block';
-    btn.querySelector('span:last-child') && (btn.lastChild.textContent = ' Extracting...');
+  function handleDropLoc(e, id, el) {
+    e.preventDefault(); e.stopPropagation();
+    el.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (!file || !file.type.startsWith('image/')) { toast('Please drop an image file'); return; }
+    readImageFile(file, (base64, src) => {
+      const idx = locations.findIndex(l => l.id === id);
+      if (idx > -1) locations[idx].imageBase64 = base64;
+      document.getElementById(`loc-img-area-${id}`).innerHTML = `<img src="${src}" alt="loc ref">`;
+      document.getElementById(`loc-badge-${id}`).style.display = 'inline';
+      document.getElementById(`loc-extract-btn-${id}`).style.display = 'inline';
+    });
+  }
 
+  function updateLoc(id, field, val) {
+    const idx = locations.findIndex(l => l.id === id);
+    if (idx > -1) locations[idx][field] = val;
+  }
+
+  function removeLocCard(id) {
+    locations = locations.filter(l => l.id !== id);
+    document.getElementById(`loc-card-${id}`)?.remove();
+  }
+
+  async function extractLocImage(id) {
+    const loc = locations.find(l => l.id === id);
+    if (!loc?.imageBase64) return;
+    const btn = document.getElementById(`loc-extract-btn-${id}`);
+    btn.textContent = '...'; btn.disabled = true;
     try {
-      const key = getKey(activeProvider);
-      if (!key) { toast('Add API key in Settings first'); btn.disabled=false; spinner.style.display='none'; return; }
-
-      // Use Anthropic vision for image analysis
+      const key = getKey('anthropic') || getKey(activeProvider);
+      if (!key) { toast('Add API key in Settings first'); btn.disabled=false; btn.textContent='⊙ Extract'; return; }
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01' },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 200,
-          messages: [{
-            role: 'user',
-            content: [
-              { type:'image', source:{ type:'base64', media_type:'image/jpeg', data: locationImageBase64 }},
-              { type:'text', text:'Extract ONLY the physical elements and space type from this location image. Ignore lighting, colors, and mood — those will be set separately. Write a single compact phrase (max 20 words) describing: space type, key furniture/objects, architectural elements. No full sentences. Example format: "modern Arabic clinic, white walls, wood desk left, large window right, marble floor". Output the phrase only, nothing else.' }
-            ]
-          }]
+          model: 'claude-sonnet-4-20250514', max_tokens: 150,
+          messages: [{ role:'user', content:[
+            { type:'image', source:{ type:'base64', media_type:'image/jpeg', data: loc.imageBase64 }},
+            { type:'text', text:'Extract ONLY physical elements and space type. Ignore lighting/colors. Max 15 words. Format: "space type, key elements". Output phrase only.' }
+          ]}]
         })
       });
       const data = await res.json();
       const extracted = data.content?.[0]?.text?.trim() || '';
       if (extracted) {
-        document.getElementById('location-desc').value = extracted;
-        toast('Location extracted ✓');
+        locations.find(l=>l.id===id).desc = extracted;
+        document.getElementById(`loc-desc-${id}`).value = extracted;
+        toast('Extracted ✓');
       }
     } catch(e) { toast('Extraction failed'); }
-    btn.disabled = false;
-    spinner.style.display = 'none';
+    btn.disabled = false; btn.textContent = '⊙ Extract';
+  }
+
+  function buildLocationsContext() {
+    const active = locations.filter(l => l.name.trim() || l.desc.trim());
+    if (!active.length) return '';
+    return active.map(l => {
+      const name = l.name.trim() || `Location ${l.id}`;
+      const desc = l.desc.trim();
+      const hasImg = !!l.imageBase64;
+      return `LOC_${l.id} [${name}]${desc ? ': ' + desc : ''}${hasImg ? ' — has reference image' : ''}`;
+    }).join('\n');
+  }
+
+  function buildLocList() {
+    const active = locations.filter(l => l.name.trim());
+    if (!active.length) return null;
+    return active.map(l => `LOC_${l.id}="${l.name.trim()}"`).join(', ');
+  }
+
+  // --- DRAG AND DROP FOR CHARS ---
+  function handleDropChar(e, id, el) {
+    e.preventDefault(); e.stopPropagation();
+    el.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (!file || !file.type.startsWith('image/')) { toast('Please drop an image file'); return; }
+    readImageFile(file, (base64, src) => {
+      const idx = characters.findIndex(c => c.id === id);
+      if (idx > -1) characters[idx].imageBase64 = base64;
+      document.getElementById(`char-img-area-${id}`).innerHTML = `<img src="${src}" alt="char ref">`;
+      document.getElementById(`char-badge-${id}`).style.display = 'inline';
+    });
   }
 
   // --- MULTI-CHARACTER SYSTEM ---
-  let characters = []; // [{id, role, imageBase64}]
+  let characters = [];
   let charCounter = 0;
 
   function addCharCard() {
@@ -2126,7 +2219,8 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
     if (!script) { toast('Add your script or idea first'); return; }
 
     const directorNote = document.getElementById('director-note').value.trim();
-    const location     = document.getElementById('location-desc').value.trim();
+    const locsCtx      = buildLocationsContext();
+    const locList      = buildLocList();
     const charsCtx     = buildCharsContext();
     const charList     = buildCharList();
     const camera       = document.getElementById('camera-type').value;
@@ -2156,7 +2250,7 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
       cgi_realistic: 'CGI Realistic — photorealistic VFX, real actor, seamless compositing'
     };
 
-    globalContext = { script, directorNote, location, charsCtx, camera, lighting, mood, flags, noTalk, videoType: videoTypeMap[currentVideoType], charList };
+    globalContext = { script, directorNote, locsCtx, locList, charsCtx, camera, lighting, mood, flags, noTalk, videoType: videoTypeMap[currentVideoType], charList };
 
     const btn = document.getElementById('gen-shots-btn');
     btn.disabled = true;
@@ -2165,9 +2259,9 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
     const body = document.getElementById('shots-output-body');
     body.innerHTML = `<div class="loading-state"><div class="spinner"></div><span>Building ${currentShotCount} shots...</span></div>`;
 
-    // Build character names list for REF
     const charNames = characters.filter(c=>c.role.trim()).map(c=>c.role.trim());
-    const hasLocation = !!location;
+    const activeLocations = locations.filter(l=>l.name.trim());
+    const multiLoc = activeLocations.length > 1;
 
     const noTalkInstruction = noTalk ? `
 NO TALKING MODE:
@@ -2184,13 +2278,20 @@ SMART A/B SPLIT RULES:
 - Simple shots = single shot_id like "1", "2", "3"
 - Never split more than needed — only when it genuinely adds cinematic value`;
 
+    const locInstruction = activeLocations.length > 0 ? `
+LOCATIONS:
+${locsCtx}
+${multiLoc
+  ? `Analyze script and assign the correct location to each shot (${locList}). Stay consistent within each scene.`
+  : `Keep this location consistent across all shots — vary angle/framing only.`}` : '';
+
     const prompt = `You are a professional cinematographer and director. Generate exactly ${currentShotCount} shots total.
 
 VIDEO TYPE: ${videoTypeMap[currentVideoType]}
 SCRIPT:
 ${script}
 ${directorNote ? `\nDIRECTOR'S NOTE (follow strictly throughout all shots):\n${directorNote}` : ''}
-${location ? `\nLOCATION (consistent across ALL shots — vary angle/framing only): ${location}` : ''}
+${locInstruction}
 ${charsCtx ? `\nCHARACTERS:\n${charsCtx}` : ''}
 ${charList ? `Assign correct character(s) per shot: ${charList}` : ''}
 CAMERA: ${camera}
@@ -2201,22 +2302,24 @@ ${noTalkInstruction}
 ${abInstruction}
 
 PROMPT FORMAT for prompt_en — structured lines, no fluff:
-Line 1: Visual action (what happens physically)
-${charNames.length ? `Line 2: [CHAR: name — match reference outfit] — only for shots where that char appears` : ''}
-${hasLocation ? `Line 3: [LOC: vary framing/angle within same location]` : ''}
+Line 1: Visual action — describe WHO does WHAT physically (body language, gesture, expression)
+${charNames.length ? `Line 2: [CHAR: name — match reference outfit | body state: speaking/listening/reacting]
+  DIALOG BODY LANGUAGE RULE — when 2+ chars in frame:
+  • Speaker: mouth open, leaning forward, gesturing hand
+  • Listener: mouth closed, nodding, leaning slightly back` : ''}
+${activeLocations.length ? `Line 3: [LOC: ${multiLoc ? 'location name' : activeLocations[0]?.name || 'location'} — vary framing/angle]` : ''}
 Line 4: [CAM: ${camera.split(',')[0]} | angle | movement]
 Line 5: [LIGHT: lighting]
 Line 6: [GRADE: grade]
 ${flags ? `Line 7: [FLAGS: ${flags}]` : ''}
 
-For chars_used: list ALL characters physically present in the scene — even if only one speaks. Use original names as typed by user. If both Doctor and Patient are in the frame, list both.
-For needs_loc_ref: true for every shot that takes place in the main location.
-For needs_extra_loc: true only when scene requires a completely different location.
-For ref_note: write in Arabic listing ALL refs needed — e.g. "دكتورة ref + مراجعة ref + location" — never omit a character who appears in the shot.
-CRITICAL RULE: prompt_en must be 100% English only — zero Arabic characters. All character names must be translated to English in prompt_en (Doctor, Patient, Engineer, etc.).
+For chars_used: list ALL characters physically present — use original names as typed.
+For loc_used: the location name where this shot takes place (match exactly from LOCATIONS list).
+For ref_note: Arabic — list all refs e.g. "دكتورة ref + مراجعة ref + غرفة المراجعة ref". Never omit.
+CRITICAL: prompt_en must be 100% English — no Arabic characters. Translate all names.
 
 Return ONLY valid JSON:
-{"shots":[{"shot_id":"1","shot_number":1,"scene_ar":"وصف","angle":"CU","shot_type":"Real","duration":"3-4s","chars_used":[],"needs_loc_ref":false,"needs_extra_loc":false,"ref_note":"","prompt_en":"structured prompt"}]}`;
+{"shots":[{"shot_id":"1","shot_number":1,"scene_ar":"وصف","angle":"CU","shot_type":"Real","duration":"3-4s","chars_used":[],"loc_used":"","needs_extra_loc":false,"ref_note":"","prompt_en":"structured prompt"}]}`;
 
     try {
       const result = await callAPI(prompt);
@@ -2262,12 +2365,13 @@ Return ONLY valid JSON:
     const shotLabel = s.shot_id || String(s.shot_number);
     const isSubShot = /[AB]$/i.test(String(shotLabel));
 
-    // REF note — build from ref_note or fallback from chars_used + needs_loc_ref
+    // REF note — build from ref_note or fallback from chars_used + loc_used
     let refNote = s.ref_note || '';
     if (!refNote) {
       const parts = [];
       if (s.chars_used && s.chars_used.length) parts.push(...s.chars_used.map(n => `${n} ref`));
-      if (s.needs_loc_ref && globalContext.location) parts.push('location ref');
+      if (s.loc_used) parts.push(`${s.loc_used} ref`);
+      else if (globalContext.locsCtx && locations.length > 0) parts.push('location ref');
       if (s.needs_extra_loc) parts.push('⚠ location جديد مطلوب');
       refNote = parts.join(' + ');
     }
@@ -2320,18 +2424,21 @@ Return ONLY valid JSON:
     if (!el) return;
     el.style.opacity = '0.4';
     try {
-      const p = `Rewrite this shot prompt with updated angle/type. Keep location and characters consistent. Use structured format. JSON only.
+      const p = `Rewrite this shot prompt with updated angle/type. 100% English only in prompt_en. JSON only.
 Video:${globalContext.videoType||''} | Script:${globalContext.script||''}
-${globalContext.location?'LOC:'+globalContext.location:''}
+${globalContext.locsCtx?'LOCATIONS: '+globalContext.locsCtx:''}
 ${globalContext.charsCtx?'CHARS:\n'+globalContext.charsCtx:''}
 CAM:${globalContext.camera||''} | LIGHT:${globalContext.lighting||''} | GRADE:${globalContext.mood||''}
 ${globalContext.flags?'FLAGS:'+globalContext.flags:''}
 Shot ${s.shot_number} | Scene:${s.scene_ar} | NEW Angle:${s.angle} | NEW Type:${s.shot_type}
-{"prompt_en":"structured prompt with [Action][LOC][CHAR][CAM][LIGHT][GRADE] format"}`;
+DIALOG RULE: If 2+ chars in frame, specify speaker (mouth open, leaning forward, gesturing) vs listener (mouth closed, nodding). Derive from script context.
+{"prompt_en":"structured English-only prompt"}`;
       const r = await callAPI(p);
       const parsed = safeParseJSON(r);
-      shotsData[idx].prompt_en = parsed.prompt_en;
-      el.textContent = parsed.prompt_en;
+      if (parsed?.prompt_en) {
+        shotsData[idx].prompt_en = parsed.prompt_en;
+        el.textContent = parsed.prompt_en;
+      }
     } catch(e) {}
     el.style.opacity = '1';
   }
@@ -2344,14 +2451,15 @@ Shot ${s.shot_number} | Scene:${s.scene_ar} | NEW Angle:${s.angle} | NEW Type:${
     btn.classList.add('spinning'); btn.textContent = '...';
     el.style.opacity = '0.4';
     try {
-      const p = `Regenerate this shot with fresh creative direction. Keep location and characters consistent. Structured format. JSON only.
+      const p = `Regenerate this shot fresh. 100% English only in prompt_en. JSON only.
 Video:${globalContext.videoType||''} | Script:${globalContext.script||''}
-${globalContext.location?'LOC:'+globalContext.location:''}
+${globalContext.locsCtx?'LOCATIONS: '+globalContext.locsCtx:''}
 ${globalContext.charsCtx?'CHARS:\n'+globalContext.charsCtx:''}
 CAM:${globalContext.camera||''} | LIGHT:${globalContext.lighting||''} | GRADE:${globalContext.mood||''}
 ${globalContext.flags?'FLAGS:'+globalContext.flags:''}
 Shot ${s.shot_number} | Angle:${s.angle} | Type:${s.shot_type} | Scene:${s.scene_ar}
-{"scene_ar":"وصف جديد","prompt_en":"fresh structured prompt [Action][LOC][CHAR][CAM][LIGHT][GRADE]"}`;
+DIALOG RULE: If 2+ chars in frame, specify speaker (mouth open, leaning forward, gesturing) vs listener (mouth closed, nodding). Derive from script context.
+{"scene_ar":"وصف جديد بالعربي","prompt_en":"fresh structured English-only prompt"}`;
       const r = await callAPI(p);
       const parsed = safeParseJSON(r);
       shotsData[idx].scene_ar  = parsed.scene_ar;
@@ -2368,7 +2476,7 @@ Shot ${s.shot_number} | Angle:${s.angle} | Type:${s.shot_type} | Scene:${s.scene
     try {
       const p = `Generate one new shot. Keep location and characters consistent. Structured format. JSON only.
 Video:${globalContext.videoType||''} | Script:${globalContext.script||''}
-${globalContext.location?'LOC:'+globalContext.location:''}
+${globalContext.locsCtx?'LOCATIONS: '+globalContext.locsCtx:''}
 ${globalContext.charsCtx?'CHARS:\n'+globalContext.charsCtx:''}
 CAM:${globalContext.camera||''} | LIGHT:${globalContext.lighting||''} | GRADE:${globalContext.mood||''}
 ${globalContext.flags?'FLAGS:'+globalContext.flags:''}
@@ -2386,22 +2494,55 @@ Existing shots:${shotsData.length} | New shot:${desc}
 
   function generatePanelsPrompt() {
     if (!shotsData.length) return;
+
+    // Build shared technical context (once, not repeated per shot)
+    const cam   = (globalContext.camera  || '').split(',')[0].trim();
+    const light = globalContext.lighting || '';
+    const grade = globalContext.mood     || '';
+    const flags = globalContext.flags    || '';
+
+    const techHeader = [
+      cam   ? `[CAM: ${cam}]`   : '',
+      light ? `[LIGHT: ${light}]` : '',
+      grade ? `[GRADE: ${grade}]` : '',
+      flags ? `[FLAGS: ${flags}]` : '',
+    ].filter(Boolean).join(' ');
+
+    // Build each panel — action + angle + char/loc ref only
     const panels = shotsData.map(s => {
       const id = s.shot_id || s.shot_number;
-      // Strip structured tags to get clean action description
-      const cleanPrompt = (s.prompt_en || '')
-        .split('\n')[0]  // First line = action
-        .replace(/^\[.*?\]\s*/,'')  // Remove leading tags
-        .trim();
-      return `SH${id}: ${cleanPrompt}`;
-    }).join(' | ');
+
+      // Extract first action line, strip any leading tags
+      const lines = (s.prompt_en || '').split('\n').map(l => l.trim()).filter(Boolean);
+      const actionLine = lines[0]?.replace(/^\[.*?\]\s*/, '').trim() || '';
+
+      // Extract CHAR lines from prompt
+      const charLines = lines
+        .filter(l => l.startsWith('[CHAR:'))
+        .map(l => l.replace(/^\[CHAR:\s*/,'').replace(/\]$/,'').trim())
+        .join(' | ');
+
+      // Extract LOC line
+      const locLine = lines.find(l => l.startsWith('[LOC:'))
+        ?.replace(/^\[LOC:\s*/,'').replace(/\]$/,'').split('—')[0].trim() || '';
+
+      const parts = [`SH${id}: ${actionLine}`];
+      if (charLines) parts.push(`[CHAR: ${charLines}]`);
+      if (locLine)   parts.push(`[LOC: ${locLine}]`);
+      parts.push(`[${s.angle || 'MS'} | ${s.shot_type || 'Real'} | ${s.duration || ''}]`);
+
+      return parts.join(' ');
+    }).join('\n');
+
+    const fullStoryboard = techHeader
+      ? `${techHeader}\n\n${panels}`
+      : panels;
 
     const panelsArea = document.getElementById('panels-area');
     const panelsBody = document.getElementById('panels-prompt-body');
     panelsArea.style.display = 'block';
-    panelsBody.textContent = panels;
-
-    // Scroll to panels
+    panelsBody.style.whiteSpace = 'pre-wrap';
+    panelsBody.textContent = fullStoryboard;
     panelsArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
