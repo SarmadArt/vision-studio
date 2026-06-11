@@ -1678,7 +1678,7 @@
         },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
-          max_tokens: 1500,
+          max_tokens: 4000,
           messages: [{ role: 'user', content: prompt }]
         })
       });
@@ -1697,7 +1697,7 @@
         },
         body: JSON.stringify({
           model: 'gpt-4o',
-          max_tokens: 1500,
+          max_tokens: 4000,
           messages: [{ role: 'user', content: prompt }]
         })
       });
@@ -2129,13 +2129,14 @@ Return ONLY valid JSON:
 
     try {
       const result = await callAPI(prompt);
-      const parsed = JSON.parse(result.replace(/```json|```/g,'').trim());
+      const parsed = safeParseJSON(result);
+      if (!parsed || !parsed.shots) throw new Error('Invalid response format');
       shotsData = parsed.shots;
       renderAllShots();
       addHistory('shot', script.slice(0,40)+'...');
     } catch(e) {
       body.innerHTML = e.message!=='no key'
-        ? `<div class="empty-state" style="color:var(--red)">${escapeHtml(e.message)||'Error'}</div>`
+        ? `<div class="empty-state" style="color:var(--red)">${escapeHtml(e.message)||'Error parsing response — try again'}</div>`
         : `<div class="empty-state"><div>Add API key in Settings</div></div>`;
     }
     btn.disabled=false;
@@ -2257,7 +2258,7 @@ ${globalContext.flags?'FLAGS:'+globalContext.flags:''}
 Shot ${s.shot_number} | Scene:${s.scene_ar} | NEW Angle:${s.angle} | NEW Type:${s.shot_type}
 {"prompt_en":"structured prompt with [Action][LOC][CHAR][CAM][LIGHT][GRADE] format"}`;
       const r = await callAPI(p);
-      const parsed = JSON.parse(r.replace(/```json|```/g,'').trim());
+      const parsed = safeParseJSON(r);
       shotsData[idx].prompt_en = parsed.prompt_en;
       el.textContent = parsed.prompt_en;
     } catch(e) {}
@@ -2281,7 +2282,7 @@ ${globalContext.flags?'FLAGS:'+globalContext.flags:''}
 Shot ${s.shot_number} | Angle:${s.angle} | Type:${s.shot_type} | Scene:${s.scene_ar}
 {"scene_ar":"وصف جديد","prompt_en":"fresh structured prompt [Action][LOC][CHAR][CAM][LIGHT][GRADE]"}`;
       const r = await callAPI(p);
-      const parsed = JSON.parse(r.replace(/```json|```/g,'').trim());
+      const parsed = safeParseJSON(r);
       shotsData[idx].scene_ar  = parsed.scene_ar;
       shotsData[idx].prompt_en = parsed.prompt_en;
       document.getElementById(`shot-card-${idx}`).replaceWith(buildShotCard(shotsData[idx], idx));
@@ -2303,7 +2304,7 @@ ${globalContext.flags?'FLAGS:'+globalContext.flags:''}
 Existing shots:${shotsData.length} | New shot:${desc}
 {"shot_number":${newNum},"scene_ar":"وصف","angle":"CU","shot_type":"Real","duration":"3-4s","chars_used":[],"prompt_en":"structured prompt [Action][LOC][CHAR][CAM][LIGHT][GRADE]"}`;
       const r = await callAPI(p);
-      const parsed = JSON.parse(r.replace(/```json|```/g,'').trim());
+      const parsed = safeParseJSON(r);
       shotsData.push(parsed);
       document.getElementById('shots-output-body').appendChild(buildShotCard(parsed, shotsData.length-1));
       document.getElementById('shots-badge').textContent = shotsData.length + ' shots';
@@ -2324,6 +2325,34 @@ Existing shots:${shotsData.length} | New shot:${desc}
       btn.textContent='COPIED ✓';
       setTimeout(()=>{btn.textContent='COPY';},2000);
     });
+  }
+
+  // --- SAFE JSON PARSER ---
+  function safeParseJSON(raw) {
+    if (!raw) return null;
+    // Remove markdown fences
+    let clean = raw.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+    // Find first { or [ and last } or ]
+    const firstBrace = clean.search(/[\[{]/);
+    const lastBrace  = Math.max(clean.lastIndexOf('}'), clean.lastIndexOf(']'));
+    if (firstBrace === -1 || lastBrace === -1) return null;
+    clean = clean.slice(firstBrace, lastBrace + 1);
+    // Fix common issues: trailing commas, unescaped newlines inside strings
+    clean = clean
+      .replace(/,\s*([}\]])/g, '$1')          // trailing commas
+      .replace(/\n/g, ' ')                     // newlines → spaces
+      .replace(/\r/g, '')                      // carriage returns
+      .replace(/[\x00-\x1F\x7F]/g, ' ');       // other control chars
+    try {
+      return JSON.parse(clean);
+    } catch(e) {
+      // Last resort: try to extract shots array manually
+      const match = clean.match(/"shots"\s*:\s*(\[[\s\S]*\])/);
+      if (match) {
+        try { return { shots: JSON.parse(match[1]) }; } catch(e2) {}
+      }
+      return null;
+    }
   }
 
   function escapeHtml(str) {
