@@ -2072,19 +2072,53 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
   }
 
   // Build characters context for prompt
+  // Simple Arabic → Latin transliteration for use inside English prompts
+  function toLatinRole(str) {
+    if (!str) return '';
+    // If already Latin/English, return as-is
+    if (!/[\u0600-\u06FF]/.test(str)) return str;
+    const map = {
+      'دكتورة':'Doctor','دكتور':'Doctor','طبيبة':'Doctor','طبيب':'Doctor',
+      'مراجعة':'Patient','مريضة':'Patient','مريض':'Patient','مراجع':'Client',
+      'مهندس':'Engineer','مهندسة':'Engineer',
+      'ممرضة':'Nurse','ممرض':'Nurse',
+      'عميل':'Client','عميلة':'Client',
+      'موظف':'Employee','موظفة':'Employee',
+      'مدير':'Manager','مديرة':'Manager',
+      'محامي':'Lawyer','محامية':'Lawyer',
+      'أستاذ':'Teacher','أستاذة':'Teacher','معلم':'Teacher','معلمة':'Teacher',
+      'شيف':'Chef','طباخ':'Chef',
+      'صديق':'Friend','صديقة':'Friend',
+      'رجل':'Man','امرأة':'Woman','شاب':'Young man','فتاة':'Young woman',
+      'أم':'Mother','أب':'Father','ابن':'Son','ابنة':'Daughter',
+    };
+    // Try exact match first
+    if (map[str.trim()]) return map[str.trim()];
+    // Try partial match
+    for (const [ar, en] of Object.entries(map)) {
+      if (str.includes(ar)) return en;
+    }
+    // Fallback: generic transliteration attempt
+    return 'Character_' + str.replace(/\s+/g,'_').replace(/[^\w_]/g,'');
+  }
+
   function buildCharsContext() {
     const active = characters.filter(c => c.role.trim());
     if (!active.length) return '';
-    return active.map(c =>
-      `CHAR_${c.id} [${c.role.trim()}]${c.imageBase64 ? ' — has reference image, match outfit from reference' : ''}`
-    ).join('\n');
+    return active.map(c => {
+      const latinRole = toLatinRole(c.role.trim());
+      const label = c.imageBase64
+        ? `${latinRole} (Arabic name: "${c.role.trim()}") — has reference image, match outfit from reference exactly`
+        : `${latinRole} (Arabic name: "${c.role.trim()}")`;
+      return `CHAR_${c.id} [${label}]`;
+    }).join('\n');
   }
 
   // Build character list for script analysis
   function buildCharList() {
     const active = characters.filter(c => c.role.trim());
     if (!active.length) return null;
-    return active.map(c => `CHAR_${c.id}="${c.role.trim()}"`).join(', ');
+    return active.map(c => `CHAR_${c.id}="${toLatinRole(c.role.trim())}"`).join(', ');
   }
 
   async function generateShots() {
@@ -2105,7 +2139,7 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
 
     const flags = [
       noTalk  ? 'NO TALKING — cinematic acting only, no on-camera speech, visually express the script' : '',
-      noText  ? 'no text overlays' : '',
+      noText  ? 'NO TEXT — no subtitles, no captions, no text overlays, no written words on screen, clean image only' : '',
       portrait? '9:16 vertical' : '16:9',
       slowmo  ? '120fps slowmo' : '',
     ].filter(Boolean).join(' | ');
@@ -2175,9 +2209,11 @@ Line 5: [LIGHT: lighting]
 Line 6: [GRADE: grade]
 ${flags ? `Line 7: [FLAGS: ${flags}]` : ''}
 
-For chars_used: use exact character names as written (Arabic or English).
-For needs_extra_loc: true only when scene logically requires a completely different location.
-For ref_note: write a short reminder like "دكتورة ref + مراجعة ref + location" or "location جديد مطلوب" — in the same language the user wrote character names.
+For chars_used: list ALL characters physically present in the scene — even if only one speaks. Use original names as typed by user. If both Doctor and Patient are in the frame, list both.
+For needs_loc_ref: true for every shot that takes place in the main location.
+For needs_extra_loc: true only when scene requires a completely different location.
+For ref_note: write in Arabic listing ALL refs needed — e.g. "دكتورة ref + مراجعة ref + location" — never omit a character who appears in the shot.
+CRITICAL RULE: prompt_en must be 100% English only — zero Arabic characters. All character names must be translated to English in prompt_en (Doctor, Patient, Engineer, etc.).
 
 Return ONLY valid JSON:
 {"shots":[{"shot_id":"1","shot_number":1,"scene_ar":"وصف","angle":"CU","shot_type":"Real","duration":"3-4s","chars_used":[],"needs_loc_ref":false,"needs_extra_loc":false,"ref_note":"","prompt_en":"structured prompt"}]}`;
@@ -2226,8 +2262,15 @@ Return ONLY valid JSON:
     const shotLabel = s.shot_id || String(s.shot_number);
     const isSubShot = /[AB]$/i.test(String(shotLabel));
 
-    // REF note
-    const refNote = s.ref_note || '';
+    // REF note — build from ref_note or fallback from chars_used + needs_loc_ref
+    let refNote = s.ref_note || '';
+    if (!refNote) {
+      const parts = [];
+      if (s.chars_used && s.chars_used.length) parts.push(...s.chars_used.map(n => `${n} ref`));
+      if (s.needs_loc_ref && globalContext.location) parts.push('location ref');
+      if (s.needs_extra_loc) parts.push('⚠ location جديد مطلوب');
+      refNote = parts.join(' + ');
+    }
     const hasExtraLoc = s.needs_extra_loc;
     const refHtml = refNote ? `
       <div class="shot-ref-note ${hasExtraLoc ? 'shot-ref-warn' : ''}">
