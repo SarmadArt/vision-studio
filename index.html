@@ -1213,7 +1213,7 @@
   <nav class="sidebar">
     <div class="nav-section">
       <div class="nav-label">الأدوات</div>
-      <div class="nav-item active" onclick="navigate('page-ideas', this)">
+      <div class="nav-item" onclick="navigate('page-ideas', this)">
         <div class="nav-icon">✦</div>
         <span>فكرة المحتوى</span>
       </div>
@@ -1244,7 +1244,7 @@
   <main class="main">
 
     <!-- PAGE: IDEAS -->
-    <div id="page-ideas" class="page active">
+    <div id="page-ideas" class="page">
       <div class="page-header">
         <div class="page-title">فكرة المحتوى</div>
         <div class="page-sub">اكتب المعلومات التي تريدها — النظام يبني الفكرة الكاملة</div>
@@ -1920,12 +1920,11 @@
     loadTotalStats();
     renderProjectsList();
     setupAutoSave();
-    // Restore session state on refresh
+    // Restore session state on refresh — or show default page
     const restored = restoreSessionState();
     if (!restored) {
-      // Default page
-      document.getElementById('page-ideas').classList.add('active');
-      document.querySelector('[onclick*="page-ideas"]')?.classList.add('active');
+      document.getElementById('page-shots').classList.add('active');
+      document.querySelector('[onclick*="page-shots"]')?.classList.add('active');
     }
     window.addEventListener('beforeunload', () => {
       saveSessionState();
