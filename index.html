@@ -705,6 +705,216 @@
     background: var(--surface2);
   }
 
+  /* --- VIDEO TYPE GRID --- */
+  .vtype-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .vtype-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    transition: all 0.12s;
+    direction: ltr;
+  }
+  .vtype-btn:hover { color: var(--text); border-color: var(--text3); }
+  .vtype-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(200,240,96,0.06);
+  }
+  .vtype-icon { font-size: 14px; flex-shrink: 0; }
+
+  /* --- FLAGS --- */
+  .flags-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .flag-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text2);
+    padding: 5px 10px;
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    background: var(--surface2);
+    transition: all 0.12s;
+    user-select: none;
+  }
+  .flag-toggle:has(input:checked) {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(200,240,96,0.06);
+  }
+  .flag-toggle input { display: none; }
+
+  /* --- SHOT CARD v2 --- */
+  .shot-card-v2 {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 10px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .shot-card-v2:hover { border-color: var(--border2); }
+
+  .shot-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    gap: 8px;
+  }
+  .shot-num-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    font-weight: 500;
+    flex-shrink: 0;
+    min-width: 52px;
+  }
+
+  /* Angle pills */
+  .angle-row {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    flex: 1;
+  }
+  .angle-pill {
+    font-size: 9px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text3);
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    transition: all 0.1s;
+    white-space: nowrap;
+  }
+  .angle-pill:hover { color: var(--text2); border-color: var(--text3); }
+  .angle-pill.active {
+    background: rgba(200,240,96,0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Shot type pills */
+  .stype-row {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .stype-pill {
+    font-size: 9px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text3);
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    transition: all 0.1s;
+  }
+  .stype-pill:hover { color: var(--text2); }
+  .stype-pill.active {
+    background: rgba(96,160,240,0.1);
+    border-color: #60a0f0;
+    color: #60a0f0;
+  }
+
+  .shot-card-body { padding: 12px 14px; }
+  .shot-desc-ar {
+    font-size: 12px;
+    color: var(--text2);
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    line-height: 1.5;
+  }
+  .shot-prompt-en {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text);
+    line-height: 1.7;
+    direction: ltr;
+    text-align: left;
+    word-break: break-word;
+  }
+
+  .shot-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    border-top: 1px solid var(--border);
+    gap: 8px;
+  }
+  .shot-dur-tag {
+    font-size: 10px;
+    color: var(--text3);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .shot-footer-btns { display: flex; gap: 6px; }
+  .shot-action-btn {
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text3);
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    transition: all 0.1s;
+  }
+  .shot-action-btn:hover { color: var(--text); border-color: var(--text3); }
+  .shot-action-btn.regen:hover { color: var(--accent); border-color: var(--accent); }
+  .shot-action-btn.spinning { opacity: 0.5; cursor: not-allowed; }
+
+  /* --- IMAGE UPLOAD ZONE --- */
+  .img-upload-zone {
+    border: 1px dashed var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    background: var(--surface2);
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .img-upload-zone:hover { border-color: var(--text3); }
+  .img-upload-zone.has-image { border-color: var(--accent); border-style: solid; }
+  .loc-img-preview {
+    width: 100%;
+    max-height: 80px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+
   /* --- SCROLLBAR --- */
   ::-webkit-scrollbar { width: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -847,116 +1057,233 @@
       </div>
     </div>
 
-    <!-- PAGE: SHOTS -->
+    <!-- PAGE: SHOTS v2 -->
     <div id="page-shots" class="page">
-      <div class="page-header">
-        <div class="page-title">برومبتات اللقطات</div>
-        <div class="page-sub">انسخ فكرتك وحدد عدد اللقطات — النظام يكتب البرومبت لكل لقطة</div>
-      </div>
+      <div style="display:grid; grid-template-columns: 340px 1fr; gap: 20px; align-items: start; height: calc(100vh - 52px - 64px); overflow: hidden;">
 
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;">
+        <!-- LEFT PANEL -->
+        <div style="overflow-y:auto; height:100%; padding-bottom:20px;">
 
-        <!-- LEFT: INPUT -->
-        <div>
+          <!-- CONTENT -->
           <div class="card">
-            <div class="card-title">الفكرة والسكريبت</div>
+            <div class="card-title">Content</div>
             <div class="field">
-              <label>انسخ الفكرة أو السكريبت</label>
-              <textarea id="shot-script" rows="5" placeholder="مثال: فيديو عن فوائد شرب الماء — هوك قوي في البداية، ثم ثلاث فوائد، ثم خاتمة بدعوة للتطبيق...&#10;&#10;أو انسخ مباشرة ناتج النظام الأول..."></textarea>
-            </div>
-            <div class="field">
-              <label>الطريقة التي تريدها للفيديو</label>
-              <input type="text" id="shot-style-note" placeholder="مثال: فيديو شخص يتكلم مباشرة، أو b-roll طبيعة، أو مزج بين الاثنين...">
+              <label>Script / Idea</label>
+              <textarea id="shot-script" rows="4" placeholder="Paste your script or idea here..."></textarea>
             </div>
           </div>
 
+          <!-- LOCATION LOCK -->
           <div class="card">
-            <div class="card-title">عدد اللقطات</div>
+            <div class="card-title">Location Lock</div>
             <div class="field">
-              <div class="shot-count-row" id="shot-pills">
-                <button class="shot-pill" onclick="setShotCount(3, this)">3</button>
-                <button class="shot-pill active" onclick="setShotCount(5, this)">5</button>
-                <button class="shot-pill" onclick="setShotCount(7, this)">7</button>
-                <button class="shot-pill" onclick="setShotCount(10, this)">10</button>
-                <button class="shot-pill" onclick="setShotCount(15, this)">15</button>
-                <div class="shot-custom">
-                  <input type="number" id="custom-shot-count" placeholder="—" min="1" max="30"
-                    style="width:64px; text-align:center; direction:ltr; padding:6px 10px; border-radius:20px;"
-                    oninput="setCustomShotCount(this.value)">
+              <label>Location Description <span style="color:var(--text3);font-weight:400">— kept across all shots</span></label>
+              <textarea id="location-desc" rows="2" placeholder="e.g: modern Arabic clinic, white textured walls, wood desk left, large window right, marble floor..."></textarea>
+            </div>
+            <div style="border-top:1px solid var(--border); padding-top:12px; margin-top:4px;">
+              <label style="margin-bottom:8px; display:flex; align-items:center; justify-content:space-between;">
+                <span>Extract from image</span>
+                <span style="font-size:10px; color:var(--text3); font-family:'IBM Plex Mono',monospace;">elements only — no lighting/color</span>
+              </label>
+              <div class="img-upload-zone" id="loc-upload-zone" onclick="document.getElementById('loc-img-input').click()">
+                <input type="file" id="loc-img-input" accept="image/*" style="display:none" onchange="handleLocationImage(this)">
+                <div id="loc-upload-content">
+                  <div style="font-size:18px; margin-bottom:4px; opacity:0.4;">⊕</div>
+                  <div style="font-size:11px; color:var(--text3);">Click to upload reference image</div>
                 </div>
               </div>
+              <button class="btn btn-ghost" id="extract-loc-btn" onclick="extractLocation()" style="width:100%; margin-top:8px; display:none;">
+                <span id="extract-loc-spinner" style="display:none" class="spinner" style="width:12px;height:12px;"></span>
+                Extract Location Elements
+              </button>
             </div>
           </div>
 
+          <!-- CHARACTER -->
           <div class="card">
-            <div class="card-title">الإعدادات التقنية</div>
-            <div class="row row-2" style="margin-bottom:12px">
+            <div class="card-title">Character <span style="color:var(--text3);font-size:10px;font-weight:400;font-family:'IBM Plex Mono',monospace;">optional</span></div>
+            <div class="row row-2" style="margin-bottom:10px;">
               <div class="field" style="margin-bottom:0">
-                <label>نوع الكاميرا</label>
-                <select id="camera-type">
-                  <option value="Sony FX3, 35mm prime lens">Sony FX3 — 35mm</option>
-                  <option value="ARRI Alexa Mini, anamorphic lens">ARRI Alexa — أنامورفيك</option>
-                  <option value="Canon EOS R5, 85mm portrait lens">Canon R5 — 85mm</option>
-                  <option value="Sony A7S III, 24-70mm zoom">Sony A7S III — 24-70mm</option>
-                  <option value="iPhone 15 Pro cinematic mode">آيفون — سينماتك</option>
-                  <option value="GoPro Hero, wide angle">GoPro — وايد</option>
-                  <option value="DJI Mavic drone, aerial">درون — هوائي</option>
-                  <option value="Blackmagic Cinema Camera 6K">Blackmagic 6K</option>
+                <label>Gender</label>
+                <select id="char-gender">
+                  <option value="">— none —</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
                 </select>
               </div>
               <div class="field" style="margin-bottom:0">
-                <label>الإضاءة</label>
-                <select id="lighting-type">
-                  <option value="golden hour warm natural sunlight">ذهبية — غروب</option>
-                  <option value="soft diffused studio softbox lighting">ناعمة — ستوديو</option>
-                  <option value="harsh dramatic side lighting, deep shadows">درامية — جانبية</option>
-                  <option value="blue hour twilight, cool tones">بلو آور</option>
-                  <option value="neon rim backlight, urban night">نيون — ليلي</option>
-                  <option value="natural overcast daylight, even exposure">طبيعية — ملبدة</option>
-                  <option value="candlelight warm ambient glow">شمعة — دافئة</option>
-                  <option value="harsh direct sunlight, high contrast">شمس قاسية</option>
-                  <option value="practical window light, lifestyle">ضوء نافذة</option>
+                <label>Ethnicity</label>
+                <select id="char-ethnicity">
+                  <option value="">— none —</option>
+                  <option value="Middle Eastern Arab">Arab / Middle Eastern</option>
+                  <option value="Gulf Arab">Gulf Arab</option>
+                  <option value="North African Arab">North African</option>
+                  <option value="South Asian">South Asian</option>
+                  <option value="East Asian">East Asian</option>
+                  <option value="Black African">Black African</option>
+                  <option value="Caucasian">Caucasian</option>
+                  <option value="Latino">Latino</option>
                 </select>
               </div>
             </div>
             <div class="field" style="margin-bottom:0">
-              <label>المود السينمائي</label>
-              <select id="mood-type">
-                <option value="cinematic anamorphic widescreen, warm amber color grade">أنامورفيك — دافئ</option>
-                <option value="teal and orange film look, moody desaturated">تيل اند أورانج</option>
-                <option value="hyper-realistic documentary, natural colors">وثائقي — واقعي</option>
-                <option value="dreamy soft bokeh, pastel tones, hazy">حالم — باستيل</option>
-                <option value="gritty raw film grain, high contrast, punchy">فيلم غرين</option>
-                <option value="clean bright lifestyle, vibrant saturated">لايف ستايل — حيوي</option>
-                <option value="dark moody noir, low key, shadows">نوار — داكن</option>
-                <option value="vintage 35mm film, light leaks, warm grain">فينتاج 35mm</option>
-                <option value="clean minimal, neutral tones, editorial">مينيمال — editorial</option>
+              <label>Appearance / Outfit <span style="color:var(--text3);font-weight:400">(optional)</span></label>
+              <input type="text" id="char-appearance" placeholder="e.g: late 20s, short dark hair, white thobe, confident posture...">
+            </div>
+          </div>
+
+          <!-- VIDEO TYPE -->
+          <div class="card">
+            <div class="card-title">Video Type</div>
+            <div class="vtype-grid">
+              <div class="vtype-btn active" data-type="cinematic" onclick="setVideoType(this)">
+                <span class="vtype-icon">🎬</span><span>Cinematic</span>
+              </div>
+              <div class="vtype-btn" data-type="talking_head" onclick="setVideoType(this)">
+                <span class="vtype-icon">🎙</span><span>Talking Head</span>
+              </div>
+              <div class="vtype-btn" data-type="talking_broll" onclick="setVideoType(this)">
+                <span class="vtype-icon">📽</span><span>Talking + B-Roll</span>
+              </div>
+              <div class="vtype-btn" data-type="dialog" onclick="setVideoType(this)">
+                <span class="vtype-icon">👥</span><span>Dialog</span>
+              </div>
+              <div class="vtype-btn" data-type="comedy" onclick="setVideoType(this)">
+                <span class="vtype-icon">😂</span><span>Comedy / Skit</span>
+              </div>
+              <div class="vtype-btn" data-type="educational" onclick="setVideoType(this)">
+                <span class="vtype-icon">📚</span><span>Educational</span>
+              </div>
+              <div class="vtype-btn" data-type="product" onclick="setVideoType(this)">
+                <span class="vtype-icon">🛍</span><span>Product</span>
+              </div>
+              <div class="vtype-btn" data-type="cgi" onclick="setVideoType(this)">
+                <span class="vtype-icon">✨</span><span>CGI / 3D</span>
+              </div>
+              <div class="vtype-btn" data-type="cgi_realistic" onclick="setVideoType(this)" style="grid-column:span 2;">
+                <span class="vtype-icon">🔬</span><span>CGI Realistic — Real Human + VFX</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- SHOT COUNT -->
+          <div class="card">
+            <div class="card-title">Shot Count</div>
+            <div class="shot-count-row">
+              <button class="shot-pill" onclick="setShotCount(3,this)">3</button>
+              <button class="shot-pill active" onclick="setShotCount(5,this)">5</button>
+              <button class="shot-pill" onclick="setShotCount(7,this)">7</button>
+              <button class="shot-pill" onclick="setShotCount(10,this)">10</button>
+              <button class="shot-pill" onclick="setShotCount(15,this)">15</button>
+              <input type="number" id="custom-shot-count" placeholder="?" min="1" max="30"
+                style="width:48px;text-align:center;direction:ltr;padding:6px 8px;border-radius:20px;"
+                oninput="setCustomShotCount(this.value)">
+            </div>
+          </div>
+
+          <!-- TECHNICAL -->
+          <div class="card">
+            <div class="card-title">Technical</div>
+
+            <div class="field">
+              <label>Camera</label>
+              <select id="camera-type">
+                <option value="Sony FX3, 35mm prime lens">Sony FX3 — 35mm</option>
+                <option value="ARRI Alexa Mini, anamorphic lens">ARRI Alexa — Anamorphic</option>
+                <option value="Canon EOS R5, 85mm portrait lens">Canon R5 — 85mm</option>
+                <option value="Sony A7S III, 24-70mm zoom lens">Sony A7S III — 24-70mm</option>
+                <option value="iPhone 15 Pro, cinematic mode">iPhone — Cinematic</option>
+                <option value="GoPro Hero, ultra wide angle">GoPro — Ultra Wide</option>
+                <option value="DJI Mavic 3, aerial drone shot">Drone — Aerial</option>
+                <option value="Blackmagic Cinema Camera 6K, super 35">Blackmagic 6K</option>
               </select>
+            </div>
+
+            <div class="field">
+              <label>Lighting</label>
+              <select id="lighting-type">
+                <option value="golden hour warm natural sunlight, long shadows">Golden Hour</option>
+                <option value="soft diffused studio softbox, even lighting">Soft Studio</option>
+                <option value="harsh dramatic side lighting, deep shadows, chiaroscuro">Dramatic Side</option>
+                <option value="blue hour twilight, cool desaturated tones">Blue Hour</option>
+                <option value="neon rim backlight, urban night, colored gels">Neon Night</option>
+                <option value="natural overcast daylight, diffused even exposure">Natural Overcast</option>
+                <option value="warm candlelight ambient glow, intimate">Candlelight</option>
+                <option value="harsh direct sunlight, high contrast, bleached">Hard Sunlight</option>
+                <option value="soft window light, natural lifestyle">Window Light</option>
+                <option value="three-point studio lighting, clean commercial">Studio Commercial</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Color Grade / Mood</label>
+              <select id="mood-type">
+                <option value="cinematic anamorphic, warm amber color grade, lens flares">Cinematic Warm</option>
+                <option value="teal and orange color grade, moody, desaturated">Teal & Orange</option>
+                <option value="hyper-realistic documentary, natural accurate colors">Documentary</option>
+                <option value="dreamy pastel tones, soft bokeh, hazy glow">Dreamy Pastel</option>
+                <option value="gritty film grain, high contrast, punchy blacks">Film Grain</option>
+                <option value="clean bright lifestyle, vibrant saturated colors">Bright Lifestyle</option>
+                <option value="dark moody noir, low key, deep shadows">Dark Noir</option>
+                <option value="vintage 35mm, light leaks, warm grain, faded">Vintage 35mm</option>
+                <option value="clean minimal editorial, neutral muted tones">Minimal Editorial</option>
+                <option value="high key white, clean commercial, product-ready">High Key White</option>
+              </select>
+            </div>
+
+            <div class="field" style="margin-bottom:0">
+              <label>Extra Flags</label>
+              <div class="flags-row">
+                <label class="flag-toggle">
+                  <input type="checkbox" id="flag-no-talking">
+                  <span>No Talking</span>
+                </label>
+                <label class="flag-toggle">
+                  <input type="checkbox" id="flag-no-text">
+                  <span>No Text/Overlay</span>
+                </label>
+                <label class="flag-toggle">
+                  <input type="checkbox" id="flag-portrait">
+                  <span>Portrait 9:16</span>
+                </label>
+                <label class="flag-toggle">
+                  <input type="checkbox" id="flag-slow">
+                  <span>Slow Motion</span>
+                </label>
+              </div>
             </div>
           </div>
 
           <button class="btn btn-accent" id="gen-shots-btn" onclick="generateShots()">
             <span id="gen-shots-spinner" style="display:none" class="spinner"></span>
-            <span id="gen-shots-label">◈ أنشئ برومبتات اللقطات</span>
+            <span id="gen-shots-label">◈ Generate Shot List</span>
           </button>
         </div>
 
-        <!-- RIGHT: OUTPUT -->
-        <div>
-          <div class="output-area">
-            <div class="output-header">
-              <span class="output-title">اللقطات</span>
-              <div class="output-actions">
-                <span class="shots-count-badge" id="shots-badge" style="display:none"></span>
-                <button class="copy-all-btn" id="copy-shots-btn" onclick="copyAllShots()" style="display:none">
-                  ⎘ نسخ الكل
-                </button>
-              </div>
+        <!-- RIGHT PANEL: OUTPUT -->
+        <div style="overflow-y:auto; height:100%; padding-bottom:20px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+            <div style="font-size:12px; color:var(--text3); text-transform:uppercase; letter-spacing:0.08em; font-weight:500;">Shot List</div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <span class="shots-count-badge" id="shots-badge" style="display:none"></span>
+              <button class="copy-all-btn" id="copy-shots-btn" onclick="copyAllShots()" style="display:none">⎘ Copy All</button>
             </div>
-            <div id="shots-output-body" class="output-body">
-              <div class="empty-state">
-                <div class="empty-icon">◈</div>
-                <div>انسخ فكرتك وحدد الإعدادات ثم اضغط أنشئ</div>
+          </div>
+
+          <div id="shots-output-body">
+            <div class="empty-state" style="padding:60px 20px;">
+              <div class="empty-icon">◈</div>
+              <div>Fill in the details and hit Generate</div>
+            </div>
+          </div>
+
+          <!-- ADD SHOT -->
+          <div id="add-shot-area" style="display:none; margin-top:12px;">
+            <div style="border:1px dashed var(--border2); border-radius:var(--radius); padding:14px 16px;">
+              <div style="font-size:11px; color:var(--text3); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.08em;">+ Add Shot</div>
+              <div style="display:flex; gap:8px;">
+                <input type="text" id="add-shot-desc" placeholder="Describe the shot briefly — e.g: product closeup rotating on table" style="flex:1; font-size:13px;">
+                <button class="btn btn-ghost" onclick="addSingleShot()" style="white-space:nowrap; font-size:12px;">Generate</button>
               </div>
             </div>
           </div>
@@ -1412,119 +1739,319 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
     document.getElementById('gen-idea-label').textContent = '✦ أنشئ الفكرة';
   }
 
-  // --- GENERATE SHOTS ---
+  // --- VIDEO TYPE ---
+  let currentVideoType = 'cinematic';
+  function setVideoType(el) {
+    document.querySelectorAll('.vtype-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    currentVideoType = el.dataset.type;
+  }
+
+  const SHOT_TYPES = ['Real','B-Roll','CGI','CGI-Real','Talking','Dialog','Comedy','Product'];
+  const ANGLES = ['ECU','CU','MS','AS','WS','EWS','POV','Dutch','MACRO','MICRO'];
+  let shotsData = [];
+  let globalContext = {};
+  let locationImageBase64 = null;
+
+  // --- LOCATION IMAGE HANDLING ---
+  function handleLocationImage(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      locationImageBase64 = e.target.result.split(',')[1];
+      const zone = document.getElementById('loc-upload-zone');
+      zone.classList.add('has-image');
+      zone.innerHTML = `<img class="loc-img-preview" src="${e.target.result}" alt="location ref">`;
+      document.getElementById('extract-loc-btn').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function extractLocation() {
+    if (!locationImageBase64) return;
+    const btn = document.getElementById('extract-loc-btn');
+    const spinner = document.getElementById('extract-loc-spinner');
+    btn.disabled = true;
+    spinner.style.display = 'inline-block';
+    btn.querySelector('span:last-child') && (btn.lastChild.textContent = ' Extracting...');
+
+    try {
+      const key = getKey(activeProvider);
+      if (!key) { toast('Add API key in Settings first'); btn.disabled=false; spinner.style.display='none'; return; }
+
+      // Use Anthropic vision for image analysis
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 200,
+          messages: [{
+            role: 'user',
+            content: [
+              { type:'image', source:{ type:'base64', media_type:'image/jpeg', data: locationImageBase64 }},
+              { type:'text', text:'Extract ONLY the physical elements and space type from this location image. Ignore lighting, colors, and mood — those will be set separately. Write a single compact phrase (max 20 words) describing: space type, key furniture/objects, architectural elements. No full sentences. Example format: "modern Arabic clinic, white walls, wood desk left, large window right, marble floor". Output the phrase only, nothing else.' }
+            ]
+          }]
+        })
+      });
+      const data = await res.json();
+      const extracted = data.content?.[0]?.text?.trim() || '';
+      if (extracted) {
+        document.getElementById('location-desc').value = extracted;
+        toast('Location extracted ✓');
+      }
+    } catch(e) { toast('Extraction failed'); }
+    btn.disabled = false;
+    spinner.style.display = 'none';
+  }
+
+  // --- BUILD CHARACTER TOKEN ---
+  function buildCharToken() {
+    const gender = document.getElementById('char-gender').value;
+    const ethnicity = document.getElementById('char-ethnicity').value;
+    const appearance = document.getElementById('char-appearance').value.trim();
+    if (!gender && !ethnicity && !appearance) return '';
+    const parts = [gender, ethnicity, appearance].filter(Boolean);
+    return parts.join(', ');
+  }
+
   async function generateShots() {
     const script = document.getElementById('shot-script').value.trim();
-    if (!script) { toast('اكتب الفكرة أو السكريبت أولاً'); return; }
-    const styleNote = document.getElementById('shot-style-note').value.trim();
+    if (!script) { toast('Add your script or idea first'); return; }
+
+    const location  = document.getElementById('location-desc').value.trim();
+    const character = buildCharToken();
     const camera    = document.getElementById('camera-type').value;
     const lighting  = document.getElementById('lighting-type').value;
     const mood      = document.getElementById('mood-type').value;
+    const noTalk    = document.getElementById('flag-no-talking').checked;
+    const noText    = document.getElementById('flag-no-text').checked;
+    const portrait  = document.getElementById('flag-portrait').checked;
+    const slowmo    = document.getElementById('flag-slow').checked;
+
+    const flags = [
+      noTalk  ? 'no talking, no speech' : '',
+      noText  ? 'no text overlays' : '',
+      portrait? 'vertical 9:16' : 'widescreen 16:9',
+      slowmo  ? 'slow motion 120fps' : '',
+    ].filter(Boolean).join(', ');
+
+    const videoTypeMap = {
+      cinematic:     'Cinematic narrative, story-driven visual storytelling',
+      talking_head:  'Talking head, person speaking directly to camera',
+      talking_broll: 'Talking head mixed with B-Roll cutaways',
+      dialog:        'Two person dialog or interview scene',
+      comedy:        'Comedy skit, exaggerated reactions, comedic timing',
+      educational:   'Educational explainer, info-driven visual content',
+      product:       'Product showcase, commercial advertisement',
+      cgi:           'CGI / 3D stylized animated scene',
+      cgi_realistic: 'Photorealistic CGI with real human actor, seamless VFX compositing, hyper-realistic render, no stylization'
+    };
+
+    globalContext = { script, location, character, camera, lighting, mood, flags, videoType: videoTypeMap[currentVideoType] };
 
     const btn = document.getElementById('gen-shots-btn');
     btn.disabled = true;
     document.getElementById('gen-shots-spinner').style.display = 'inline-block';
-    document.getElementById('gen-shots-label').textContent = 'جاري التوليد...';
+    document.getElementById('gen-shots-label').textContent = 'Generating...';
 
     const body = document.getElementById('shots-output-body');
-    body.innerHTML = `<div class="loading-state"><div class="spinner"></div><span>جاري بناء ${currentShotCount} لقطة...</span></div>`;
+    body.innerHTML = `<div class="loading-state"><div class="spinner"></div><span>Building ${currentShotCount} shots...</span></div>`;
 
-    const prompt = `أنت متخصص في كتابة برومبتات إنتاج الفيديو السينمائي الاحترافي.
+    const locToken  = location  ? `LOCATION (use consistently across all shots): ${location}` : '';
+    const charToken = character ? `CHARACTER (use consistently across all shots): ${character}` : '';
 
-المطلوب: اكتب بالضبط ${currentShotCount} برومبتات لقطات لهذا المحتوى.
+    const prompt = `You are a professional cinematographer writing production-ready shot prompts for AI video tools (Runway, Sora, Kling).
 
-الفكرة أو السكريبت:
-${script}
+Video Type: ${videoTypeMap[currentVideoType]}
+Script: ${script}
+${locToken}
+${charToken}
+Camera: ${camera}
+Lighting: ${lighting}
+Mood/Grade: ${mood}
+${flags ? `Flags: ${flags}` : ''}
 
-${styleNote ? `الطريقة المطلوبة: ${styleNote}` : ''}
+Generate exactly ${currentShotCount} shots.
 
-الإعدادات التقنية الثابتة لكل اللقطات:
-- الكاميرا: ${camera}
-- الإضاءة: ${lighting}
-- المود السينمائي: ${mood}
+RULES:
+- Location must appear consistently — vary the ANGLE and FRAMING within that space, not the location itself
+- Character description must be identical in every shot where character appears
+- Vary angles intelligently across: ECU, CU, MS, AS, WS, EWS, POV, Dutch, MACRO, MICRO
+- Shot types: Real / B-Roll / CGI / CGI-Real / Talking / Dialog / Comedy / Product
+- MACRO/MICRO shots: describe texture/detail at extreme close range
+- CGI-Real: emphasize photorealistic VFX integration, real actor, seamless compositing
+- Each shot builds narrative flow from previous
 
-تعليمات مهمة:
-- نوّع في الزوايا: close-up, medium shot, wide shot, extreme close-up, low angle, high angle, over-the-shoulder, POV, aerial — وزّعها بذكاء
-- كل لقطة تبني على السابقة وتخدم السرد
-- البرومبت الإنجليزي يكون مفصلاً وجاهزاً لـ Midjourney/Runway/Sora
-
-أعطني الناتج JSON فقط بدون أي نص خارج JSON:
-{"shots":[{"shot_number":1,"scene_ar":"وصف المشهد بالعربي في جملة أو جملتين","angle":"نوع الزاوية بالإنجليزي مثل: Close-up","duration":"مدة مقترحة مثل: 3-4s","prompt_en":"Full production-ready cinematic prompt in English: describe subject action, exact camera angle and movement, lighting, color grade, mood, lens, camera body"}]}`;
+Return ONLY valid JSON:
+{"shots":[{"shot_number":1,"scene_ar":"وصف المشهد بالعربي","angle":"CU","shot_type":"Real","duration":"3-4s","prompt_en":"detailed production prompt with all parameters"}]}`;
 
     try {
       const result = await callAPI(prompt);
-      const clean  = result.replace(/```json|```/g, '').trim();
-      const parsed = JSON.parse(clean);
-      lastShotsData = parsed.shots;
-      renderShots(parsed.shots);
-      addHistory('shot', script.slice(0, 40) + '...');
+      const parsed = JSON.parse(result.replace(/```json|```/g,'').trim());
+      shotsData = parsed.shots;
+      renderAllShots();
+      addHistory('shot', script.slice(0,40)+'...');
     } catch(e) {
-      if (e.message !== 'no key') {
-        body.innerHTML = `<div class="empty-state" style="color:var(--red)">${escapeHtml(e.message) || 'حدث خطأ، حاول مرة أخرى'}</div>`;
-      } else {
-        body.innerHTML = `<div class="empty-state"><div>أضف مفتاح API من الإعدادات</div></div>`;
-      }
+      body.innerHTML = e.message!=='no key'
+        ? `<div class="empty-state" style="color:var(--red)">${escapeHtml(e.message)||'Error'}</div>`
+        : `<div class="empty-state"><div>Add API key in Settings</div></div>`;
     }
-    btn.disabled = false;
-    document.getElementById('gen-shots-spinner').style.display = 'none';
-    document.getElementById('gen-shots-label').textContent = '◈ أنشئ برومبتات اللقطات';
+    btn.disabled=false;
+    document.getElementById('gen-shots-spinner').style.display='none';
+    document.getElementById('gen-shots-label').textContent='◈ Generate Shot List';
   }
 
-  function renderShots(shots) {
+  function renderAllShots() {
     const body = document.getElementById('shots-output-body');
-    body.style.padding = '16px';
-    body.innerHTML = shots.map(s => `
-      <div class="shot-item">
-        <div class="shot-item-header">
-          <span class="shot-num-label">SHOT ${String(s.shot_number).padStart(2,'0')}</span>
-          <div class="shot-meta-tags">
-            <span class="shot-tag">${s.angle || ''}</span>
-            <span class="shot-tag">${s.duration || ''}</span>
-            <button class="copy-shot-btn" onclick="copyShot(this, \`${escapeTpl(s.prompt_en)}\`)">COPY</button>
-          </div>
-        </div>
-        <div class="shot-item-body">
-          <div class="shot-ar">${escapeHtml(s.scene_ar || '')}</div>
-          <div class="shot-en">${escapeHtml(s.prompt_en || '')}</div>
-        </div>
-      </div>
-    `).join('');
-    document.getElementById('shots-badge').style.display = 'inline';
-    document.getElementById('shots-badge').textContent = shots.length + ' لقطة';
-    document.getElementById('copy-shots-btn').style.display = 'flex';
+    body.innerHTML = '';
+    shotsData.forEach((s,i) => body.appendChild(buildShotCard(s,i)));
+    document.getElementById('shots-badge').style.display='inline';
+    document.getElementById('shots-badge').textContent=shotsData.length+' shots';
+    document.getElementById('copy-shots-btn').style.display='flex';
+    document.getElementById('add-shot-area').style.display='block';
   }
 
-  // --- COPY ---
+  function buildShotCard(s,idx) {
+    const div=document.createElement('div');
+    div.className='shot-card-v2'; div.id=`shot-card-${idx}`;
+    const aH=ANGLES.map(a=>`<button class="angle-pill ${a===s.angle?'active':''}" onclick="changeAngle(${idx},'${a}',this)">${a}</button>`).join('');
+    const tH=SHOT_TYPES.map(t=>`<button class="stype-pill ${t===s.shot_type?'active':''}" onclick="changeShotType(${idx},'${t}',this)">${t}</button>`).join('');
+    div.innerHTML=`
+      <div class="shot-card-header">
+        <span class="shot-num-badge">SHOT ${String(s.shot_number).padStart(2,'0')}</span>
+        <div class="angle-row">${aH}</div>
+      </div>
+      <div class="stype-row">${tH}</div>
+      <div class="shot-card-body">
+        <div class="shot-desc-ar">${escapeHtml(s.scene_ar||'')}</div>
+        <div class="shot-prompt-en" id="prompt-text-${idx}">${escapeHtml(s.prompt_en||'')}</div>
+      </div>
+      <div class="shot-card-footer">
+        <span class="shot-dur-tag">${s.duration||''}</span>
+        <div class="shot-footer-btns">
+          <button class="shot-action-btn" onclick="copyShot(this,${idx})">COPY</button>
+          <button class="shot-action-btn regen" id="regen-btn-${idx}" onclick="regenShot(${idx})">↺ REGEN</button>
+        </div>
+      </div>`;
+    return div;
+  }
+
+  function changeAngle(idx,angle,el) {
+    shotsData[idx].angle=angle;
+    el.closest('.angle-row').querySelectorAll('.angle-pill').forEach(p=>p.classList.remove('active'));
+    el.classList.add('active');
+    regenShotSilent(idx);
+  }
+  function changeShotType(idx,type,el) {
+    shotsData[idx].shot_type=type;
+    el.closest('.stype-row').querySelectorAll('.stype-pill').forEach(p=>p.classList.remove('active'));
+    el.classList.add('active');
+    regenShotSilent(idx);
+  }
+
+  async function regenShotSilent(idx) {
+    const s=shotsData[idx];
+    const el=document.getElementById(`prompt-text-${idx}`);
+    if(!el) return;
+    el.style.opacity='0.4';
+    try {
+      const loc = globalContext.location ? `LOCATION: ${globalContext.location}` : '';
+      const chr = globalContext.character ? `CHARACTER: ${globalContext.character}` : '';
+      const p=`Rewrite shot prompt with updated angle/type. Keep location and character consistent. JSON only.
+Video:${globalContext.videoType||''} | Script:${globalContext.script||''}
+${loc} | ${chr}
+Camera:${globalContext.camera||''} | Lighting:${globalContext.lighting||''} | Mood:${globalContext.mood||''}
+${globalContext.flags?'Flags:'+globalContext.flags:''}
+Shot ${s.shot_number} | Scene:${s.scene_ar} | NEW Angle:${s.angle} | NEW Type:${s.shot_type}
+{"prompt_en":"updated prompt"}`;
+      const r=await callAPI(p);
+      const parsed=JSON.parse(r.replace(/```json|```/g,'').trim());
+      shotsData[idx].prompt_en=parsed.prompt_en;
+      el.textContent=parsed.prompt_en;
+    } catch(e){}
+    el.style.opacity='1';
+  }
+
+  async function regenShot(idx) {
+    const s=shotsData[idx];
+    const btn=document.getElementById(`regen-btn-${idx}`);
+    const el=document.getElementById(`prompt-text-${idx}`);
+    if(!btn||!el) return;
+    btn.classList.add('spinning'); btn.textContent='...';
+    el.style.opacity='0.4';
+    try {
+      const loc = globalContext.location ? `LOCATION: ${globalContext.location}` : '';
+      const chr = globalContext.character ? `CHARACTER: ${globalContext.character}` : '';
+      const p=`Regenerate shot with fresh creative direction. Keep location and character consistent. JSON only.
+Video:${globalContext.videoType||''} | Script:${globalContext.script||''}
+${loc} | ${chr}
+Camera:${globalContext.camera||''} | Lighting:${globalContext.lighting||''} | Mood:${globalContext.mood||''}
+${globalContext.flags?'Flags:'+globalContext.flags:''}
+Shot ${s.shot_number} | Angle:${s.angle} | Type:${s.shot_type} | Scene:${s.scene_ar}
+{"scene_ar":"وصف جديد","prompt_en":"fresh cinematic prompt"}`;
+      const r=await callAPI(p);
+      const parsed=JSON.parse(r.replace(/```json|```/g,'').trim());
+      shotsData[idx].scene_ar=parsed.scene_ar;
+      shotsData[idx].prompt_en=parsed.prompt_en;
+      document.getElementById(`shot-card-${idx}`).replaceWith(buildShotCard(shotsData[idx],idx));
+    } catch(e){ toast('Regen failed'); }
+  }
+
+  async function addSingleShot() {
+    const desc=document.getElementById('add-shot-desc').value.trim();
+    if(!desc){ toast('Describe the shot first'); return; }
+    const newNum=shotsData.length+1;
+    toast('Generating shot '+newNum+'...');
+    try {
+      const loc = globalContext.location ? `LOCATION: ${globalContext.location}` : '';
+      const chr = globalContext.character ? `CHARACTER: ${globalContext.character}` : '';
+      const p=`Generate one new shot. Keep location and character consistent. JSON only.
+Video:${globalContext.videoType||''} | Script:${globalContext.script||''}
+${loc} | ${chr}
+Camera:${globalContext.camera||''} | Lighting:${globalContext.lighting||''} | Mood:${globalContext.mood||''}
+${globalContext.flags?'Flags:'+globalContext.flags:''}
+Existing shots:${shotsData.length} | New shot:${desc}
+{"shot_number":${newNum},"scene_ar":"وصف","angle":"CU","shot_type":"Real","duration":"3-4s","prompt_en":"full cinematic prompt"}`;
+      const r=await callAPI(p);
+      const parsed=JSON.parse(r.replace(/```json|```/g,'').trim());
+      shotsData.push(parsed);
+      document.getElementById('shots-output-body').appendChild(buildShotCard(parsed,shotsData.length-1));
+      document.getElementById('shots-badge').textContent=shotsData.length+' shots';
+      document.getElementById('add-shot-desc').value='';
+      toast('Shot '+newNum+' added ✓');
+    } catch(e){ toast('Failed — try again'); }
+  }
+
   function copyIdea() {
-    navigator.clipboard.writeText(lastIdeaText).then(() => toast('تم نسخ الفكرة'));
+    navigator.clipboard.writeText(lastIdeaText).then(()=>toast('تم نسخ الفكرة'));
   }
   function copyAllShots() {
-    const text = lastShotsData.map(s =>
-      `SHOT ${String(s.shot_number).padStart(2,'0')} | ${s.angle} | ${s.duration}\n${s.scene_ar}\n\n${s.prompt_en}`
-    ).join('\n\n---\n\n');
-    navigator.clipboard.writeText(text).then(() => toast('تم نسخ كل اللقطات'));
+    const text=shotsData.map(s=>`SHOT ${String(s.shot_number).padStart(2,'0')} | ${s.angle} | ${s.shot_type} | ${s.duration}\n${s.scene_ar}\n\n${s.prompt_en}`).join('\n\n---\n\n');
+    navigator.clipboard.writeText(text).then(()=>toast('All shots copied ✓'));
   }
-  function copyShot(btn, text) {
-    navigator.clipboard.writeText(text).then(() => {
-      btn.textContent = 'COPIED ✓';
-      setTimeout(() => { btn.textContent = 'COPY'; }, 2000);
+  function copyShot(btn,idx) {
+    navigator.clipboard.writeText(shotsData[idx]?.prompt_en||'').then(()=>{
+      btn.textContent='COPIED ✓';
+      setTimeout(()=>{btn.textContent='COPY';},2000);
     });
   }
 
-  // --- HELPERS ---
   function escapeHtml(str) {
-    if (!str) return '';
+    if(!str) return '';
     return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
   function escapeTpl(str) {
-    if (!str) return '';
+    if(!str) return '';
     return str.replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\$/g,'\\$');
   }
   function toast(msg) {
-    const el = document.getElementById('toast');
-    el.textContent = msg;
+    const el=document.getElementById('toast');
+    el.textContent=msg;
     el.classList.add('show');
-    setTimeout(() => el.classList.remove('show'), 2500);
+    setTimeout(()=>el.classList.remove('show'),2500);
   }
 </script>
 </body>
