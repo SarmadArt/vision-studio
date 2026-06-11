@@ -3917,9 +3917,17 @@ DIALOG RULE: If 2+ chars in frame, specify speaker (mouth open, leaning forward,
 {"prompt_en":"structured English-only prompt"}`;
       const r = await callAPI(p);
       const parsed = safeParseJSON(r);
-      if (parsed?.prompt_en) {
+      if (parsed?.prompt_en && typeof parsed.prompt_en === 'string') {
         shotsData[idx].prompt_en = parsed.prompt_en;
         el.textContent = parsed.prompt_en;
+      } else if (parsed?.scene_ar && typeof parsed.scene_ar !== 'string') {
+        // parsed came back but prompt_en is wrong type — ignore
+      } else if (!parsed) {
+        // raw response may contain plain text — use as-is if no JSON
+        if (r && r.length < 2000 && !r.includes('{')) {
+          shotsData[idx].prompt_en = r.trim();
+          el.textContent = r.trim();
+        }
       }
     } catch(e) {}
     el.style.opacity = '1';
@@ -3944,10 +3952,23 @@ DIALOG RULE: If 2+ chars in frame, specify speaker (mouth open, leaning forward,
 {"scene_ar":"وصف جديد بالعربي","prompt_en":"fresh structured English-only prompt"}`;
       const r = await callAPI(p);
       const parsed = safeParseJSON(r);
-      shotsData[idx].scene_ar  = parsed.scene_ar;
-      shotsData[idx].prompt_en = parsed.prompt_en;
+      if (!parsed) throw new Error('parse failed');
+      // Validate fields are strings before assigning
+      if (parsed.scene_ar  && typeof parsed.scene_ar  === 'string') shotsData[idx].scene_ar  = parsed.scene_ar;
+      if (parsed.prompt_en && typeof parsed.prompt_en === 'string') shotsData[idx].prompt_en = parsed.prompt_en;
+      // Fallback: if prompt_en is still not a string, try simple extraction
+      if (!shotsData[idx].prompt_en || typeof shotsData[idx].prompt_en !== 'string') {
+        const m = r.indexOf('"prompt_en"');
+        if (m !== -1) {
+          const start = r.indexOf('"', m + 12) + 1;
+          const end   = r.indexOf('"}', start);
+          if (start > 0 && end > start) {
+            shotsData[idx].prompt_en = r.slice(start, end).replace(/\n/g,' ');
+          }
+        }
+      }
       document.getElementById(`shot-card-${idx}`).replaceWith(buildShotCard(shotsData[idx], idx));
-    } catch(e) { toast('Regen failed'); }
+    } catch(e) { toast('Regen failed: ' + e.message); }
   }
 
   async function addSingleShot() {
