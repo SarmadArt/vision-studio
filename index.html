@@ -1752,9 +1752,18 @@
 
       <div class="card">
         <div class="card-title">الجلسة</div>
-        <button class="btn btn-ghost" onclick="resetSession()" style="color:var(--red); border-color:rgba(255,79,79,0.3)">
-          صفّر إحصائيات الجلسة
-        </button>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn-ghost" onclick="newSession()" style="color:var(--accent); border-color:rgba(200,240,96,0.3);">
+            ✦ جلسة جديدة
+          </button>
+          <button class="btn btn-ghost" onclick="resetSession()" style="color:var(--red); border-color:rgba(255,79,79,0.3)">
+            صفّر إحصائيات الجلسة
+          </button>
+        </div>
+        <div style="font-size:11px; color:var(--text3); margin-top:10px; line-height:1.8;">
+          ✦ جلسة جديدة — يمسح كل شيء ويبدأ من صفر (المشاريع المحفوظة تبقى)<br>
+          ✦ صفّر الإحصائيات — يصفّر العداد فقط بدون مسح المحتوى
+        </div>
       </div>
     </div>
 
@@ -1814,12 +1823,89 @@
   }
 
   // --- NAV ---
+  // --- AUTO-SAVE SESSION STATE ---
+  function saveSessionState() {
+    try {
+      const state = {
+        activePage: document.querySelector('.page.active')?.id || 'page-ideas',
+        platform: currentPlatform,
+        ideaContent: document.getElementById('idea-content')?.value || '',
+        ideaDuration: document.getElementById('duration-val')?.value || '60',
+        ideaTone: document.getElementById('idea-tone')?.value || '',
+        ideaOutput: lastIdeaText,
+        shotScript: document.getElementById('shot-script')?.value || '',
+        directorNote: document.getElementById('director-note')?.value || '',
+        shotCount: currentShotCount,
+        videoType: currentVideoType,
+        camera: document.getElementById('camera-type')?.value || '',
+        lighting: document.getElementById('lighting-type')?.value || '',
+        mood: document.getElementById('mood-type')?.value || '',
+        flagNoTalk: document.getElementById('flag-no-talking')?.checked || false,
+        flagNoText: document.getElementById('flag-no-text')?.checked || false,
+        flagPortrait: document.getElementById('flag-portrait')?.checked || false,
+        flagSlow: document.getElementById('flag-slow')?.checked || false,
+        // Store chars without images (images are heavy — restore separately)
+        characters: characters.map(c => ({ id: c.id, role: c.role, imageBase64: c.imageBase64 })),
+        charCounter,
+        locations: locations.map(l => ({ id: l.id, name: l.name, desc: l.desc, imageBase64: l.imageBase64 })),
+        locCounter,
+        shotsData,
+        currentProjectId,
+      };
+      sessionStorage.setItem('cs_session', JSON.stringify(state));
+    } catch(e) { /* sessionStorage full — ignore */ }
+  }
+
+  function restoreSessionState() {
+    try {
+      const raw = sessionStorage.getItem('cs_session');
+      if (!raw) return false;
+      const state = JSON.parse(raw);
+      // Restore page
+      if (state.activePage) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        const pg = document.getElementById(state.activePage);
+        if (pg) pg.classList.add('active');
+        const navEl = document.querySelector(`[onclick*="${state.activePage}"]`);
+        if (navEl) navEl.classList.add('active');
+      }
+      // Restore currentProjectId
+      if (state.currentProjectId) currentProjectId = state.currentProjectId;
+      // Apply state (reuse existing function — but skip page navigation)
+      applyState(state);
+      return true;
+    } catch(e) { return false; }
+  }
+
   function navigate(pageId, el) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById(pageId).classList.add('active');
     el.classList.add('active');
+    saveSessionState();
   }
+
+  // Auto-save on any input change
+  function setupAutoSave() {
+    const inputs = ['idea-content','duration-val','shot-script','director-note'];
+    inputs.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', () => saveSessionState());
+    });
+    // Save on select changes
+    const selects = ['idea-tone','camera-type','lighting-type','mood-type'];
+    selects.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('change', () => saveSessionState());
+    });
+    // Save on flag changes
+    ['flag-no-talking','flag-no-text','flag-portrait','flag-slow'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('change', () => saveSessionState());
+    });
+  }
+
   window.addEventListener('DOMContentLoaded', () => {
     activeProvider = localStorage.getItem('cs_active_provider') || 'anthropic';
     ['anthropic','openai','gemini'].forEach(p => {
@@ -1833,7 +1919,18 @@
     refreshProviderUI();
     loadTotalStats();
     renderProjectsList();
-    window.addEventListener('beforeunload', saveSessionStats);
+    setupAutoSave();
+    // Restore session state on refresh
+    const restored = restoreSessionState();
+    if (!restored) {
+      // Default page
+      document.getElementById('page-ideas').classList.add('active');
+      document.querySelector('[onclick*="page-ideas"]')?.classList.add('active');
+    }
+    window.addEventListener('beforeunload', () => {
+      saveSessionState();
+      saveSessionStats();
+    });
   });
 
   function loadTotalStats() {
@@ -2040,6 +2137,49 @@
     toast('تم الحذف');
   }
 
+  function newSession() {
+    if (!confirm('بدء جلسة جديدة؟\nسيُمسح كل شيء — السكريبت، الشخصيات، المواقع، اللقطات.\nالمشاريع المحفوظة لن تُتأثر.')) return;
+    // Clear session storage
+    sessionStorage.removeItem('cs_session');
+    // Clear all state
+    currentProjectId = null;
+    lastIdeaText = ''; shotsData = [];
+    characters = []; charCounter = 0;
+    locations  = []; locCounter  = 0;
+    // Reset all inputs
+    document.getElementById('idea-content').value  = '';
+    document.getElementById('shot-script').value   = '';
+    document.getElementById('director-note').value = '';
+    document.getElementById('duration-val').value  = '60';
+    // Reset idea output
+    document.getElementById('idea-output-body').innerHTML = '<div class="empty-state"><div class="empty-icon">✦</div><div>اكتب المعلومات واضغط أنشئ الفكرة</div></div>';
+    document.getElementById('copy-idea-btn').style.display = 'none';
+    // Reset shots output
+    document.getElementById('shots-output-body').innerHTML = '<div class="empty-state" style="padding:60px 20px;"><div class="empty-icon">◈</div><div>Fill in the details and hit Generate</div></div>';
+    ['add-shot-area','panels-area','shots-badge','copy-shots-btn','gen-panels-btn'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.style.display = 'none';
+    });
+    // Clear chars and locs UI
+    document.getElementById('char-cards-list').innerHTML = '';
+    document.getElementById('loc-cards-list').innerHTML  = '';
+    // Reset video type to default
+    currentVideoType = 'cinematic';
+    document.querySelectorAll('.vtype-btn').forEach(b => b.classList.toggle('active', b.dataset.type === 'cinematic'));
+    // Reset shot count
+    currentShotCount = 5;
+    document.querySelectorAll('.shot-pill').forEach(p => p.classList.toggle('active', p.textContent.trim() === '5'));
+    // Reset flags
+    ['flag-no-talking','flag-no-text','flag-portrait','flag-slow'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.checked = false;
+    });
+    // Navigate to shots page
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-shots').classList.add('active');
+    document.querySelector('[onclick*="page-shots"]')?.classList.add('active');
+    toast('جلسة جديدة ✓');
+  }
+
   function newProject() {
     if(!confirm('بدء مشروع جديد؟ المشاريع المحفوظة لن تُحذف.')) return;
     currentProjectId=null;
@@ -2230,6 +2370,7 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
       document.getElementById(`loc-img-area-${id}`).innerHTML = `<img src="${src}" alt="loc ref">`;
       document.getElementById(`loc-badge-${id}`).style.display = 'inline';
       document.getElementById(`loc-extract-btn-${id}`).style.display = 'inline';
+      saveSessionState();
     });
   }
 
@@ -2244,17 +2385,19 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
       document.getElementById(`loc-img-area-${id}`).innerHTML = `<img src="${src}" alt="loc ref">`;
       document.getElementById(`loc-badge-${id}`).style.display = 'inline';
       document.getElementById(`loc-extract-btn-${id}`).style.display = 'inline';
+      saveSessionState();
     });
   }
 
   function updateLoc(id, field, val) {
     const idx = locations.findIndex(l => l.id === id);
-    if (idx > -1) locations[idx][field] = val;
+    if (idx > -1) { locations[idx][field] = val; saveSessionState(); }
   }
 
   function removeLocCard(id) {
     locations = locations.filter(l => l.id !== id);
     document.getElementById(`loc-card-${id}`)?.remove();
+    saveSessionState();
   }
 
   async function extractLocImage(id) {
@@ -2357,20 +2500,21 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
     readImageFile(file, (base64, src) => {
       const idx = characters.findIndex(c => c.id === id);
       if (idx > -1) characters[idx].imageBase64 = base64;
-      const area = document.getElementById(`char-img-area-${id}`);
-      area.innerHTML = `<img src="${src}" alt="char ref">`;
+      document.getElementById(`char-img-area-${id}`).innerHTML = `<img src="${src}" alt="char ref">`;
       document.getElementById(`char-badge-${id}`).style.display = 'inline';
+      saveSessionState();
     });
   }
 
   function updateCharRole(id, val) {
     const idx = characters.findIndex(c => c.id === id);
-    if (idx > -1) characters[idx].role = val;
+    if (idx > -1) { characters[idx].role = val; saveSessionState(); }
   }
 
   function removeCharCard(id) {
     characters = characters.filter(c => c.id !== id);
     document.getElementById(`char-card-${id}`)?.remove();
+    saveSessionState();
   }
 
   function buildCharToken() {
@@ -2561,8 +2705,8 @@ Return ONLY valid JSON:
     document.getElementById('copy-shots-btn').style.display='flex';
     document.getElementById('gen-panels-btn').style.display='flex';
     document.getElementById('add-shot-area').style.display='block';
-    // Reset panels area
     document.getElementById('panels-area').style.display='none';
+    saveSessionState();
   }
 
   function buildShotCard(s, idx) {
