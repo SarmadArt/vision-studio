@@ -1018,6 +1018,30 @@
   .session-stat { color: var(--text3); font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
   .session-stat span { color: var(--accent); }
 
+  /* --- QUICK ACTION BAR --- */
+  .quick-action-btn {
+    display: flex; align-items: center; gap: 5px;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--surface);
+    font-size: 11px; font-weight: 500;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    cursor: pointer; transition: all 0.12s;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .qa-save {
+    color: var(--accent);
+    border-color: rgba(200,240,96,0.3);
+    background: rgba(200,240,96,0.05);
+  }
+  .qa-save:hover { background: rgba(200,240,96,0.1); }
+  .qa-new {
+    color: var(--text2);
+    border-color: var(--border2);
+  }
+  .qa-new:hover { color: var(--text); border-color: var(--text3); }
+
   /* --- LOCATION CARDS --- */
   .loc-card {
     border: 1px solid var(--border2);
@@ -1338,6 +1362,18 @@
 
         <!-- LEFT PANEL -->
         <div style="overflow-y:auto; height:100%; padding-bottom:20px;">
+
+          <!-- QUICK ACTIONS BAR -->
+          <div style="display:flex; gap:6px; margin-bottom:12px;">
+            <button class="quick-action-btn qa-save" onclick="saveCurrentProject()" title="Save project">
+              <span id="qa-save-spinner" style="display:none" class="spinner" style="width:10px;height:10px;border-width:1.5px;"></span>
+              <span>⊙ Save</span>
+            </button>
+            <button class="quick-action-btn qa-new" onclick="confirmNewSession()" title="New session">
+              + New
+            </button>
+            <div id="qa-project-name" style="flex:1; display:flex; align-items:center; padding:0 8px; font-size:10px; color:var(--text3); font-family:'IBM Plex Mono',monospace; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;"></div>
+          </div>
 
           <!-- CONTENT -->
           <div class="card">
@@ -2190,7 +2226,11 @@
   async function saveCurrentProject() {
     const script = document.getElementById('shot-script').value.trim()||document.getElementById('idea-content').value.trim();
     if(!script){ toast('أضف سكريبت أو فكرة أولاً'); return; }
-    const spinner=document.getElementById('save-proj-spinner'); spinner.style.display='inline-block';
+    // Show spinner in both the projects page button and the quick action bar
+    const spinner1 = document.getElementById('save-proj-spinner');
+    const spinner2 = document.getElementById('qa-save-spinner');
+    if(spinner1) spinner1.style.display='inline-block';
+    if(spinner2) spinner2.style.display='inline-block';
     let projName=script.slice(0,60).replace(/\n/g,' ');
     try {
       const key=getKey(activeProvider);
@@ -2208,7 +2248,11 @@
       toast('تم حفظ المشروع ✓');
     }
     localStorage.setItem('cs_projects',JSON.stringify(projects));
-    spinner.style.display='none';
+    if(spinner1) spinner1.style.display='none';
+    if(spinner2) spinner2.style.display='none';
+    // Update project name badge in quick action bar
+    const badge = document.getElementById('qa-project-name');
+    if(badge) badge.textContent = projName;
     renderProjectsList();
   }
 
@@ -2219,6 +2263,9 @@
     currentProjectId=id;
     applyState(proj.state);
     toast('تم تحميل: '+proj.name);
+    // Update quick bar name
+    const badge = document.getElementById('qa-project-name');
+    if(badge) badge.textContent = proj.name;
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     document.getElementById('page-shots').classList.add('active');
@@ -2233,6 +2280,10 @@
     if(currentProjectId===id) currentProjectId=null;
     renderProjectsList();
     toast('تم الحذف');
+  }
+
+  function confirmNewSession() {
+    newSession();
   }
 
   function newSession() {
@@ -2257,6 +2308,8 @@
     ['add-shot-area','panels-area','shots-badge','copy-shots-btn','gen-panels-btn'].forEach(id => {
       const el = document.getElementById(id); if (el) el.style.display = 'none';
     });
+    const badge = document.getElementById('qa-project-name');
+    if(badge) badge.textContent = '';
     // Clear chars and locs UI
     document.getElementById('char-cards-list').innerHTML = '';
     document.getElementById('loc-cards-list').innerHTML  = '';
