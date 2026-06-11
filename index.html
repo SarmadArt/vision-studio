@@ -3503,13 +3503,22 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
     btn.disabled  = true;
     spinner.style.display = 'inline-block';
     try {
-      const prompt = `Split this script into exactly ${currentShotCount} shot descriptions. Each description must be 1 short sentence (max 8 words) describing what happens visually in that shot moment. Keep the original language (Arabic or English).
+      // Detect script language
+      const isArabic = /[؀-ۿ]/.test(script);
+      const langRule = isArabic
+        ? 'CRITICAL: Write ALL excerpts in Arabic only — no English words at all.'
+        : 'Write all excerpts in English.';
+
+      const prompt = `Split this script into exactly ${currentShotCount} visual shot descriptions.
+${langRule}
+Each description: 1 short sentence (max 8 words), describe WHAT HAPPENS VISUALLY in that moment.
+Stay faithful to the script content — do not invent new content.
 
 Script:
 ${script}
 
-Return ONLY valid JSON:
-{"shots":[{"shot":1,"excerpt":"short visual description"},{"shot":2,"excerpt":"..."}]}`;
+Return ONLY valid JSON (no markdown, no explanation):
+{"shots":[{"shot":1,"excerpt":"وصف بصري قصير"},{"shot":2,"excerpt":"..."}]}`;
       const result = await callAPI(prompt);
       const parsed = safeParseJSON(result);
       if (parsed?.shots) {
