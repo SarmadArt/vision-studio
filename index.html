@@ -2129,58 +2129,44 @@
   // --- NAV ---
   // --- AUTO-SAVE SESSION STATE ---
   function saveSessionState() {
+    const state = {
+      activePage: document.querySelector('.page.active')?.id || 'page-shots',
+      platform: currentPlatform,
+      ideaContent: document.getElementById('idea-content')?.value || '',
+      ideaDuration: document.getElementById('duration-val')?.value || '60',
+      ideaTone: document.getElementById('idea-tone')?.value || '',
+      shotScript: document.getElementById('shot-script')?.value || '',
+      directorNote: document.getElementById('director-note')?.value || '',
+      shotCount: currentShotCount,
+      selectedVideoTypes: [...selectedVideoTypes],
+      camera: document.getElementById('camera-type')?.value || '',
+      currentLook, currentLookSub,
+      customLookText,
+      flagNoTalk: document.getElementById('flag-no-talking')?.checked || false,
+      flagNoText: document.getElementById('flag-no-text')?.checked || false,
+      flagPortrait: document.getElementById('flag-portrait')?.checked || false,
+      flagSlow: document.getElementById('flag-slow')?.checked || false,
+      characters: characters.map(c => ({ id:c.id, role:c.role })),
+      charCounter,
+      locations: locations.map(l => ({ id:l.id, name:l.name, desc:l.desc })),
+      locCounter,
+      currentProjectId,
+      genMode,
+      manualAngles: genMode==='manual' ? getManualAngles() : [],
+      styleRefText: window._styleRefText || '',
+    };
     try {
-      const state = {
-        activePage: document.querySelector('.page.active')?.id || 'page-shots',
-        platform: currentPlatform,
-        ideaContent: document.getElementById('idea-content')?.value || '',
-        ideaDuration: document.getElementById('duration-val')?.value || '60',
-        ideaTone: document.getElementById('idea-tone')?.value || '',
-        ideaOutput: lastIdeaText,
-        shotScript: document.getElementById('shot-script')?.value || '',
-        directorNote: document.getElementById('director-note')?.value || '',
-        shotCount: currentShotCount,
-        videoType: currentVideoType,
-        selectedVideoTypes: [...selectedVideoTypes],
-        camera: document.getElementById('camera-type')?.value || '',
-        lighting: document.getElementById('lighting-type')?.value || '',
-        mood: document.getElementById('mood-type')?.value || '',
-        currentLook, currentLookSub,
-        flagNoTalk: document.getElementById('flag-no-talking')?.checked || false,
-        flagNoText: document.getElementById('flag-no-text')?.checked || false,
-        flagPortrait: document.getElementById('flag-portrait')?.checked || false,
-        flagSlow: document.getElementById('flag-slow')?.checked || false,
-        // Exclude imageBase64 to avoid sessionStorage size limit — save metadata only
-        characters: characters.map(c => ({ id: c.id, role: c.role, hasImage: !!c.imageBase64 })),
-        charCounter,
-        locations: locations.map(l => ({ id: l.id, name: l.name, desc: l.desc, hasImage: !!l.imageBase64 })),
-        locCounter,
-        // Save shots without full prompt to save space — just key fields
-        shotsData: shotsData.map(s => ({
-          shot_id: s.shot_id, shot_number: s.shot_number, scene_ar: s.scene_ar,
-          angle: s.angle, shot_type: s.shot_type, duration: s.duration,
-          chars_used: s.chars_used, loc_used: s.loc_used, ref_note: s.ref_note,
-          prompt_en: (s.prompt_en||'').slice(0, 500), // truncate to save space
-        })),
-        currentProjectId,
-        genMode,
-        manualAngles: genMode === 'manual' ? getManualAngles() : [],
-        styleRefText: window._styleRefText || '',
-      };
-      const json = JSON.stringify(state);
-      sessionStorage.setItem('cs_session', json);
+      sessionStorage.setItem('cs_session', JSON.stringify(state));
     } catch(e) {
-      // If still too large, save without shots
       try {
-        const minimal = {
-          activePage: document.querySelector('.page.active')?.id || 'page-shots',
-          shotScript: document.getElementById('shot-script')?.value || '',
-          directorNote: document.getElementById('director-note')?.value || '',
-          currentLook, currentLookSub, currentVideoType, currentShotCount,
-          genMode, manualAngles: genMode==='manual'?getManualAngles():[],
-        };
-        sessionStorage.setItem('cs_session', JSON.stringify(minimal));
-      } catch(e2) { /* give up */ }
+        sessionStorage.setItem('cs_session', JSON.stringify({
+          activePage: state.activePage,
+          shotScript: state.shotScript,
+          directorNote: state.directorNote,
+          selectedVideoTypes: state.selectedVideoTypes,
+          currentLook, currentLookSub, genMode,
+        }));
+      } catch(e2) {}
     }
   }
 
@@ -2460,6 +2446,16 @@
     // Restore shots
     shotsData=state.shotsData||[];
     if(shotsData.length) renderAllShots();
+    // Restore custom look text
+    if (state.customLookText) {
+      customLookText = state.customLookText;
+      const lookTxt = document.getElementById('look-img-text');
+      const lookExt = document.getElementById('look-img-extracted');
+      if (lookTxt) lookTxt.textContent = state.customLookText;
+      if (lookExt) lookExt.style.display = 'block';
+      const clearBtn = document.getElementById('clear-look-img-btn');
+      if (clearBtn) clearBtn.style.display = 'inline';
+    }
     // Restore style ref
     if (state.styleRefText) {
       window._styleRefText   = state.styleRefText;
