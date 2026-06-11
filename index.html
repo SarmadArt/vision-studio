@@ -1310,6 +1310,29 @@
   ::-webkit-scrollbar { width: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 10px; }
+
+  /* Model selector */
+  .model-select-wrap { margin-top: 10px; }
+  .model-select-label { font-size: 11px; color: var(--text3); margin-bottom: 5px; }
+  .model-select { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 12px; padding: 6px 10px; cursor: pointer; font-family: inherit; }
+  .model-select:focus { outline: none; border-color: var(--accent); }
+  .model-select option { background: var(--surface2); }
+  .model-note { font-size: 11px; color: var(--accent); margin-top: 4px; }
+  .model-price-badge { display:inline-flex; gap:6px; font-size:11px; color:var(--text3); margin-top:3px; }
+  .model-price-badge .pin { background:var(--surface); border:1px solid var(--border); border-radius:4px; padding:1px 6px; }
+  .model-price-badge .pin.cheap { border-color:#4caf50; color:#4caf50; }
+
+  /* Pricing comparison table */
+  .pricing-table-wrap { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .pricing-table-title { font-size: 12px; color: var(--text2); font-weight: 600; margin-bottom: 8px; }
+  .pricing-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .pricing-table th { text-align: right; color: var(--text3); font-weight: 500; padding: 4px 6px; border-bottom: 1px solid var(--border); }
+  .pricing-table td { padding: 5px 6px; border-bottom: 1px solid var(--border2); color: var(--text2); }
+  .pricing-table tr:last-child td { border-bottom: none; }
+  .pricing-table .t-cheap { color: #4caf50; font-weight: 600; }
+  .pricing-table .t-prov { color: var(--text3); font-size:10px; }
+  .pricing-table .t-rec { background: rgba(200,240,96,0.07); }
+
 </style>
 </head>
 <body>
@@ -1995,6 +2018,62 @@
           </div>
         </div>
 
+        <!-- Model Selectors -->
+        <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border);">
+          <div style="font-size:12px; color:var(--text2); font-weight:600; margin-bottom:10px;">🎛️ اختر النموذج لكل مزود</div>
+
+          <!-- Anthropic -->
+          <div style="margin-bottom:12px;">
+            <div style="font-size:11px; color:var(--text3); margin-bottom:4px; display:flex; align-items:center; gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#c96442;display:inline-block;"></span> Anthropic</div>
+            <select class="model-select" id="model-anthropic" onchange="changeModel('anthropic',this.value)"></select>
+            <div class="model-note" id="note-anthropic"></div>
+            <div class="model-price-badge" id="price-anthropic"></div>
+          </div>
+
+          <!-- OpenAI -->
+          <div style="margin-bottom:12px;">
+            <div style="font-size:11px; color:var(--text3); margin-bottom:4px; display:flex; align-items:center; gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#10a37f;display:inline-block;"></span> OpenAI</div>
+            <select class="model-select" id="model-openai" onchange="changeModel('openai',this.value)"></select>
+            <div class="model-note" id="note-openai"></div>
+            <div class="model-price-badge" id="price-openai"></div>
+          </div>
+
+          <!-- Gemini -->
+          <div style="margin-bottom:12px;">
+            <div style="font-size:11px; color:var(--text3); margin-bottom:4px; display:flex; align-items:center; gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#4285f4;display:inline-block;"></span> Google Gemini</div>
+            <select class="model-select" id="model-gemini" onchange="changeModel('gemini',this.value)"></select>
+            <div class="model-note" id="note-gemini"></div>
+            <div class="model-price-badge" id="price-gemini"></div>
+          </div>
+
+          <!-- Comparison Table -->
+          <div class="pricing-table-wrap">
+            <div class="pricing-table-title">📊 مقارنة الأسعار (لكل مليون token)</div>
+            <table class="pricing-table">
+              <tr><th>النموذج</th><th>Input</th><th>Output</th><th></th></tr>
+              <!-- GPT -->
+              <tr><td><b class="t-prov">OpenAI</b></td><td></td><td></td><td></td></tr>
+              <tr class="t-rec"><td>GPT-4.1 Nano</td><td class="t-cheap">$0.10</td><td class="t-cheap">$0.40</td><td>⚡</td></tr>
+              <tr class="t-rec"><td>GPT-4o Mini</td><td class="t-cheap">$0.15</td><td class="t-cheap">$0.60</td><td>✅</td></tr>
+              <tr><td>GPT-4.1 Mini</td><td>$0.40</td><td>$1.60</td><td></td></tr>
+              <tr><td>GPT-4o</td><td>$2.50</td><td>$10.00</td><td></td></tr>
+              <tr><td>GPT-4.1</td><td>$2.00</td><td>$8.00</td><td></td></tr>
+              <!-- Gemini -->
+              <tr><td><b class="t-prov">Google</b></td><td></td><td></td><td></td></tr>
+              <tr class="t-rec"><td>Gemini 3.1 Flash-Lite</td><td class="t-cheap">$0.25</td><td class="t-cheap">$1.50</td><td>⚡</td></tr>
+              <tr class="t-rec"><td>Gemini 2.5 Flash</td><td class="t-cheap">$0.30</td><td class="t-cheap">$2.50</td><td>✅</td></tr>
+              <tr><td>Gemini 3 Flash</td><td>$0.50</td><td>$3.00</td><td></td></tr>
+              <tr><td>Gemini 2.5 Pro</td><td>$1.25</td><td>$10.00</td><td></td></tr>
+              <tr><td>Gemini 3.1 Pro</td><td>$2.00</td><td>$12.00</td><td></td></tr>
+              <!-- Anthropic -->
+              <tr><td><b class="t-prov">Anthropic</b></td><td></td><td></td><td></td></tr>
+              <tr class="t-rec"><td>Claude Haiku 4.5</td><td class="t-cheap">$1.00</td><td class="t-cheap">$5.00</td><td>⚡</td></tr>
+              <tr><td>Claude Sonnet 4.6</td><td>$3.00</td><td>$15.00</td><td></td></tr>
+              <tr><td>Claude Opus 4.8</td><td>$5.00</td><td>$25.00</td><td>🏆</td></tr>
+            </table>
+          </div>
+        </div>
+
         <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border);">
           <div style="font-size:11px; color:var(--text3); line-height:2;">
             ✦ كل المفاتيح تُحفظ في localStorage على جهازك فقط<br>
@@ -2037,11 +2116,49 @@
   let lastShotsData = [];
   let activeProvider = 'anthropic';
 
-  // Pricing per 1M tokens (input / output)
+  // --- MODEL OPTIONS (اختر النموذج) ---
+  const MODEL_OPTIONS = {
+    anthropic: [
+      { id: 'claude-haiku-4-5-20251001',  label: 'Haiku 4.5',   tier: 'cheap',   in: 1.00,  out: 5.00,  note: '⚡ الأرخص — سريع جداً' },
+      { id: 'claude-sonnet-4-6-20251105', label: 'Sonnet 4.6',  tier: 'mid',     in: 3.00,  out: 15.00, note: '⚖️ توازن مثالي' },
+      { id: 'claude-opus-4-8-20260528',   label: 'Opus 4.8',    tier: 'premium', in: 5.00,  out: 25.00, note: '🏆 الأقوى' },
+    ],
+    openai: [
+      { id: 'gpt-4.1-nano', label: 'GPT-4.1 Nano', tier: 'cheap',   in: 0.10, out: 0.40,  note: '⚡ الأرخص — مهام بسيطة' },
+      { id: 'gpt-4o-mini',  label: 'GPT-4o Mini',  tier: 'cheap',   in: 0.15, out: 0.60,  note: '✅ رخيص + جيد لمعظم المهام' },
+      { id: 'gpt-4.1-mini', label: 'GPT-4.1 Mini', tier: 'mid',     in: 0.40, out: 1.60,  note: '⚖️ توازن جيد' },
+      { id: 'gpt-4o',       label: 'GPT-4o',        tier: 'mid',     in: 2.50, out: 10.00, note: '🎯 جودة عالية' },
+      { id: 'gpt-4.1',      label: 'GPT-4.1',       tier: 'premium', in: 2.00, out: 8.00,  note: '🎯 جودة + سياق 1M' },
+    ],
+    gemini: [
+      { id: 'gemini-3.1-flash-lite', label: 'Gemini 3.1 Flash-Lite', tier: 'cheap',   in: 0.25, out: 1.50,  note: '⚡ الأرخص من Gemini' },
+      { id: 'gemini-2.5-flash',      label: 'Gemini 2.5 Flash',      tier: 'cheap',   in: 0.30, out: 2.50,  note: '✅ سريع + رخيص' },
+      { id: 'gemini-3-flash',        label: 'Gemini 3 Flash',        tier: 'mid',     in: 0.50, out: 3.00,  note: '⚖️ توازن جيد' },
+      { id: 'gemini-2.5-pro',        label: 'Gemini 2.5 Pro',        tier: 'mid',     in: 1.25, out: 10.00, note: '🎯 جودة عالية' },
+      { id: 'gemini-3.1-pro',        label: 'Gemini 3.1 Pro',        tier: 'premium', in: 2.00, out: 12.00, note: '🏆 الأقوى من Gemini' },
+    ]
+  };
+
+  // النماذج الافتراضية (الأرخص لكل provider)
+  let selectedModels = {
+    anthropic: 'claude-haiku-4-5-20251001',
+    openai:    'gpt-4o-mini',
+    gemini:    'gemini-2.5-flash'
+  };
+
+  function getSelectedModel(provider) {
+    return selectedModels[provider] || MODEL_OPTIONS[provider][0].id;
+  }
+  function getModelInfo(provider, modelId) {
+    const opts = MODEL_OPTIONS[provider] || [];
+    return opts.find(m => m.id === modelId) || opts[0] || { in: 3, out: 15 };
+  }
+
+  // Pricing per 1M tokens — dynamic based on selected model
   const PRICING = {
-    anthropic: { in: 3,    out: 15   },
-    openai:    { in: 2.5,  out: 10   },
-    gemini:    { in: 1.25, out: 5    }
+    get anthropic() { const m = getModelInfo('anthropic', getSelectedModel('anthropic')); return { in: m.in, out: m.out }; },
+    get openai()    { const m = getModelInfo('openai',    getSelectedModel('openai'));    return { in: m.in, out: m.out }; },
+    get gemini()    { const m = getModelInfo('gemini',    getSelectedModel('gemini'));     return { in: m.in, out: m.out }; },
   };
 
   // --- PROVIDER ---
@@ -2060,6 +2177,44 @@
     refreshProviderUI();
     toast('المزود النشط: ' + p);
   }
+  // --- MODEL SELECTION ---
+  function initModelSelects() {
+    ['anthropic','openai','gemini'].forEach(prov => {
+      const sel = document.getElementById('model-' + prov);
+      if (!sel) return;
+      sel.innerHTML = '';
+      MODEL_OPTIONS[prov].forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.textContent = m.label + (m.tier === 'cheap' ? ' ⚡' : m.tier === 'premium' ? ' 🏆' : '');
+        if (m.id === getSelectedModel(prov)) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      updateModelNote(prov);
+    });
+  }
+  function updateModelNote(prov) {
+    const modelId = getSelectedModel(prov);
+    const info = getModelInfo(prov, modelId);
+    const noteEl = document.getElementById('note-' + prov);
+    const priceEl = document.getElementById('price-' + prov);
+    if (noteEl) noteEl.textContent = info.note || '';
+    if (priceEl) priceEl.innerHTML = `<span class="pin ${info.tier === 'cheap' ? 'cheap' : ''}">IN $${info.in}/M</span><span class="pin ${info.tier === 'cheap' ? 'cheap' : ''}">OUT $${info.out}/M</span>`;
+  }
+  function changeModel(prov, modelId) {
+    selectedModels[prov] = modelId;
+    localStorage.setItem('cs_model_' + prov, modelId);
+    updateModelNote(prov);
+    const info = getModelInfo(prov, modelId);
+    toast(prov + ': ' + info.label);
+  }
+  function loadSavedModels() {
+    ['anthropic','openai','gemini'].forEach(prov => {
+      const saved = localStorage.getItem('cs_model_' + prov);
+      if (saved) selectedModels[prov] = saved;
+    });
+  }
+
   function saveKey(provider) {
     const val = document.getElementById('key-' + provider).value.trim();
     if (!val) { toast('أدخل المفتاح أولاً'); return; }
@@ -2089,7 +2244,7 @@
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type':'application/json', 'x-api-key':key, 'anthropic-version':'2023-06-01' },
-        body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:4000, messages:[{role:'user',content:prompt}] })
+        body: JSON.stringify({ model: getSelectedModel('anthropic'), max_tokens:4000, messages:[{role:'user',content:prompt}] })
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);
@@ -2101,7 +2256,7 @@
       const res = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+key },
-        body: JSON.stringify({ model:'gpt-4o', max_tokens:4000, messages:[{role:'user',content:prompt}] })
+        body: JSON.stringify({ model: getSelectedModel('openai'), max_tokens:4000, messages:[{role:'user',content:prompt}] })
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);
@@ -2111,7 +2266,7 @@
 
     } else if (activeProvider === 'gemini') {
       const res = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + key,
+        `https://generativelanguage.googleapis.com/v1beta/models/${getSelectedModel('gemini')}:generateContent?key=` + key,
         { method:'POST', headers:{'Content-Type':'application/json'},
           body: JSON.stringify({ contents:[{parts:[{text:prompt}]}], generationConfig:{maxOutputTokens:4000} }) }
       );
@@ -2230,7 +2385,9 @@
         document.getElementById('dot-' + p).classList.add('has-key');
       }
     });
+    loadSavedModels();
     refreshProviderUI();
+    initModelSelects();
     loadTotalStats();
     renderProjectsList();
     initVtypeImages();
@@ -2833,7 +2990,7 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
         method: 'POST',
         headers: { 'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01' },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514', max_tokens: 120,
+          model: getSelectedModel('anthropic'), max_tokens: 120,
           messages: [{ role:'user', content:[
             { type:'image', source:{ type:'base64', media_type:'image/jpeg', data: base64 }},
             { type:'text', text:'Extract the cinematic Look from this image: lighting style + color grade only, max 20 words, English phrase only. No descriptions of people or content. Example: "warm golden hour light, teal-orange color grade, soft shadows"' }
@@ -3101,7 +3258,7 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
         method: 'POST',
         headers: { 'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01' },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514', max_tokens: 150,
+          model: getSelectedModel('anthropic'), max_tokens: 150,
           messages: [{ role:'user', content:[
             { type:'image', source:{ type:'base64', media_type:'image/jpeg', data: loc.imageBase64 }},
             { type:'text', text:'Extract ONLY physical elements and space type. Ignore lighting/colors. Max 15 words. Format: "space type, key elements". Output phrase only.' }
@@ -3490,7 +3647,7 @@ Return ONLY valid JSON:
         method: 'POST',
         headers: { 'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01' },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514', max_tokens: 200,
+          model: getSelectedModel('anthropic'), max_tokens: 200,
           messages: [{ role:'user', content:[
             { type:'image', source:{ type:'base64', media_type:'image/jpeg', data: window._styleRefBase64 }},
             { type:'text', text:`Analyze this video/photo frame and extract ONLY the cinematic visual style in a compact English phrase (max 25 words). Focus on: color grade, lighting style, film look, mood/atmosphere, camera feel. Do NOT describe the content or people. Output the style phrase only. Example: "warm teal-orange grade, soft studio lighting, shallow depth of field, cinematic anamorphic, intimate close-up feel"` }
@@ -3601,7 +3758,7 @@ ${multiLoc
 
     const prompt = `You are a professional cinematographer and director. Generate exactly ${currentShotCount} shots total.
 
-VIDEO TYPE: ${videoTypeMap[currentVideoType]}
+VIDEO TYPE: ${videoType}
 SCRIPT:
 ${script}
 ${directorNote ? `\nDIRECTOR'S NOTE (follow strictly throughout all shots):\n${directorNote}` : ''}
