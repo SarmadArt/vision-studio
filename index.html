@@ -3782,18 +3782,25 @@ ${flags ? `FLAGS: ${flags}` : ''}
 ${noTalkInstruction}
 ${abInstruction}
 
-PROMPT FORMAT for prompt_en — structured lines, no fluff:
-Line 1: Visual action — describe WHO does WHAT physically (body language, gesture, expression)
+PROMPT FORMAT for prompt_en — MANDATORY structured format, every shot must follow this EXACTLY:
+Line 1: Visual action — describe WHO does WHAT physically (body language, gesture, expression, movement)
 ${charNames.length ? `Line 2: [CHAR: CharName — match reference outfit | body state]
   CRITICAL CHAR RULES:
   • Include [CHAR] line for EVERY character in chars_used — no exceptions
   • Use English name (Doctor, Patient, Engineer...)
   • Always specify body state: speaking (mouth open, leaning forward, gesturing) OR listening (mouth closed, nodding) OR acting (describe action)` : ''}
-${activeLocations.length ? `Line 3: [LOC: ${multiLoc ? 'location name' : activeLocations[0]?.name || 'location'} — vary framing/angle]` : ''}
+${activeLocations.length ? `Line 3: [LOC: ${multiLoc ? 'location name' : activeLocations[0]?.name || 'location'} — vary framing/angle]` : `Line 3: [LOC: environment — describe setting briefly]`}
 Line 4: [CAM: ${camera.split(',')[0]} | angle | movement]
-Line 5: [LIGHT: lighting]
-Line 6: [GRADE: grade${styleRefText ? ` — STYLE REF: ${styleRefText}` : ''}]
+Line 5: [LIGHT: ${lighting}]
+Line 6: [GRADE: ${mood}${styleRefText ? ` — STYLE REF: ${styleRefText}` : ''}]
 ${flags ? `Line 7: [FLAGS: ${flags}]` : ''}
+
+CRITICAL PROMPT RULES:
+• prompt_en MUST have ALL lines above — never skip CAM, LIGHT, GRADE
+• Each line on its own line separated by \n
+• NO paragraph prose — only the structured lines above
+• Example prompt_en: "Doctor holds Botox vial, examining it carefully with focused expression.\n[CAM: Sony FX3 | CU | static]\n[LIGHT: bold dynamic lighting]\n[GRADE: vibrant social media grade]\n[FLAGS: 16:9]"
+• NEVER write a single sentence paragraph — always use the bracketed format
 
 SCRIPT DISTRIBUTION RULE:
 - Script has multiple lines/points. You have exactly ${currentShotCount} shots.
@@ -3958,8 +3965,15 @@ ${globalContext.charsCtx?'CHARS:\n'+globalContext.charsCtx:''}
 CAM:${globalContext.camera||''} | LIGHT:${globalContext.lighting||''} | GRADE:${globalContext.mood||''}
 ${globalContext.flags?'FLAGS:'+globalContext.flags:''}
 Shot ${s.shot_number} | Angle:${s.angle} | Type:${s.shot_type} | Scene:${s.scene_ar}
-DIALOG RULE: If 2+ chars in frame, specify speaker (mouth open, leaning forward, gesturing) vs listener (mouth closed, nodding). Derive from script context.
-{"scene_ar":"وصف جديد بالعربي","prompt_en":"fresh structured English-only prompt"}`;
+DIALOG RULE: If 2+ chars in frame, specify speaker vs listener.
+MANDATORY prompt_en FORMAT — use EXACTLY these structured lines separated by \\n:
+Line 1: Visual action (WHO does WHAT physically)
+Line 2: [CAM: \${globalContext.camera||'camera'} | \${s.angle} | movement]
+Line 3: [LIGHT: \${globalContext.lighting||'lighting'}]
+Line 4: [GRADE: \${globalContext.mood||'grade'}]
+\${globalContext.flags?'Line 5: [FLAGS: '+globalContext.flags+']':''}
+NEVER write a single sentence paragraph. Always use bracketed lines.
+{"scene_ar":"وصف جديد بالعربي","prompt_en":"Visual action here.\n[CAM: camera | angle | movement]\n[LIGHT: lighting]\n[GRADE: grade]"}`;
       const r = await callAPI(p);
       const parsed = safeParseJSON(r);
       if (!parsed) throw new Error('parse failed');
