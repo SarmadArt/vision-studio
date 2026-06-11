@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Idea Studio</title>
+<title>Idea Studio — Content Studio</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
@@ -515,7 +515,7 @@
       &nbsp;·&nbsp;
       <span class="token-cost" id="td-cost">$0.0000</span>
     </div>
-    <a href="index.html" class="back-btn">◈ Shot List</a>
+    <a href="index.html" class="back-btn">⌂ الرئيسية</a><a href="shots.html" class="back-btn" style="margin-right:4px;">◈ Shot List</a>
   </div>
 </header>
 
@@ -536,6 +536,9 @@
           <button class="dialect-btn" data-v="مصري" onclick="setDialect(this)">مصري</button>
           <button class="dialect-btn" data-v="فصيح" onclick="setDialect(this)">فصيح</button>
         </div>
+        <input type="text" id="dialect-custom" placeholder="أو اكتب لهجتك... مثال: حساوي، شامي، مغربي"
+          style="margin-top:8px;font-size:12px;padding:7px 12px;"
+          oninput="setDialectCustom(this.value)" />
       </div>
       <div class="field">
         <label>المنصة</label>
@@ -557,6 +560,18 @@
             Snap
           </button>
         </div>
+      </div>
+    </div>
+
+    <div class="field" style="margin-bottom:14px;">
+      <label>مدة الفيديو</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;" id="duration-row">
+        <button class="dialect-btn active" data-v="15" onclick="setDuration(this)">15ث</button>
+        <button class="dialect-btn" data-v="30" onclick="setDuration(this)">30ث</button>
+        <button class="dialect-btn" data-v="60" onclick="setDuration(this)">60ث</button>
+        <button class="dialect-btn" data-v="90" onclick="setDuration(this)">90ث</button>
+        <button class="dialect-btn" data-v="120" onclick="setDuration(this)">2 دقيقة</button>
+        <button class="dialect-btn" data-v="180" onclick="setDuration(this)">3 دقائق</button>
       </div>
     </div>
 
@@ -684,6 +699,7 @@
 <script>
   // ─── STATE ───
   let dialect = '';
+  let videoDuration = 15; // seconds
   let platform = 'instagram';
   let contentType = 'شخصية تتكلم للكاميرا';
   let trendMode = 'search';
@@ -823,10 +839,25 @@
 
   // ─── UI SETTERS ───
   function setDialect(el) {
-    document.querySelectorAll('.dialect-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#dialect-row .dialect-btn').forEach(b => b.classList.remove('active'));
     el.classList.add('active');
     dialect = el.dataset.v;
     localStorage.setItem('is_dialect', dialect);
+  }
+
+  function setDialectCustom(val) {
+    if (!val.trim()) return;
+    // Deactivate all pills when typing custom
+    document.querySelectorAll('#dialect-row .dialect-btn').forEach(b => b.classList.remove('active'));
+    dialect = val.trim();
+    localStorage.setItem('is_dialect', dialect);
+  }
+
+  function setDuration(el) {
+    document.querySelectorAll('#duration-row .dialect-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    videoDuration = parseInt(el.dataset.v);
+    localStorage.setItem('is_duration', videoDuration);
   }
   function setPlatform(p, el) {
     platform = p;
@@ -927,6 +958,17 @@
     const extra = document.getElementById('extra-details').value.trim();
     const plat = { instagram:'Instagram Reels', tiktok:'TikTok', youtube:'YouTube Shorts', snapchat:'Snapchat' }[platform];
     const dialectStr = dialect || 'خليجي';
+    const durationSec = videoDuration || 30;
+    const durationLabel = durationSec < 60 ? `${durationSec} ثانية` : `${durationSec/60} ${durationSec===60?'دقيقة':'دقائق'}`;
+    // Estimated words: ~2.5 words/sec for Arabic speech
+    const approxWords = Math.round(durationSec * 2.5);
+    // Estimated shots based on duration and type
+    const isCinematic = contentType.includes('سينمائي') || contentType.includes('Cinematic');
+    const isSimple = contentType.includes('توكينج') || contentType.includes('Talking') || contentType.includes('توعوي');
+    let suggestedShots;
+    if (isCinematic)     suggestedShots = Math.max(4, Math.round(durationSec / 5));
+    else if (isSimple)   suggestedShots = Math.max(3, Math.round(durationSec / 12));
+    else                 suggestedShots = Math.max(3, Math.round(durationSec / 8));
 
     let trendCtx = '';
     if (trendMode === 'search' && selectedTrends.length) {
@@ -936,12 +978,12 @@
       if (m) trendCtx = 'الترند/الفكرة: ' + m;
     }
 
-    return { topic, extra, plat, dialectStr, trendCtx, contentType };
+    return { topic, extra, plat, dialectStr, trendCtx, contentType, durationSec, durationLabel, approxWords, suggestedShots };
   }
 
   // ─── GENERATE 3 IDEAS ───
   async function generateIdeas() {
-    const { topic, extra, plat, dialectStr, trendCtx, contentType } = buildContext();
+    const { topic, extra, plat, dialectStr, trendCtx, contentType, durationSec, durationLabel, approxWords } = buildContext();
     if (!topic) { toast('اكتب الموضوع أولاً'); document.getElementById('topic-input').focus(); return; }
 
     const btn = document.getElementById('gen-btn');
@@ -955,16 +997,20 @@
     const systemPrompt = `أنت منتج محتوى رقمي محترف متخصص في ${plat}. مهمتك توليد أفكار فيديو إبداعية وجذابة.
 اللهجة المطلوبة: ${dialectStr} — التزم بها بدقة في كل الكلام والحوار.
 نوع المحتوى: ${contentType}.
+مدة الفيديو: ${durationSec} ثانية — السكريبت يجب أن يُقرأ في هذا الوقت تقريباً.
 لا تستخدم لهجة مختلفة أو فصحى إلا إذا طُلب ذلك صراحة.`;
 
     const prompt = `الموضوع: ${topic}
 ${trendCtx ? trendCtx + '\n' : ''}${extra ? 'تفاصيل إضافية: ' + extra + '\n' : ''}
 أنشئ 3 أفكار فيديو مختلفة تماماً لـ ${plat}.
 
+مدة الفيديو: ${durationLabel} (${durationSec} ثانية)
+عدد الكلمات المستهدف في كل سكريبت: ~${approxWords} كلمة (بما في ذلك الهوك)
+
 لكل فكرة اتبع هذا الهيكل بالضبط:
 IDEA_1
 HOOK: جملة الهوك (أول 2-3 ثواني تشد المشاهد)
-SCRIPT: السكريبت الكامل كما سيُقال أمام الكاميرا — جملة جملة — ${dialectStr} — لا توقيتات لا هاشتاقات
+SCRIPT: السكريبت الكامل — ${dialectStr} — جاهز للتصوير — لا توقيتات لا هاشتاقات — يستغرق قراءته ~${durationSec} ثانية
 ANGLE: كيف هذه الفكرة مختلفة ومثيرة (جملة واحدة)
 ---
 IDEA_2
@@ -979,7 +1025,7 @@ ANGLE: ...
 
 قواعد صارمة:
 - اللهجة ${dialectStr} في كل السكريبت بدون استثناء
-- SCRIPT يكون النص الكامل الجاهز للتصوير (مش ملاحظات أو شرح)
+- SCRIPT = النص الكامل الجاهز للتصوير (~${approxWords} كلمة)
 - كل فكرة مختلفة في الأسلوب والزاوية
 - لا مقدمة لا خاتمة — فقط الهيكل المطلوب`;
 
@@ -1236,11 +1282,17 @@ ${text}
   function sendToShotList() {
     const script = document.getElementById('script-editor').value.trim();
     if (!script) { toast('السكريبت فارغ'); return; }
-    // Save to localStorage for index.html to pick up
+    const idea = generatedIdeas[selectedIdeaIdx] || {};
+    // Pass script + context to shots.html
     localStorage.setItem('is_pending_script', script);
-    localStorage.setItem('is_pending_idea_hook', generatedIdeas[selectedIdeaIdx]?.hook || '');
+    localStorage.setItem('is_pending_idea_hook', idea.hook || '');
+    localStorage.setItem('is_pending_content_type', contentType || '');
+    localStorage.setItem('is_pending_platform', platform || 'instagram');
+    localStorage.setItem('is_pending_duration', videoDuration || 30);
+    const ctx = buildContext();
+    localStorage.setItem('is_pending_shots_count', ctx.suggestedShots || 5);
     toast('جاري الانتقال لـ Shot List...');
-    setTimeout(() => { window.location.href = 'index.html?from_ideas=1'; }, 700);
+    setTimeout(() => { window.location.href = 'shots.html?from_ideas=1'; }, 700);
   }
 
   // ─── HELPERS ───
@@ -1264,8 +1316,25 @@ ${text}
     // Restore dialect
     const saved = localStorage.getItem('is_dialect');
     if (saved) {
-      const btn = [...document.querySelectorAll('.dialect-btn')].find(b => b.dataset.v === saved);
-      if (btn) { btn.classList.add('active'); dialect = saved; }
+      dialect = saved;
+      const btn = [...document.querySelectorAll('#dialect-row .dialect-btn')].find(b => b.dataset.v === saved);
+      if (btn) {
+        btn.classList.add('active');
+      } else {
+        // Custom dialect — show in input
+        const customInput = document.getElementById('dialect-custom');
+        if (customInput) customInput.value = saved;
+      }
+    }
+    // Restore duration
+    const savedDur = localStorage.getItem('is_duration');
+    if (savedDur) {
+      videoDuration = parseInt(savedDur);
+      const durBtn = [...document.querySelectorAll('#duration-row .dialect-btn')].find(b => b.dataset.v === savedDur);
+      if (durBtn) {
+        document.querySelectorAll('#duration-row .dialect-btn').forEach(b => b.classList.remove('active'));
+        durBtn.classList.add('active');
+      }
     }
   });
 </script>
