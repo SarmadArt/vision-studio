@@ -892,6 +892,82 @@
   .shot-action-btn.regen:hover { color: var(--accent); border-color: var(--accent); }
   .shot-action-btn.spinning { opacity: 0.5; cursor: not-allowed; }
 
+  /* --- CHARACTER CARDS --- */
+  .char-card {
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .char-card-img-area {
+    position: relative;
+    width: 100%;
+    height: 90px;
+    background: var(--surface2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .char-card-img-area img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .char-card-img-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: var(--text3);
+    font-size: 11px;
+  }
+  .char-card-img-placeholder span { font-size: 20px; opacity: 0.4; }
+  .char-card-body {
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+  }
+  .char-role-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 12px;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    padding: 0;
+  }
+  .char-role-input::placeholder { color: var(--text3); }
+  .char-ref-badge {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: rgba(200,240,96,0.1);
+    color: var(--accent);
+    border: 1px solid rgba(200,240,96,0.2);
+    font-family: 'IBM Plex Mono', monospace;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .char-remove-btn {
+    width: 20px; height: 20px;
+    border-radius: 3px;
+    border: none;
+    background: transparent;
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .char-remove-btn:hover { color: var(--red); }
+
   /* --- IMAGE UPLOAD ZONE --- */
   .img-upload-zone {
     border: 1px dashed var(--border2);
@@ -908,6 +984,12 @@
   }
   .img-upload-zone:hover { border-color: var(--text3); }
   .img-upload-zone.has-image { border-color: var(--accent); border-style: solid; }
+  .img-upload-zone.drag-over,
+  .char-card-img-area.drag-over {
+    border-color: var(--accent) !important;
+    border-style: dashed !important;
+    background: rgba(200,240,96,0.06) !important;
+  }
   .loc-img-preview {
     width: 100%;
     max-height: 80px;
@@ -1085,11 +1167,15 @@
                 <span>Extract from image</span>
                 <span style="font-size:10px; color:var(--text3); font-family:'IBM Plex Mono',monospace;">elements only — no lighting/color</span>
               </label>
-              <div class="img-upload-zone" id="loc-upload-zone" onclick="document.getElementById('loc-img-input').click()">
+              <div class="img-upload-zone" id="loc-upload-zone"
+                onclick="document.getElementById('loc-img-input').click()"
+                ondragover="handleDragOver(event, this)"
+                ondragleave="handleDragLeave(event, this)"
+                ondrop="handleDropLocation(event, this)">
                 <input type="file" id="loc-img-input" accept="image/*" style="display:none" onchange="handleLocationImage(this)">
                 <div id="loc-upload-content">
                   <div style="font-size:18px; margin-bottom:4px; opacity:0.4;">⊕</div>
-                  <div style="font-size:11px; color:var(--text3);">Click to upload reference image</div>
+                  <div style="font-size:11px; color:var(--text3);">Click or drag image here</div>
                 </div>
               </div>
               <button class="btn btn-ghost" id="extract-loc-btn" onclick="extractLocation()" style="width:100%; margin-top:8px; display:none;">
@@ -1099,37 +1185,13 @@
             </div>
           </div>
 
-          <!-- CHARACTER -->
+          <!-- CHARACTERS -->
           <div class="card">
-            <div class="card-title">Character <span style="color:var(--text3);font-size:10px;font-weight:400;font-family:'IBM Plex Mono',monospace;">optional</span></div>
-            <div class="row row-2" style="margin-bottom:10px;">
-              <div class="field" style="margin-bottom:0">
-                <label>Gender</label>
-                <select id="char-gender">
-                  <option value="">— none —</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                </select>
-              </div>
-              <div class="field" style="margin-bottom:0">
-                <label>Ethnicity</label>
-                <select id="char-ethnicity">
-                  <option value="">— none —</option>
-                  <option value="Middle Eastern Arab">Arab / Middle Eastern</option>
-                  <option value="Gulf Arab">Gulf Arab</option>
-                  <option value="North African Arab">North African</option>
-                  <option value="South Asian">South Asian</option>
-                  <option value="East Asian">East Asian</option>
-                  <option value="Black African">Black African</option>
-                  <option value="Caucasian">Caucasian</option>
-                  <option value="Latino">Latino</option>
-                </select>
-              </div>
-            </div>
-            <div class="field" style="margin-bottom:0">
-              <label>Appearance / Outfit <span style="color:var(--text3);font-weight:400">(optional)</span></label>
-              <input type="text" id="char-appearance" placeholder="e.g: late 20s, short dark hair, white thobe, confident posture...">
-            </div>
+            <div class="card-title">Characters <span style="color:var(--text3);font-size:10px;font-weight:400;font-family:'IBM Plex Mono',monospace;">optional — multiple</span></div>
+            <div id="char-cards-list"></div>
+            <button class="btn btn-ghost" onclick="addCharCard()" style="width:100%; margin-top:4px; font-size:12px;">
+              + Add Character
+            </button>
           </div>
 
           <!-- VIDEO TYPE -->
@@ -1753,19 +1815,70 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
   let globalContext = {};
   let locationImageBase64 = null;
 
+  // --- DRAG AND DROP HELPERS ---
+  function handleDragOver(e, el) {
+    e.preventDefault();
+    e.stopPropagation();
+    el.classList.add('drag-over');
+  }
+
+  function handleDragLeave(e, el) {
+    e.preventDefault();
+    e.stopPropagation();
+    el.classList.remove('drag-over');
+  }
+
+  function handleDropLocation(e, el) {
+    e.preventDefault();
+    e.stopPropagation();
+    el.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (!file || !file.type.startsWith('image/')) { toast('Please drop an image file'); return; }
+    readImageFile(file, (base64, src) => {
+      locationImageBase64 = base64;
+      const zone = document.getElementById('loc-upload-zone');
+      zone.classList.add('has-image');
+      zone.innerHTML = `<img class="loc-img-preview" src="${src}" alt="location ref">`;
+      document.getElementById('extract-loc-btn').style.display = 'block';
+    });
+  }
+
+  function handleDropChar(e, id, el) {
+    e.preventDefault();
+    e.stopPropagation();
+    el.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (!file || !file.type.startsWith('image/')) { toast('Please drop an image file'); return; }
+    readImageFile(file, (base64, src) => {
+      const idx = characters.findIndex(c => c.id === id);
+      if (idx > -1) characters[idx].imageBase64 = base64;
+      const area = document.getElementById(`char-img-area-${id}`);
+      area.innerHTML = `<img src="${src}" alt="char ref">`;
+      document.getElementById(`char-badge-${id}`).style.display = 'inline';
+    });
+  }
+
+  function readImageFile(file, callback) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const src = e.target.result;
+      const base64 = src.split(',')[1];
+      callback(base64, src);
+    };
+    reader.readAsDataURL(file);
+  }
+
   // --- LOCATION IMAGE HANDLING ---
   function handleLocationImage(input) {
     const file = input.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      locationImageBase64 = e.target.result.split(',')[1];
+    readImageFile(file, (base64, src) => {
+      locationImageBase64 = base64;
       const zone = document.getElementById('loc-upload-zone');
       zone.classList.add('has-image');
-      zone.innerHTML = `<img class="loc-img-preview" src="${e.target.result}" alt="location ref">`;
+      zone.innerHTML = `<img class="loc-img-preview" src="${src}" alt="location ref">`;
       document.getElementById('extract-loc-btn').style.display = 'block';
-    };
-    reader.readAsDataURL(file);
+    });
   }
 
   async function extractLocation() {
@@ -1807,86 +1920,156 @@ ${tone.includes('توعوي') || tone.includes('تعليمي') || tone.includes(
     spinner.style.display = 'none';
   }
 
-  // --- BUILD CHARACTER TOKEN ---
+  // --- MULTI-CHARACTER SYSTEM ---
+  let characters = []; // [{id, role, imageBase64}]
+  let charCounter = 0;
+
+  function addCharCard() {
+    const id = ++charCounter;
+    characters.push({ id, role: '', imageBase64: null });
+    const list = document.getElementById('char-cards-list');
+    const card = document.createElement('div');
+    card.className = 'char-card';
+    card.id = `char-card-${id}`;
+    card.innerHTML = `
+      <input type="file" id="char-img-input-${id}" accept="image/*" style="display:none"
+        onchange="handleCharImage(${id}, this)">
+      <div class="char-card-img-area" id="char-img-area-${id}"
+        onclick="document.getElementById('char-img-input-${id}').click()"
+        ondragover="handleDragOver(event, this)"
+        ondragleave="handleDragLeave(event, this)"
+        ondrop="handleDropChar(event, ${id}, this)">
+        <div class="char-card-img-placeholder">
+          <span>＋</span>
+          <div>Click or drag image</div>
+        </div>
+      </div>
+      <div class="char-card-body">
+        <input class="char-role-input" id="char-role-${id}" placeholder="Role / Name — e.g: Doctor, Engineer, Client..."
+          oninput="updateCharRole(${id}, this.value)">
+        <span class="char-ref-badge" id="char-badge-${id}" style="display:none">ref_${id}</span>
+        <button class="char-remove-btn" onclick="removeCharCard(${id})" title="Remove">×</button>
+      </div>`;
+    list.appendChild(card);
+  }
+
+  function handleCharImage(id, input) {
+    const file = input.files[0];
+    if (!file) return;
+    readImageFile(file, (base64, src) => {
+      const idx = characters.findIndex(c => c.id === id);
+      if (idx > -1) characters[idx].imageBase64 = base64;
+      const area = document.getElementById(`char-img-area-${id}`);
+      area.innerHTML = `<img src="${src}" alt="char ref">`;
+      document.getElementById(`char-badge-${id}`).style.display = 'inline';
+    });
+  }
+
+  function updateCharRole(id, val) {
+    const idx = characters.findIndex(c => c.id === id);
+    if (idx > -1) characters[idx].role = val;
+  }
+
+  function removeCharCard(id) {
+    characters = characters.filter(c => c.id !== id);
+    document.getElementById(`char-card-${id}`)?.remove();
+  }
+
   function buildCharToken() {
-    const gender = document.getElementById('char-gender').value;
-    const ethnicity = document.getElementById('char-ethnicity').value;
-    const appearance = document.getElementById('char-appearance').value.trim();
-    if (!gender && !ethnicity && !appearance) return '';
-    const parts = [gender, ethnicity, appearance].filter(Boolean);
-    return parts.join(', ');
+    // Legacy single-char fallback — now handled by characters array
+    return '';
+  }
+
+  // Build characters context for prompt
+  function buildCharsContext() {
+    const active = characters.filter(c => c.role.trim());
+    if (!active.length) return '';
+    return active.map(c =>
+      `CHAR_${c.id} [${c.role.trim()}]${c.imageBase64 ? ' — has reference image, match outfit from reference' : ''}`
+    ).join('\n');
+  }
+
+  // Build character list for script analysis
+  function buildCharList() {
+    const active = characters.filter(c => c.role.trim());
+    if (!active.length) return null;
+    return active.map(c => `CHAR_${c.id}=${c.role.trim()}`).join(', ');
   }
 
   async function generateShots() {
     const script = document.getElementById('shot-script').value.trim();
     if (!script) { toast('Add your script or idea first'); return; }
 
-    const location  = document.getElementById('location-desc').value.trim();
-    const character = buildCharToken();
-    const camera    = document.getElementById('camera-type').value;
-    const lighting  = document.getElementById('lighting-type').value;
-    const mood      = document.getElementById('mood-type').value;
-    const noTalk    = document.getElementById('flag-no-talking').checked;
-    const noText    = document.getElementById('flag-no-text').checked;
-    const portrait  = document.getElementById('flag-portrait').checked;
-    const slowmo    = document.getElementById('flag-slow').checked;
+    const location   = document.getElementById('location-desc').value.trim();
+    const charsCtx   = buildCharsContext();
+    const charList   = buildCharList();
+    const camera     = document.getElementById('camera-type').value;
+    const lighting   = document.getElementById('lighting-type').value;
+    const mood       = document.getElementById('mood-type').value;
+    const noTalk     = document.getElementById('flag-no-talking').checked;
+    const noText     = document.getElementById('flag-no-text').checked;
+    const portrait   = document.getElementById('flag-portrait').checked;
+    const slowmo     = document.getElementById('flag-slow').checked;
 
     const flags = [
-      noTalk  ? 'no talking, no speech' : '',
+      noTalk  ? 'no talking' : '',
       noText  ? 'no text overlays' : '',
-      portrait? 'vertical 9:16' : 'widescreen 16:9',
-      slowmo  ? 'slow motion 120fps' : '',
-    ].filter(Boolean).join(', ');
+      portrait? '9:16 vertical' : '16:9',
+      slowmo  ? '120fps slowmo' : '',
+    ].filter(Boolean).join(' | ');
 
     const videoTypeMap = {
-      cinematic:     'Cinematic narrative, story-driven visual storytelling',
-      talking_head:  'Talking head, person speaking directly to camera',
-      talking_broll: 'Talking head mixed with B-Roll cutaways',
-      dialog:        'Two person dialog or interview scene',
-      comedy:        'Comedy skit, exaggerated reactions, comedic timing',
-      educational:   'Educational explainer, info-driven visual content',
-      product:       'Product showcase, commercial advertisement',
-      cgi:           'CGI / 3D stylized animated scene',
-      cgi_realistic: 'Photorealistic CGI with real human actor, seamless VFX compositing, hyper-realistic render, no stylization'
+      cinematic:     'Cinematic narrative',
+      talking_head:  'Talking Head — person to camera',
+      talking_broll: 'Talking Head + B-Roll',
+      dialog:        'Two-person Dialog',
+      comedy:        'Comedy Skit',
+      educational:   'Educational Explainer',
+      product:       'Product Showcase',
+      cgi:           'CGI / 3D Stylized',
+      cgi_realistic: 'CGI Realistic — photorealistic VFX, real actor, seamless compositing'
     };
 
-    globalContext = { script, location, character, camera, lighting, mood, flags, videoType: videoTypeMap[currentVideoType] };
+    globalContext = { script, location, charsCtx, camera, lighting, mood, flags, videoType: videoTypeMap[currentVideoType], charList };
 
     const btn = document.getElementById('gen-shots-btn');
     btn.disabled = true;
     document.getElementById('gen-shots-spinner').style.display = 'inline-block';
     document.getElementById('gen-shots-label').textContent = 'Generating...';
-
     const body = document.getElementById('shots-output-body');
     body.innerHTML = `<div class="loading-state"><div class="spinner"></div><span>Building ${currentShotCount} shots...</span></div>`;
 
-    const locToken  = location  ? `LOCATION (use consistently across all shots): ${location}` : '';
-    const charToken = character ? `CHARACTER (use consistently across all shots): ${character}` : '';
+    const prompt = `You are a professional cinematographer and director. Generate exactly ${currentShotCount} production-ready shot prompts.
 
-    const prompt = `You are a professional cinematographer writing production-ready shot prompts for AI video tools (Runway, Sora, Kling).
+VIDEO TYPE: ${videoTypeMap[currentVideoType]}
+SCRIPT: ${script}
+${location ? `LOCATION (consistent across all shots): ${location}` : ''}
+${charsCtx ? `CHARACTERS:\n${charsCtx}` : ''}
+${charList ? `Analyze script and assign the correct character(s) to each shot based on who appears in that scene. Characters: ${charList}` : ''}
+CAMERA: ${camera}
+LIGHTING: ${lighting}
+GRADE: ${mood}
+${flags ? `FLAGS: ${flags}` : ''}
 
-Video Type: ${videoTypeMap[currentVideoType]}
-Script: ${script}
-${locToken}
-${charToken}
-Camera: ${camera}
-Lighting: ${lighting}
-Mood/Grade: ${mood}
-${flags ? `Flags: ${flags}` : ''}
-
-Generate exactly ${currentShotCount} shots.
+OUTPUT FORMAT — each shot must follow this exact structure for prompt_en:
+[Action/scene description — concise, visual, no fluff]
+${location ? `[LOC: keep location consistent — vary angle/framing only]` : ''}
+${charsCtx ? `[CHAR: role — match reference outfit]` : ''}
+[CAM: camera | angle | movement]
+[LIGHT: lighting]
+[GRADE: mood/color]
+${flags ? `[FLAGS: ${flags}]` : ''}
 
 RULES:
-- Location must appear consistently — vary the ANGLE and FRAMING within that space, not the location itself
-- Character description must be identical in every shot where character appears
-- Vary angles intelligently across: ECU, CU, MS, AS, WS, EWS, POV, Dutch, MACRO, MICRO
+- prompt_en must be structured, no run-on sentences
+- Vary angles: ECU, CU, MS, AS, WS, EWS, POV, Dutch, MACRO, MICRO
 - Shot types: Real / B-Roll / CGI / CGI-Real / Talking / Dialog / Comedy / Product
-- MACRO/MICRO shots: describe texture/detail at extreme close range
-- CGI-Real: emphasize photorealistic VFX integration, real actor, seamless compositing
-- Each shot builds narrative flow from previous
+- Only include CHAR line in shots where that character actually appears
+- MACRO/MICRO: describe what detail/texture is captured
+- No filler words, no "we see", no "the camera shows"
 
 Return ONLY valid JSON:
-{"shots":[{"shot_number":1,"scene_ar":"وصف المشهد بالعربي","angle":"CU","shot_type":"Real","duration":"3-4s","prompt_en":"detailed production prompt with all parameters"}]}`;
+{"shots":[{"shot_number":1,"scene_ar":"وصف بالعربي","angle":"CU","shot_type":"Real","duration":"3-4s","chars_used":["CHAR_1"],"prompt_en":"structured prompt following the format above"}]}`;
 
     try {
       const result = await callAPI(prompt);
@@ -1914,17 +2097,32 @@ Return ONLY valid JSON:
     document.getElementById('add-shot-area').style.display='block';
   }
 
-  function buildShotCard(s,idx) {
-    const div=document.createElement('div');
-    div.className='shot-card-v2'; div.id=`shot-card-${idx}`;
-    const aH=ANGLES.map(a=>`<button class="angle-pill ${a===s.angle?'active':''}" onclick="changeAngle(${idx},'${a}',this)">${a}</button>`).join('');
-    const tH=SHOT_TYPES.map(t=>`<button class="stype-pill ${t===s.shot_type?'active':''}" onclick="changeShotType(${idx},'${t}',this)">${t}</button>`).join('');
-    div.innerHTML=`
+  function buildShotCard(s, idx) {
+    const div = document.createElement('div');
+    div.className = 'shot-card-v2'; div.id = `shot-card-${idx}`;
+    const aH = ANGLES.map(a =>
+      `<button class="angle-pill ${a===s.angle?'active':''}" onclick="changeAngle(${idx},'${a}',this)">${a}</button>`
+    ).join('');
+    const tH = SHOT_TYPES.map(t =>
+      `<button class="stype-pill ${t===s.shot_type?'active':''}" onclick="changeShotType(${idx},'${t}',this)">${t}</button>`
+    ).join('');
+
+    // Chars used badges
+    const charsUsed = (s.chars_used || []);
+    const charBadges = charsUsed.map(cid => {
+      const c = characters.find(ch => `CHAR_${ch.id}` === cid);
+      return c ? `<span style="font-size:9px;padding:2px 7px;border-radius:3px;border:1px solid rgba(200,240,96,0.3);color:var(--accent);background:rgba(200,240,96,0.07);font-family:'IBM Plex Mono',monospace;">${c.role||cid}</span>` : '';
+    }).join('');
+
+    div.innerHTML = `
       <div class="shot-card-header">
         <span class="shot-num-badge">SHOT ${String(s.shot_number).padStart(2,'0')}</span>
         <div class="angle-row">${aH}</div>
       </div>
-      <div class="stype-row">${tH}</div>
+      <div class="stype-row">
+        ${tH}
+        ${charBadges ? `<div style="margin-right:auto;display:flex;gap:4px;flex-wrap:wrap;">${charBadges}</div>` : ''}
+      </div>
       <div class="shot-card-body">
         <div class="shot-desc-ar">${escapeHtml(s.scene_ar||'')}</div>
         <div class="shot-prompt-en" id="prompt-text-${idx}">${escapeHtml(s.prompt_en||'')}</div>
@@ -1953,76 +2151,73 @@ Return ONLY valid JSON:
   }
 
   async function regenShotSilent(idx) {
-    const s=shotsData[idx];
-    const el=document.getElementById(`prompt-text-${idx}`);
-    if(!el) return;
-    el.style.opacity='0.4';
+    const s = shotsData[idx];
+    const el = document.getElementById(`prompt-text-${idx}`);
+    if (!el) return;
+    el.style.opacity = '0.4';
     try {
-      const loc = globalContext.location ? `LOCATION: ${globalContext.location}` : '';
-      const chr = globalContext.character ? `CHARACTER: ${globalContext.character}` : '';
-      const p=`Rewrite shot prompt with updated angle/type. Keep location and character consistent. JSON only.
+      const p = `Rewrite this shot prompt with updated angle/type. Keep location and characters consistent. Use structured format. JSON only.
 Video:${globalContext.videoType||''} | Script:${globalContext.script||''}
-${loc} | ${chr}
-Camera:${globalContext.camera||''} | Lighting:${globalContext.lighting||''} | Mood:${globalContext.mood||''}
-${globalContext.flags?'Flags:'+globalContext.flags:''}
+${globalContext.location?'LOC:'+globalContext.location:''}
+${globalContext.charsCtx?'CHARS:\n'+globalContext.charsCtx:''}
+CAM:${globalContext.camera||''} | LIGHT:${globalContext.lighting||''} | GRADE:${globalContext.mood||''}
+${globalContext.flags?'FLAGS:'+globalContext.flags:''}
 Shot ${s.shot_number} | Scene:${s.scene_ar} | NEW Angle:${s.angle} | NEW Type:${s.shot_type}
-{"prompt_en":"updated prompt"}`;
-      const r=await callAPI(p);
-      const parsed=JSON.parse(r.replace(/```json|```/g,'').trim());
-      shotsData[idx].prompt_en=parsed.prompt_en;
-      el.textContent=parsed.prompt_en;
-    } catch(e){}
-    el.style.opacity='1';
+{"prompt_en":"structured prompt with [Action][LOC][CHAR][CAM][LIGHT][GRADE] format"}`;
+      const r = await callAPI(p);
+      const parsed = JSON.parse(r.replace(/```json|```/g,'').trim());
+      shotsData[idx].prompt_en = parsed.prompt_en;
+      el.textContent = parsed.prompt_en;
+    } catch(e) {}
+    el.style.opacity = '1';
   }
 
   async function regenShot(idx) {
-    const s=shotsData[idx];
-    const btn=document.getElementById(`regen-btn-${idx}`);
-    const el=document.getElementById(`prompt-text-${idx}`);
-    if(!btn||!el) return;
-    btn.classList.add('spinning'); btn.textContent='...';
-    el.style.opacity='0.4';
+    const s = shotsData[idx];
+    const btn = document.getElementById(`regen-btn-${idx}`);
+    const el  = document.getElementById(`prompt-text-${idx}`);
+    if (!btn||!el) return;
+    btn.classList.add('spinning'); btn.textContent = '...';
+    el.style.opacity = '0.4';
     try {
-      const loc = globalContext.location ? `LOCATION: ${globalContext.location}` : '';
-      const chr = globalContext.character ? `CHARACTER: ${globalContext.character}` : '';
-      const p=`Regenerate shot with fresh creative direction. Keep location and character consistent. JSON only.
+      const p = `Regenerate this shot with fresh creative direction. Keep location and characters consistent. Structured format. JSON only.
 Video:${globalContext.videoType||''} | Script:${globalContext.script||''}
-${loc} | ${chr}
-Camera:${globalContext.camera||''} | Lighting:${globalContext.lighting||''} | Mood:${globalContext.mood||''}
-${globalContext.flags?'Flags:'+globalContext.flags:''}
+${globalContext.location?'LOC:'+globalContext.location:''}
+${globalContext.charsCtx?'CHARS:\n'+globalContext.charsCtx:''}
+CAM:${globalContext.camera||''} | LIGHT:${globalContext.lighting||''} | GRADE:${globalContext.mood||''}
+${globalContext.flags?'FLAGS:'+globalContext.flags:''}
 Shot ${s.shot_number} | Angle:${s.angle} | Type:${s.shot_type} | Scene:${s.scene_ar}
-{"scene_ar":"وصف جديد","prompt_en":"fresh cinematic prompt"}`;
-      const r=await callAPI(p);
-      const parsed=JSON.parse(r.replace(/```json|```/g,'').trim());
-      shotsData[idx].scene_ar=parsed.scene_ar;
-      shotsData[idx].prompt_en=parsed.prompt_en;
-      document.getElementById(`shot-card-${idx}`).replaceWith(buildShotCard(shotsData[idx],idx));
-    } catch(e){ toast('Regen failed'); }
+{"scene_ar":"وصف جديد","prompt_en":"fresh structured prompt [Action][LOC][CHAR][CAM][LIGHT][GRADE]"}`;
+      const r = await callAPI(p);
+      const parsed = JSON.parse(r.replace(/```json|```/g,'').trim());
+      shotsData[idx].scene_ar  = parsed.scene_ar;
+      shotsData[idx].prompt_en = parsed.prompt_en;
+      document.getElementById(`shot-card-${idx}`).replaceWith(buildShotCard(shotsData[idx], idx));
+    } catch(e) { toast('Regen failed'); }
   }
 
   async function addSingleShot() {
-    const desc=document.getElementById('add-shot-desc').value.trim();
-    if(!desc){ toast('Describe the shot first'); return; }
-    const newNum=shotsData.length+1;
-    toast('Generating shot '+newNum+'...');
+    const desc = document.getElementById('add-shot-desc').value.trim();
+    if (!desc) { toast('Describe the shot first'); return; }
+    const newNum = shotsData.length + 1;
+    toast('Generating shot ' + newNum + '...');
     try {
-      const loc = globalContext.location ? `LOCATION: ${globalContext.location}` : '';
-      const chr = globalContext.character ? `CHARACTER: ${globalContext.character}` : '';
-      const p=`Generate one new shot. Keep location and character consistent. JSON only.
+      const p = `Generate one new shot. Keep location and characters consistent. Structured format. JSON only.
 Video:${globalContext.videoType||''} | Script:${globalContext.script||''}
-${loc} | ${chr}
-Camera:${globalContext.camera||''} | Lighting:${globalContext.lighting||''} | Mood:${globalContext.mood||''}
-${globalContext.flags?'Flags:'+globalContext.flags:''}
+${globalContext.location?'LOC:'+globalContext.location:''}
+${globalContext.charsCtx?'CHARS:\n'+globalContext.charsCtx:''}
+CAM:${globalContext.camera||''} | LIGHT:${globalContext.lighting||''} | GRADE:${globalContext.mood||''}
+${globalContext.flags?'FLAGS:'+globalContext.flags:''}
 Existing shots:${shotsData.length} | New shot:${desc}
-{"shot_number":${newNum},"scene_ar":"وصف","angle":"CU","shot_type":"Real","duration":"3-4s","prompt_en":"full cinematic prompt"}`;
-      const r=await callAPI(p);
-      const parsed=JSON.parse(r.replace(/```json|```/g,'').trim());
+{"shot_number":${newNum},"scene_ar":"وصف","angle":"CU","shot_type":"Real","duration":"3-4s","chars_used":[],"prompt_en":"structured prompt [Action][LOC][CHAR][CAM][LIGHT][GRADE]"}`;
+      const r = await callAPI(p);
+      const parsed = JSON.parse(r.replace(/```json|```/g,'').trim());
       shotsData.push(parsed);
-      document.getElementById('shots-output-body').appendChild(buildShotCard(parsed,shotsData.length-1));
-      document.getElementById('shots-badge').textContent=shotsData.length+' shots';
-      document.getElementById('add-shot-desc').value='';
-      toast('Shot '+newNum+' added ✓');
-    } catch(e){ toast('Failed — try again'); }
+      document.getElementById('shots-output-body').appendChild(buildShotCard(parsed, shotsData.length-1));
+      document.getElementById('shots-badge').textContent = shotsData.length + ' shots';
+      document.getElementById('add-shot-desc').value = '';
+      toast('Shot ' + newNum + ' added ✓');
+    } catch(e) { toast('Failed — try again'); }
   }
 
   function copyIdea() {
