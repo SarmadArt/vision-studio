@@ -1745,6 +1745,30 @@
             </div>
           </div>
 
+          <!-- IMAGE PROMPTS -->
+          <div id="img-prompts-area" style="display:none; margin-top:10px;">
+            <div style="border:1px solid var(--border); border-radius:var(--radius); overflow:hidden;">
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 14px; background:var(--surface2); border-bottom:1px solid var(--border);">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span style="font-size:11px; color:var(--text2); text-transform:uppercase; letter-spacing:0.08em; font-weight:500;">Reference Image Prompts</span>
+                  <span style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">للشخصيات والمواقع</span>
+                </div>
+                <div style="display:flex;gap:6px;">
+                  <button class="shot-action-btn" onclick="genImgPrompts()" id="gen-img-prompts-btn">
+                    <span id="img-prompts-spinner" style="display:none" class="spinner"></span>
+                    ✦ توليد
+                  </button>
+                  <button class="shot-action-btn" onclick="copyImgPrompts()" id="copy-img-prompts-btn" style="display:none;">COPY</button>
+                </div>
+              </div>
+              <div id="img-prompts-body" style="padding:12px 14px; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text); line-height:1.9; direction:ltr; word-break:break-word; background:var(--surface);">
+                <div style="color:var(--text3);font-size:12px;font-family:'IBM Plex Sans Arabic',sans-serif;direction:rtl;">
+                  اضغط "توليد" لإنشاء برومبتات صور مرجعية للشخصيات والمواقع
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- STORYBOARD -->
           <div id="panels-area" style="display:none; margin-top:10px;">
             <div style="border:1px solid var(--border); border-radius:var(--radius); overflow:hidden;">
@@ -3513,6 +3537,12 @@ NO TALKING MODE:
 - Read each script line → create visual scene expressing it physically
 - e.g. "Have you heard about Baby Botox?" → Doctor holds vial toward camera, curious expression, ECU` : '';
 
+    // Determine cinematic style BEFORE using in abInstruction
+    const isCinematicStyle = videoType.toLowerCase().includes('cinematic') ||
+      videoType.toLowerCase().includes('narrative') ||
+      videoType.toLowerCase().includes('dramatic') ||
+      videoType.toLowerCase().includes('film');
+
     const abInstruction = genMode === 'manual' ? (() => {
       const manualAngles = getManualAngles();
       const angleList = manualAngles.map((a,i) => `SH${i+1}: ${a}`).join(', ');
@@ -3542,12 +3572,6 @@ ${locsCtx}
 ${multiLoc
   ? `Analyze script and assign the correct location to each shot (${locList}). Stay consistent within each scene.`
   : `Keep this location consistent across all shots — vary angle/framing only.`}` : '';
-
-    // Determine if cinematic style → smarter splits
-    const isCinematicStyle = videoType.toLowerCase().includes('cinematic') ||
-      videoType.toLowerCase().includes('narrative') ||
-      videoType.toLowerCase().includes('dramatic') ||
-      videoType.toLowerCase().includes('film');
 
     const prompt = `You are a professional cinematographer and director. Generate exactly ${currentShotCount} shots total.
 
@@ -4061,16 +4085,18 @@ Existing shots:${shotsData.length} | New shot:${desc}
           const pendingShotsCount = localStorage.getItem('is_pending_shots_count');
           if (pendingShotsCount) {
             const n = parseInt(pendingShotsCount);
-            currentShotCount = n;
-            // Update shot pills UI
-            document.querySelectorAll('.shot-pill').forEach(p => {
-              p.classList.toggle('active', parseInt(p.textContent) === n);
-            });
-            // If not a standard pill value, set custom
-            const standardVals = [3, 5, 7, 10];
-            if (!standardVals.includes(n)) {
-              const customInput = document.getElementById('custom-shot-count');
-              if (customInput) customInput.value = n;
+            if (!isNaN(n) && n > 0) {
+              currentShotCount = n;
+              // Mark the matching pill active
+              document.querySelectorAll('.shot-pill').forEach(p => {
+                p.classList.toggle('active', parseInt(p.textContent) === n);
+              });
+              const standardVals = [3, 5, 7, 10, 15];
+              if (!standardVals.includes(n)) {
+                const customInput = document.getElementById('custom-shot-count');
+                if (customInput) customInput.value = n;
+                document.querySelectorAll('.shot-pill').forEach(p => p.classList.remove('active'));
+              }
             }
           }
           // Cleanup
@@ -4186,6 +4212,93 @@ Existing shots:${shotsData.length} | New shot:${desc}
     sessionStorage.removeItem('cs_shots_session');
     toast('جلسة جديدة ✓');
   }
+
+  // ─── IMAGE REFERENCE PROMPTS ───
+  async function genImgPrompts() {
+    const btn = document.getElementById('gen-img-prompts-btn');
+    const spinner = document.getElementById('img-prompts-spinner');
+    const body = document.getElementById('img-prompts-body');
+    const copyBtn = document.getElementById('copy-img-prompts-btn');
+
+    const hasChars = characters.some(c => c.role.trim());
+    const hasLocs  = locations.some(l => l.name.trim());
+
+    if (!hasChars && !hasLocs) {
+      body.innerHTML = '<div style="color:var(--text3);font-size:12px;font-family:IBM Plex Sans Arabic,sans-serif;direction:rtl;">أضف شخصيات أو مواقع أولاً لتوليد البرومبتات</div>';
+      return;
+    }
+
+    btn.disabled = true;
+    spinner.style.display = 'inline-block';
+    body.innerHTML = '<div style="color:var(--text3);">Generating prompts...</div>';
+
+    // Build context
+    const charLines = characters.filter(c => c.role.trim())
+      .map(c => `- Character: "${c.role}"${c.desc ? ' | Description: ' + c.desc : ''}${c.analysis ? ' | Visual: ' + c.analysis : ''}`)
+      .join('\n');
+
+    const locLines = locations.filter(l => l.name.trim())
+      .map(l => `- Location: "${l.name}"${l.desc ? ' | Description: ' + l.desc : ''}${l.analysis ? ' | Visual: ' + l.analysis : ''}`)
+      .join('\n');
+
+    const script = document.getElementById('shot-script')?.value?.trim() || '';
+    const videoType = getVideoTypeDescription();
+    const lightingVal = document.getElementById('lighting-type')?.value || '';
+    const moodVal     = document.getElementById('mood-type')?.value || '';
+
+    const prompt = `Generate detailed text-to-image reference prompts for the following characters and locations.
+These prompts will be used in Midjourney / Flux / Kling to create reference images.
+
+VIDEO CONTEXT:
+- Type: ${videoType}
+- Lighting: ${lightingVal}
+- Mood: ${moodVal}
+${script ? '- Script excerpt: ' + script.slice(0, 200) : ''}
+
+${charLines ? 'CHARACTERS:\n' + charLines : ''}
+${locLines ? '\nLOCATIONS:\n' + locLines : ''}
+
+For EACH character write:
+CHARACTER: [name/role]
+PORTRAIT PROMPT: [detailed prompt for a portrait/reference shot — physical appearance, clothing, lighting, camera, style]
+FULL BODY PROMPT: [full body reference prompt]
+
+For EACH location write:
+LOCATION: [name]
+REFERENCE PROMPT: [detailed environment/set design prompt — architecture, lighting, mood, time of day, camera angle]
+
+Rules:
+- Write in English
+- Be very specific and visual — describe colors, textures, lighting, style
+- Include technical photo/render specs: camera, lens, lighting setup
+- Match the video's mood and style
+- Start directly — no intro text`;
+
+    try {
+      const result = await callMainAPI(prompt, 'You are a professional art director and prompt engineer. Write detailed, cinematic image prompts.');
+      // Format nicely
+      const formatted = result.trim()
+        .replace(/^(CHARACTER:|LOCATION:)/gm, '\n$1')
+        .replace(/^(PORTRAIT PROMPT:|FULL BODY PROMPT:|REFERENCE PROMPT:)/gm, '  $1')
+        .trim();
+      body.innerHTML = '<pre style="white-space:pre-wrap;direction:ltr;font-size:11px;line-height:1.8;">' + escapeHtml(formatted) + '</pre>';
+      copyBtn.style.display = 'inline-flex';
+      toast('Image prompts ready ✓');
+    } catch(e) {
+      body.innerHTML = '<div style="color:var(--red);">Error: ' + (e.message || 'failed') + '</div>';
+    }
+
+    btn.disabled = false;
+    spinner.style.display = 'none';
+  }
+
+  function copyImgPrompts() {
+    const body = document.getElementById('img-prompts-body');
+    const pre = body.querySelector('pre');
+    if (!pre) return;
+    navigator.clipboard.writeText(pre.textContent).then(() => toast('Copied ✓'));
+  }
+
 </script>
 </body>
 </html>
