@@ -667,10 +667,24 @@
   <div class="selected-actions" id="selected-actions">
     <div class="selected-title">✦ الفكرة المختارة</div>
 
-    <div id="selected-preview" style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.7;padding:12px 14px;background:var(--surface2);border-radius:var(--radius-sm);border:1px solid var(--border);white-space:pre-wrap;"></div>
+    <!-- HOOK -->
+    <div id="selected-hook" style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px;padding:10px 14px;background:rgba(200,240,96,0.06);border-radius:var(--radius-sm);border:1px solid rgba(200,240,96,0.2);"></div>
+
+    <!-- SCRIPT + word count badge -->
+    <div style="position:relative;margin-bottom:14px;">
+      <div id="selected-preview" style="font-size:13px;color:var(--text2);line-height:1.8;padding:12px 14px;background:var(--surface2);border-radius:var(--radius-sm);border:1px solid var(--border);white-space:pre-wrap;padding-bottom:32px;"></div>
+      <div style="position:absolute;bottom:8px;left:10px;display:flex;align-items:center;gap:8px;">
+        <span id="preview-word-badge" style="font-size:10px;font-family:'IBM Plex Mono',monospace;padding:2px 8px;border-radius:4px;background:var(--surface3);border:1px solid var(--border2);color:var(--text3);"></span>
+        <span id="preview-duration-badge" style="font-size:10px;font-family:'IBM Plex Mono',monospace;padding:2px 8px;border-radius:4px;"></span>
+      </div>
+    </div>
 
     <div class="action-row">
-      <button class="action-btn primary" id="btn-develop" onclick="developIdea()">
+      <button class="action-btn primary" id="btn-trim" onclick="trimToTime()">
+        <span id="trim-spinner" style="display:none;" class="spinner spinner-light"></span>
+        ✂ اختصر للمدة
+      </button>
+      <button class="action-btn" id="btn-develop" onclick="developIdea()">
         <span id="dev-spinner" style="display:none;" class="spinner spinner-light" style="width:13px;height:13px;border-width:1.5px;"></span>
         ✎ طوّر النص
       </button>
@@ -1023,7 +1037,8 @@
     const durationSec = videoDuration || 30;
     const durationLabel = durationSec < 60 ? `${durationSec} ثانية` : `${durationSec/60} ${durationSec===60?'دقيقة':'دقائق'}`;
     // Estimated words: ~2.5 words/sec for Arabic speech
-    const approxWords = Math.round(durationSec * 2.5);
+    const approxWords = Math.round(durationSec * 2.2);
+    const maxWords    = Math.round(durationSec * 2.5);
     // Estimated shots based on duration and type
     const isCinematic = ['cinematic','vfx','cgi','cgi_character','cgi_human','cgi_stylized'].includes(contentTypeKey);
     const isSimple    = ['talking_head','educational','demonstration'].includes(contentTypeKey);
@@ -1067,25 +1082,27 @@ ${trendCtx ? trendCtx + '\n' : ''}${extra ? 'تفاصيل: ' + extra + '\n' : ''
 
 ===IDEA_1===
 HOOK: [الهوك هنا]
-SCRIPT: [السكريبت الكامل باللهجة ${dialectStr} — جملة جملة — ~${approxWords} كلمة]
+SCRIPT: [السكريبت باللهجة ${dialectStr} — ${approxWords} كلمة بالضبط (الحد الأقصى ${maxWords} كلمة)]
 ANGLE: [ما يميز هذه الفكرة]
 
 ===IDEA_2===
 HOOK: [الهوك هنا]
-SCRIPT: [السكريبت الكامل باللهجة ${dialectStr} — جملة جملة — ~${approxWords} كلمة]
+SCRIPT: [السكريبت باللهجة ${dialectStr} — ${approxWords} كلمة بالضبط (الحد الأقصى ${maxWords} كلمة)]
 ANGLE: [ما يميز هذه الفكرة]
 
 ===IDEA_3===
 HOOK: [الهوك هنا]
-SCRIPT: [السكريبت الكامل باللهجة ${dialectStr} — جملة جملة — ~${approxWords} كلمة]
+SCRIPT: [السكريبت باللهجة ${dialectStr} — ${approxWords} كلمة بالضبط (الحد الأقصى ${maxWords} كلمة)]
 ANGLE: [ما يميز هذه الفكرة]
 
-قواعد:
-- لا توقيتات ولا هاشتاقات ولا أرقام مقاطع
+قواعد صارمة:
+- كل SCRIPT = ${approxWords} كلمة تقريباً (الحد الأقصى ${maxWords} كلمة — لا تتجاوز هذا)
+- لا توقيتات ولا هاشتاقات ولا أرقام مقاطع ولا أقواس وصفية
 - كل فكرة مختلفة في الزاوية والأسلوب
 - ابدأ مباشرة بـ ===IDEA_1===`;
 
     try {
+      window._lastDuration = durationSec;
       const result = await callMainAPI(prompt, systemPrompt);
       parseAndRenderIdeas(result);
     } catch(e) {
@@ -1159,6 +1176,13 @@ ANGLE: [ما يميز هذه الفكرة]
       generatedIdeas = [{ hook: '', script: raw.trim(), angle: '' }];
     }
 
+    // Soft-trim scripts that exceed the time limit by >30%
+    const dur = window._lastDuration || 30;
+    const hardMax = Math.round(dur * 3.2);
+    generatedIdeas.forEach(idea => {
+      const words = idea.script.trim().split(/\s+/).filter(Boolean);
+      if (words.length > hardMax) idea.script = words.slice(0, hardMax).join(' ');
+    });
     renderIdeas();
   }
 
@@ -1207,7 +1231,7 @@ ANGLE: [ما يميز هذه الفكرة]
     });
     // Show actions
     const idea = generatedIdeas[idx];
-    document.getElementById('selected-preview').textContent = idea.hook + '\n\n' + idea.script;
+    fillIdeaPreview(idea);
     const actions = document.getElementById('selected-actions');
     actions.classList.add('visible');
     // Reset editor
@@ -1216,7 +1240,79 @@ ANGLE: [ما يميز هذه الفكرة]
     actions.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
+  function fillIdeaPreview(idea) {
+    // Hook
+    const hookEl = document.getElementById('selected-hook');
+    if (hookEl) hookEl.textContent = idea.hook || '';
+    // Script
+    document.getElementById('selected-preview').textContent = idea.script || '';
+    // Word count + duration estimate
+    updatePreviewBadges(idea.script || '');
+  }
+
+  function updatePreviewBadges(text) {
+    const words = text.trim().split(/\s+/).filter(Boolean).length;
+    const estSec = Math.round(words / 2.2);
+    const badge = document.getElementById('preview-word-badge');
+    const durBadge = document.getElementById('preview-duration-badge');
+    const target = videoDuration;
+    if (badge) badge.textContent = words + ' كلمة';
+    if (durBadge) {
+      const over = estSec > target * 1.15;
+      const under = estSec < target * 0.7;
+      durBadge.textContent = '~' + estSec + 'ث';
+      durBadge.style.background = over ? 'rgba(255,79,79,0.15)' : under ? 'rgba(255,200,50,0.12)' : 'rgba(200,240,96,0.1)';
+      durBadge.style.border = over ? '1px solid rgba(255,79,79,0.4)' : under ? '1px solid rgba(255,200,50,0.3)' : '1px solid rgba(200,240,96,0.3)';
+      durBadge.style.color = over ? '#ff7070' : under ? '#ffc832' : 'var(--accent)';
+    }
+  }
+
   // ─── DEVELOP IDEA ───
+  // ─── TRIM TO TIME ───
+  async function trimToTime() {
+    if (selectedIdeaIdx < 0) return;
+    const idea = generatedIdeas[selectedIdeaIdx];
+    const { dialectStr, durationSec, approxWords, maxWords } = buildContext();
+
+    const currentWords = (idea.script || '').trim().split(/\s+/).filter(Boolean).length;
+    if (currentWords <= maxWords) {
+      toast('النص مناسب للمدة بالفعل ✓');
+      return;
+    }
+
+    const btn = document.getElementById('btn-trim');
+    btn.disabled = true;
+    document.getElementById('trim-spinner').style.display = 'inline-block';
+
+    try {
+      const result = await callMainAPI(
+        `اختصر هذا السكريبت ليناسب ${durationSec} ثانية بالضبط.
+
+السكريبت الحالي:
+${idea.hook}
+${idea.script}
+
+المطلوب:
+- الهدف: ${approxWords} كلمة تقريباً (الحد الأقصى ${maxWords} كلمة)
+- احتفظ بالهوك القوي في البداية
+- احذف الجمل الأقل أهمية
+- لا تغيّر اللهجة ${dialectStr}
+- لا تضف أي شيء جديد
+- أعطني فقط النص المختصر بدون أي شرح أو عنوان`,
+        `أنت محرر سكريبت. مهمتك اختصار النص للوقت المحدد. اللهجة ${dialectStr}. لا تزيد عن ${maxWords} كلمة.`
+      );
+
+      const clean = result.replace(/^(السكريبت|النص|الناتج|المختصر|هنا)[:\s]*/i, '').trim();
+      generatedIdeas[selectedIdeaIdx].script = clean;
+      fillIdeaPreview(generatedIdeas[selectedIdeaIdx]);
+      showScriptEditor(clean);
+      toast(`تم الاختصار — ${clean.trim().split(/\s+/).length} كلمة ✓`);
+    } catch(e) { if (e.message !== 'no key') toast('حدث خطأ'); }
+
+    btn.disabled = false;
+    document.getElementById('trim-spinner').style.display = 'none';
+  }
+
   async function developIdea() {
     if (selectedIdeaIdx < 0) return;
     const idea = generatedIdeas[selectedIdeaIdx];
@@ -1244,7 +1340,7 @@ ANGLE: [ما يميز هذه الفكرة]
 
       const clean = result.replace(/^(السكريبت|النص|المطوّر|الناتج|Here|Here's|Script|هنا)[:\s]*/i, '').trim();
       generatedIdeas[selectedIdeaIdx].script = clean;
-      document.getElementById('selected-preview').textContent = idea.hook + '\n\n' + clean;
+      fillIdeaPreview(generatedIdeas[selectedIdeaIdx]);
       showScriptEditor(clean);
       toast('تم التطوير ✓');
     } catch(e) { if (e.message !== 'no key') toast('حدث خطأ'); }
