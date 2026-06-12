@@ -1060,7 +1060,7 @@
 
   // ─── GENERATE 3 IDEAS ───
   async function generateIdeas() {
-    const { topic, extra, plat, dialectStr, trendCtx, contentType, durationSec, durationLabel, approxWords } = buildContext();
+    const { topic, extra, plat, dialectStr, trendCtx, contentType, durationSec, durationLabel, approxWords, maxWords } = buildContext();
     if (!topic) { toast('اكتب الموضوع أولاً'); document.getElementById('topic-input').focus(); return; }
 
     const btn = document.getElementById('gen-btn');
@@ -1071,7 +1071,7 @@
     document.getElementById('selected-actions').classList.remove('visible');
     selectedIdeaIdx = -1;
 
-    const systemPrompt = `أنت منتج محتوى رقمي محترف. التزم باللهجة ${dialectStr} في كل كلمة. ممنوع أي كلمة إنجليزية في السكريبت. ممنوع الفصحى.`;
+    const systemPrompt = `أنت منتج محتوى رقمي محترف. التزم باللهجة ${dialectStr} في كل كلمة. ممنوع أي كلمة إنجليزية. ممنوع الفصحى. الحد الأقصى لكل سكريبت ${maxWords} كلمة.`;
 
     const prompt = `الموضوع: ${topic}
 المنصة: ${plat} | النوع: ${contentType} | المدة: ~${durationSec} ثانية (~${approxWords} كلمة)
