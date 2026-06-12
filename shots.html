@@ -3524,6 +3524,12 @@ Return ONLY valid JSON (no markdown, no explanation):
     document.getElementById('gen-shots-spinner').style.display = 'inline-block';
     document.getElementById('gen-shots-label').textContent = 'Generating...';
     const body = document.getElementById('shots-output-body');
+    // ── SUBTYPE from ideas.html ──
+    const subtypeData = window._pendingSubtype || null;
+    const subtypeNote = subtypeData
+      ? `\n\nCONTENT SUB-TYPE: ${subtypeData.name}\nShot approach: ${subtypeData.shots_note}\nDirector note: ${subtypeData.extra}`
+      : '';
+
     // ── BEATS from ideas.html director analysis — declare BEFORE use ──
     const beatsData = window._pendingBeats || null;
     const beatsContext = beatsData?.beats?.length ? (() => {
@@ -3591,7 +3597,7 @@ ${multiLoc
 
 VIDEO TYPE: ${videoType}
 SCRIPT:
-${script}${beatsContext}
+${script}${beatsContext}${subtypeNote}
 ${directorNote ? `\nDIRECTOR'S NOTE (follow strictly throughout all shots):\n${directorNote}` : ''}
 ${locInstruction}
 ${charsCtx ? `\nCHARACTERS:\n${charsCtx}` : ''}
@@ -4087,6 +4093,14 @@ Existing shots:${shotsData.length} | New shot:${desc}
             scriptEl.value = pendingScript;
             scriptEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }
+          // Load subtype from ideas.html
+          const pendingSubtypeRaw = localStorage.getItem('is_pending_subtype');
+          if (pendingSubtypeRaw) {
+            try { window._pendingSubtype = JSON.parse(pendingSubtypeRaw); }
+            catch(e) { window._pendingSubtype = null; }
+            localStorage.removeItem('is_pending_subtype');
+          }
+
           // Load beats analysis from ideas.html
           const pendingBeatsRaw = localStorage.getItem('is_pending_beats');
           if (pendingBeatsRaw) {

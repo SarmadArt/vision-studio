@@ -201,6 +201,62 @@
   .ctype-btn.active .ctype-label { color: var(--accent); }
   .ctype-icon { display: none; }
 
+  /* ── SUB-TYPE DRAWER ── */
+  .subtype-drawer {
+    position: fixed; inset: 0; z-index: 200;
+    display: flex; align-items: flex-end; justify-content: center;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .subtype-drawer.open { opacity: 1; pointer-events: all; }
+  .subtype-panel {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 24px 20px 32px; width: 100%; max-width: 680px;
+    transform: translateY(20px); transition: transform 0.25s cubic-bezier(.4,0,.2,1);
+  }
+  .subtype-drawer.open .subtype-panel { transform: translateY(0); }
+  .subtype-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+  }
+  .subtype-title {
+    font-size: 13px; font-weight: 600; color: var(--text);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .subtype-type-badge {
+    font-size: 10px; font-family: 'IBM Plex Mono', monospace;
+    background: rgba(200,240,96,0.1); border: 1px solid rgba(200,240,96,0.3);
+    color: var(--accent); padding: 2px 8px; border-radius: 4px;
+  }
+  .subtype-close {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 1px solid var(--border2); background: transparent;
+    color: var(--text3); cursor: pointer; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .subtype-close:hover { color: var(--text); border-color: var(--text3); }
+  .subtype-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .subtype-card {
+    border: 1px solid var(--border2); border-radius: var(--radius);
+    padding: 14px 16px; cursor: pointer; transition: all 0.15s;
+    background: var(--surface2);
+  }
+  .subtype-card:hover { border-color: var(--text3); }
+  .subtype-card.active { border-color: var(--accent); background: rgba(200,240,96,0.05); }
+  .subtype-card-icon { font-size: 20px; margin-bottom: 6px; }
+  .subtype-card-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+  .subtype-card-desc { font-size: 11px; color: var(--text3); line-height: 1.5; }
+  .subtype-card.active .subtype-card-name { color: var(--accent); }
+  .subtype-confirm {
+    width: 100%; padding: 12px; border-radius: var(--radius-sm);
+    border: 1px solid var(--accent); background: rgba(200,240,96,0.08);
+    color: var(--accent); font-size: 14px; font-weight: 600;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    cursor: pointer; transition: all 0.15s; margin-top: 4px;
+  }
+  .subtype-confirm:hover { background: rgba(200,240,96,0.15); }
+
   /* TREND SECTION */
   .trend-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
   .trend-tab {
@@ -722,6 +778,21 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- SUB-TYPE DRAWER -->
+<div class="subtype-drawer" id="subtype-drawer" onclick="closeSubtypeDrawer(event)">
+  <div class="subtype-panel">
+    <div class="subtype-header">
+      <div class="subtype-title">
+        خصص نوع المحتوى
+        <span class="subtype-type-badge" id="subtype-type-label"></span>
+      </div>
+      <button class="subtype-close" onclick="closeSubtypeDrawer(null,true)">✕</button>
+    </div>
+    <div class="subtype-grid" id="subtype-grid"></div>
+    <button class="subtype-confirm" onclick="confirmSubtype()">تأكيد ✦</button>
+  </div>
+</div>
+
 <script>
   // ─── STATE ───
   let dialect = '';
@@ -937,13 +1008,7 @@
   }
 
   function setCtype(el) {
-    document.querySelectorAll('.ctype-btn').forEach(b => b.classList.remove('active'));
-    el.classList.add('active');
-    contentType    = el.dataset.v;
-    contentTypeKey = el.dataset.key || 'cinematic';
-    localStorage.setItem('is_content_type_key', contentTypeKey);
-    const ci = document.getElementById('ctype-custom');
-    if (ci) ci.value = '';
+    openSubtypeDrawer(el);
   }
   function switchTrendTab(mode) {
     trendMode = mode;
@@ -1059,6 +1124,262 @@
   }
 
   // ─── GENERATE 3 IDEAS ───
+  // ─── SUB-TYPES ───
+  const SUBTYPES = {
+    cinematic: [
+      { id:'drama',    icon:'🎭', name:'قصة درامية',      desc:'قصة عاطفية أو صراع إنساني — شخصيات بأسماء، تصاعد درامي، لحظة تحول',
+        extra:'الأفكار يجب أن تحتوي شخصيات بأسماء عربية واضحة، مشاهد تمثيل حقيقي، تحول عاطفي في النهاية.',
+        shots_note:'wide establishing + close-up reactions + climax shot' },
+      { id:'narrative', icon:'📖', name:'رواية بصرية',    desc:'قصة قصيرة تُروى بالصورة والصوت — أقرب للفيلم القصير',
+        extra:'الفكرة تُروى بصرياً أكثر من الكلام. اجعل كل جملة تصف مشهداً يمكن تصويره.',
+        shots_note:'visual storytelling — montage + VO narration style' },
+    ],
+    talking_head: [
+      { id:'opinion',   icon:'💬', name:'رأي شخصي',       desc:'أنت + رأيك المباشر — unpopular opinion أو اعتراف',
+        extra:'الهوك اعتراف أو رأي يخالف السائد. الكلام مباشر وصادق بضمير المتكلم.',
+        shots_note:'single speaker, direct to camera, minimal cuts' },
+      { id:'listicle',  icon:'📋', name:'قائمة نقاط',     desc:'3 أو 5 نقاط — tips أو أخطاء أو حقائق',
+        extra:'كل سكريبت يحتوي 3-5 نقاط مرقمة. كل نقطة جملة أو جملتين.',
+        shots_note:'speaker + text overlay per point + summary shot' },
+    ],
+    talking_broll: [
+      { id:'explainer', icon:'🔍', name:'شرح مع مشاهد',   desc:'تشرح فكرة والكاميرا تقطع لمشاهد دعم توضيحية',
+        extra:'كل جملة رئيسية تحتوي [B-Roll: وصف المشهد الداعم]. مثال: "الجلد يتضرر [B-Roll: تصوير مجهري لخلايا البشرة]".',
+        shots_note:'talking head intercutting with b-roll every 2-3 seconds' },
+      { id:'reaction',  icon:'😮', name:'رد فعل + شرح',   desc:'تشاهد شيئاً وتعلق عليه — react + explain style',
+        extra:'ابدأ برد فعل على حدث أو منتج أو مقطع، ثم اشرح السبب.',
+        shots_note:'reaction shot + reference footage + speaker close-up' },
+    ],
+    dialog: [
+      { id:'conflict',  icon:'⚡', name:'صراع وتوتر',     desc:'حوار متوتر بين شخصين — خلاف أو مواجهة',
+        extra:'كل حوار يبدأ بـ "اسم الشخصية:". الصراع يتصاعد جملة بجملة. لا حل سعيد.',
+        shots_note:'OTS shots, reaction CUs, no wide shots until climax' },
+      { id:'comedy_duo',icon:'😄', name:'ثنائي كوميدي',   desc:'حوار مضحك بين شخصيتين متناقضتين',
+        extra:'شخصية جادة + شخصية خفيفة. الكوميديا من التناقض بينهم. punch line في آخر جملة.',
+        shots_note:'tight two-shot + alternating CU reactions' },
+    ],
+    educational: [
+      { id:'myth_fact',  icon:'🔴', name:'خرافة vs حقيقة', desc:'اكسر خرافة شائعة بحقيقة علمية أو عملية',
+        extra:'ابدأ بالخرافة الشائعة، ثم الصدمة "هذا خطأ!"، ثم الحقيقة بالدليل.',
+        shots_note:'text overlay for myth, speaker for fact, before/after visual' },
+      { id:'howto',      icon:'⚙️', name:'كيف تفعل X',    desc:'خطوات عملية واضحة — tutorial أو life hack',
+        extra:'كل سكريبت: مشكلة (جملة) + الخطوات (3-4 خطوات) + النتيجة (جملة).',
+        shots_note:'step-by-step demonstration shots, numbered text overlays' },
+    ],
+    comedy: [
+      { id:'skit',       icon:'🎪', name:'سكيت موقف',      desc:'موقف يومي مبالغ فيه بين شخصيتين',
+        extra:'شخصيتان بأسماء عربية. موقف يومي يتصاعد بشكل مضحك. punch line قوية في النهاية.',
+        shots_note:'wide for setup, CU for reactions, slow zoom for punchline' },
+      { id:'parody',     icon:'🎭', name:'محاكاة ساخرة',   desc:'تقليد ساخر لشيء معروف — trend أو إعلان أو موقف',
+        extra:'حدد ما تحاكيه بوضوح في الفكرة. المحاكاة تبالغ بالتفاصيل المعروفة.',
+        shots_note:'match cut to original style, exaggerated versions' },
+    ],
+    product: [
+      { id:'showcase',   icon:'✨', name:'استعراض المنتج',  desc:'لقطات جمالية للمنتج — زوايا، تفاصيل، استخدام',
+        extra:'السكريبت يصف اللقطات البصرية فقط: "يد تمسك المنتج، الزجاجة في الضوء الدافئ، التفاصيل الذهبية". لا حوار.',
+        shots_note:'macro product shots, hero angles, detail close-ups, lifestyle B-roll' },
+      { id:'before_after',icon:'🔄', name:'قبل وبعد',       desc:'مقارنة واضحة تُظهر تأثير المنتج',
+        extra:'ابدأ بالمشكلة قبل المنتج، وسطها الاستخدام، نهايتها النتيجة المدهشة.',
+        shots_note:'before state shot, application process, dramatic after reveal' },
+    ],
+    demonstration: [
+      { id:'tutorial',   icon:'👆', name:'خطوات عملية',    desc:'كيفية استخدام المنتج أو الخدمة خطوة بخطوة',
+        extra:'كل جملة = خطوة واحدة قابلة للتصوير. رقّم الخطوات في السكريبت.',
+        shots_note:'POV hands shots, step numbers as text, result close-up' },
+      { id:'ui_walkthrough',icon:'📱', name:'جولة UI/تطبيق', desc:'شرح واجهة تطبيق أو موقع أو برنامج',
+        extra:'السكريبت يصف ما يظهر على الشاشة + الكلام المصاحب. مثال: "اضغط على الزر الأخضر [SCREEN: cursor moves to button]".',
+        shots_note:'screen recording + hand pointer + face reaction inserts' },
+    ],
+    cgi: [
+      { id:'world_build', icon:'🌍', name:'بناء عالم',      desc:'عالم خيالي ثلاثي الأبعاد مع قصة بصرية',
+        extra:'الفكرة تبدأ بوصف العالم (اسمه، قوانينه، مظهره) ثم القصة داخله.',
+        shots_note:'wide world establishing, environment details, character in world' },
+      { id:'product_cgi', icon:'🎬', name:'منتج بعالم CGI', desc:'المنتج الحقيقي يدخل عالم CGI أو يتحول لكيان CGI',
+        extra:'المنتج هو البطل. يتحول أو يدخل عالم CGI ويتفاعل مع البيئة.',
+        shots_note:'product hero shot, CGI environment reveal, product + world integration' },
+    ],
+    cgi_character: [
+      { id:'mascot',     icon:'🤖', name:'ماسكوت المنتج',  desc:'شخصية CGI تمثّل المنتج وتروج له بشخصية مميزة',
+        extra:'اخترع اسم الشخصية + وصفها الجسدي + شخصيتها. الشخصية تظهر في كل لقطة وتتفاعل مع المنتج.',
+        shots_note:'character introduction shot, product interaction, personality moment, CTA with character' },
+      { id:'story_char', icon:'✨', name:'شخصية قصصية',    desc:'شخصية CGI في رحلة أو مغامرة تعكس رسالة المنتج',
+        extra:'الشخصية تواجه مشكلة تحلها الفكرة/المنتج. رحلة بداية-وسط-نهاية.',
+        shots_note:'hero journey structure, character emotion shots, resolution reveal' },
+    ],
+    cgi_human: [
+      { id:'micro_world', icon:'🔬', name:'عالم مصغر',     desc:'شخصية CGI صغيرة في العالم الحقيقي — داخل الجسم أو المنتج',
+        extra:'الإنسان الحقيقي يتفاعل مع كيان CGI صغير. الكيان له اسم وشخصية. يشرح أو يساعد.',
+        shots_note:'real person reaction + CGI character integration, scale contrast shots' },
+      { id:'parallel',   icon:'🌐', name:'عالمان متوازيان', desc:'الإنسان في الواقع والشخصية CGI في عالمها — يتواصلان',
+        extra:'مشاهد تتقاطع بين العالم الحقيقي والعالم CGI. كلاهما يحل نفس المشكلة.',
+        shots_note:'split screen, portal transitions, intercutting between worlds' },
+    ],
+    vfx: [
+      { id:'transformation',icon:'⚡', name:'تحول مدهش',   desc:'شيء عادي يتحول لشيء خيالي أمام الكاميرا',
+        extra:'حدد نقطة التحول بوضوح في السكريبت. قبلها واقعي، بعدها خيالي.',
+        shots_note:'wide normal shot, VFX trigger moment, reveal of transformed state' },
+      { id:'power_fantasy', icon:'🦸', name:'قوة خيالية',  desc:'الشخصية تمتلك قدرة خارقة تعكس الفكرة',
+        extra:'القدرة الخارقة تمثّل الفكرة/المنتج مجازياً. مثال: "يملك قوة الحماية = درع مرئي يظهر حوله".',
+        shots_note:'power activation shot, ability demonstration, impact reveal' },
+    ],
+  };
+
+  let selectedSubtype = null;
+  let pendingCtypeKey = null;
+  let pendingCtypeEl  = null;
+
+  function openSubtypeDrawer(el) {
+    const key = el.dataset.key;
+    const subs = SUBTYPES[key];
+    if (!subs || !subs.length) {
+      // No subtypes — apply directly
+      applyCtypeSelection(el, null);
+      return;
+    }
+    pendingCtypeKey = key;
+    pendingCtypeEl  = el;
+    selectedSubtype = null;
+
+    // Build drawer content
+    document.getElementById('subtype-type-label').textContent = el.querySelector('.ctype-label')?.textContent || key;
+    const grid = document.getElementById('subtype-grid');
+    grid.innerHTML = subs.map(s => `
+      <div class="subtype-card" data-id="${s.id}" onclick="selectSubtype(this,'${s.id}')">
+        <div class="subtype-card-icon">${s.icon}</div>
+        <div class="subtype-card-name">${s.name}</div>
+        <div class="subtype-card-desc">${s.desc}</div>
+      </div>`).join('');
+
+    // Auto-select first
+    const firstCard = grid.querySelector('.subtype-card');
+    if (firstCard) selectSubtype(firstCard, subs[0].id);
+
+    document.getElementById('subtype-drawer').classList.add('open');
+  }
+
+  function selectSubtype(el, id) {
+    document.querySelectorAll('.subtype-card').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    selectedSubtype = id;
+  }
+
+  function confirmSubtype() {
+    if (!pendingCtypeEl) return;
+    const key  = pendingCtypeKey;
+    const subs = SUBTYPES[key] || [];
+    const sub  = subs.find(s => s.id === selectedSubtype);
+    applyCtypeSelection(pendingCtypeEl, sub);
+    closeSubtypeDrawer(null, true);
+  }
+
+  function closeSubtypeDrawer(e, force) {
+    if (!force && e && e.target !== document.getElementById('subtype-drawer')) return;
+    document.getElementById('subtype-drawer').classList.remove('open');
+  }
+
+  function applyCtypeSelection(el, sub) {
+    document.querySelectorAll('.ctype-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    contentType    = el.dataset.v;
+    contentTypeKey = el.dataset.key || 'cinematic';
+    localStorage.setItem('is_content_type_key', contentTypeKey);
+    // Store subtype
+    window._activeSubtype = sub || null;
+    localStorage.setItem('is_content_subtype', sub ? JSON.stringify(sub) : '');
+    // Clear custom input
+    const ci = document.getElementById('ctype-custom');
+    if (ci) ci.value = '';
+    // Show badge
+    if (sub) {
+      toast(sub.icon + ' ' + sub.name);
+    }
+  }
+
+  // ─── CONTENT TYPE DNA ───
+  // Each type has a creative brief that shapes the IDEAS themselves
+  const CONTENT_TYPE_DNA = {
+    cinematic: {
+      brief: 'قصة درامية سينمائية بأداء تمثيلي قوي. الهوك مشهد بصري صادم أو لحظة عاطفية.',
+      elements: 'مشاهد تمثيلية، شخصيات بأسماء محددة، بيئة واضحة، تحول درامي في القصة',
+      hooks: 'ابدأ بمشهد في وسطه — in medias res',
+      avoid: 'لا تبدأ بسؤال مباشر للكاميرا'
+    },
+    talking_head: {
+      brief: 'شخص واحد يتكلم مباشرة للكاميرا بأسلوب جذاب وشخصي.',
+      elements: 'كلام مباشر، رأي شخصي، معلومة واحدة واضحة، نبرة صادقة',
+      hooks: 'ابدأ بجملة صادمة أو اعتراف شخصي',
+      avoid: 'لا شخصيات متعددة، لا مشاهد تمثيلية'
+    },
+    talking_broll: {
+      brief: 'كلام مع مشاهد دعم بصرية. الصوت talking head لكن الصورة تتغير.',
+      elements: 'كلام رئيسي + وصف مشاهد B-Roll توضيحية بين الجمل',
+      hooks: 'ابدأ بسؤال أو حقيقة مثيرة',
+      avoid: 'لا تكتفي بالكلام فقط'
+    },
+    dialog: {
+      brief: 'حوار حقيقي بين شخصين أو أكثر. كل شخصية لها اسم وصوت مختلف.',
+      elements: 'اسم الشخصية قبل كل جملة، توتر بين الشخصيات، نقطة تحول في الحوار',
+      hooks: 'ابدأ بجملة حوارية صادمة أو مثيرة للتساؤل',
+      avoid: 'لا تبدأ بوصف المشهد — ابدأ بالكلام مباشرة',
+      example: 'مثال: سارة: وين كنت؟ / أحمد: قلت لك — الشغل. / سارة: الشغل؟ الساعة 2 الليل؟!'
+    },
+    educational: {
+      brief: 'محتوى تعليمي يشرح فكرة واحدة بشكل بسيط ومثير.',
+      elements: 'حقيقة مفاجئة، شرح مبسط، مثال عملي، خلاصة واضحة',
+      hooks: 'ابدأ بمعلومة مدهشة أو خطأ شائع',
+      avoid: 'لا مصطلحات معقدة، لا شرح طويل'
+    },
+    comedy: {
+      brief: 'كوميديا موقف — skit — بشخصيات واضحة ولحظة مضحكة.',
+      elements: 'شخصيتان على الأقل بأسماء، موقف يومي مبالغ فيه، punch line في النهاية',
+      hooks: 'ابدأ بموقف يومي غريب أو سوء فهم كوميدي',
+      avoid: 'لا نكت مباشرة — الكوميديا من الموقف نفسه',
+      example: 'مثال شخصيات: أم وابنها، بائع وزبون، موظف ومديره'
+    },
+    product: {
+      brief: 'عرض منتج احترافي بأسلوب lifestyle أو مقارنة أو قبل/بعد.',
+      elements: 'اسم المنتج بوضوح، فائدة واحدة محددة، مشهد استخدام حقيقي، CTA',
+      hooks: 'ابدأ بمشكلة يحلها المنتج أو نتيجة مدهشة',
+      avoid: 'لا مبالغة — واقعية وموثوقة'
+    },
+    demonstration: {
+      brief: 'عرض تجريبي خطوة بخطوة — how-to أو مقارنة.',
+      elements: 'خطوات واضحة ومرقمة، نتيجة قابلة للقياس، مقارنة قبل/بعد',
+      hooks: 'ابدأ بالنتيجة النهائية ثم اشرح كيف',
+      avoid: 'لا كلام زائد — كل جملة لها فعل واضح'
+    },
+    cgi: {
+      brief: 'عالم كارتوني ثلاثي الأبعاد — Pixar style أو Dreamworks — قصة بصرية خيالية.',
+      elements: 'عالم خيالي واضح الهوية، شخصية رئيسية بشخصية مميزة، مشكلة بصرية يجب حلها',
+      hooks: 'ابدأ بلقطة واسعة تعرف العالم — establishing shot خيالي',
+      avoid: 'لا واقعية — كل شيء مبالغ وخيالي ومبهج',
+      note: 'العالم والشخصيات يجب أن يكونوا جزءاً من السكريبت كوصف بصري'
+    },
+    cgi_character: {
+      brief: 'شخصية CGI متحركة تمثّل المنتج أو الفكرة — mascot character.',
+      elements: 'اسم الشخصية + وصفها الجسدي + شخصيتها، علاقتها بالمنتج، حركة/رد فعل مميز',
+      hooks: 'ابدأ بتقديم الشخصية بطريقة مبهجة',
+      avoid: 'لا تنسى اسم الشخصية — يجب أن يُذكر في السكريبت',
+      note: 'مثال أسماء: بروق، نانو، كيمو، زيبو، فلاشي — حسب المنتج والموضوع',
+      example: 'اذا المنتج منظف: شخصية فقاعة اسمها "بروق" تحارب البكتيريا. اذا دواء: شخصية خلية اسمها "نانو" تحمي الجسم.'
+    },
+    cgi_human: {
+      brief: 'دمج إنسان حقيقي مع عناصر CGI في نفس المشهد.',
+      elements: 'شخصية بشرية حقيقية واضحة + كيان CGI صغير أو بيئة CGI تتفاعل معه',
+      hooks: 'ابدأ بلحظة اكتشاف — الإنسان يرى/يتفاعل مع عنصر CGI لأول مرة',
+      avoid: 'لا تجعلهم منفصلين — يجب أن يتفاعلوا جسدياً',
+      note: 'مثال: دكتورة حقيقية + خلية CGI صغيرة تحدثها / شخص حقيقي + كائن صغير CGI على كتفه',
+      example: 'اذا صحة: دكتورة سارة + شخصية مايكرو CGI اسمها "فيرو" تشرح الفيروسات. اذا تقنية: مهندس + روبوت نانو CGI.'
+    },
+    vfx: {
+      brief: 'مؤثرات بصرية خيالية — الواقع يتحول أمام الكاميرا.',
+      elements: 'لحظة تحول بصرية مدهشة، منطق خيالي واضح، إحساس بالقدرة أو الخطر',
+      hooks: 'ابدأ بمشهد عادي يتحول فجأة لشيء خيالي',
+      avoid: 'لا تبقى في الواقع — استغل الـ VFX لقول شيء مستحيل',
+      note: 'مثال: يد تمتد وتمسك الوقت / منتج يتحول لعالم مصغر / شخص يطير فوق المدينة'
+    }
+  };
+
   async function generateIdeas() {
     const { topic, extra, plat, dialectStr, trendCtx, contentType, durationSec, durationLabel, approxWords, maxWords } = buildContext();
     if (!topic) { toast('اكتب الموضوع أولاً'); document.getElementById('topic-input').focus(); return; }
@@ -1071,11 +1392,27 @@
     document.getElementById('selected-actions').classList.remove('visible');
     selectedIdeaIdx = -1;
 
-    const systemPrompt = `أنت منتج محتوى رقمي محترف. التزم باللهجة ${dialectStr} في كل كلمة. ممنوع أي كلمة إنجليزية. ممنوع الفصحى. الحد الأقصى لكل سكريبت ${maxWords} كلمة.`;
+    // Get content type DNA
+    const ctKey = contentTypeKey || 'cinematic';
+    const dna = CONTENT_TYPE_DNA[ctKey] || CONTENT_TYPE_DNA['cinematic'];
+    // Active subtype
+    const activeSub = window._activeSubtype || null;
+    const subtypeExtra = activeSub
+      ? `\nالتخصص المختار: ${activeSub.icon} ${activeSub.name}\nتوجيه: ${activeSub.extra}\nنوع اللقطات: ${activeSub.shots_note}`
+      : '';
+    const dnaInstructions = `نوع المحتوى: ${contentType}${activeSub ? ' — ' + activeSub.name : ''}
+الروح الإبداعية: ${dna.brief}
+العناصر المطلوبة: ${dna.elements}
+أسلوب الهوك: ${dna.hooks}
+تجنب: ${dna.avoid}${dna.note ? '\nملاحظة: ' + dna.note : ''}${dna.example ? '\nمثال: ' + dna.example : ''}${subtypeExtra}`;
+
+    const systemPrompt = `أنت منتج محتوى رقمي محترف متخصص في نوع "${contentType}". التزم باللهجة ${dialectStr} في كل كلمة. ممنوع أي كلمة إنجليزية. ممنوع الفصحى. الحد الأقصى لكل سكريبت ${maxWords} كلمة.`;
 
     const prompt = `الموضوع: ${topic}
-المنصة: ${plat} | النوع: ${contentType} | المدة: ~${durationSec} ثانية (~${approxWords} كلمة)
+المنصة: ${plat} | المدة: ~${durationSec} ثانية (~${approxWords} كلمة)
 ${trendCtx ? trendCtx + '\n' : ''}${extra ? 'تفاصيل: ' + extra + '\n' : ''}
+${dnaInstructions}
+
 اللهجة: ${dialectStr} — في كل كلمة بدون استثناء
 
 اكتب 3 أفكار فيديو مختلفة. استخدم هذا الشكل بالضبط ولا تغيره:
@@ -1601,6 +1938,10 @@ ${isTalking ? `- This is TALKING HEAD: beats are topic shifts, not sentences
     localStorage.setItem('is_pending_shots_count',  shotCount);
     if (beatsData) {
       localStorage.setItem('is_pending_beats', JSON.stringify(beatsData));
+    // Pass subtype for shots generation
+    const activeSub2 = window._activeSubtype;
+    if (activeSub2) localStorage.setItem('is_pending_subtype', JSON.stringify(activeSub2));
+    else localStorage.removeItem('is_pending_subtype');
     } else {
       localStorage.removeItem('is_pending_beats');
     }
