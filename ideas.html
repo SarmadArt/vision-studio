@@ -1104,27 +1104,42 @@ ANGLE: ...
   }
 
   function parseAndRenderIdeas(raw) {
-    // Parse IDEA_N blocks
-    const blocks = raw.split(/---+/).map(b => b.trim()).filter(Boolean);
     generatedIdeas = [];
 
-    blocks.forEach((block, i) => {
-      const hookMatch  = block.match(/HOOK:\s*([\s\S]*?)(?=\nSCRIPT:|$)/i);
+    // Try primary format: split by ---
+    const blocks = raw.split(/(?:^|\n)---+(?:\n|$)/).map(b => b.trim()).filter(Boolean);
+
+    blocks.forEach(block => {
+      const hookMatch   = block.match(/HOOK:\s*([\s\S]*?)(?=\nSCRIPT:|\nANGLE:|$)/i);
       const scriptMatch = block.match(/SCRIPT:\s*([\s\S]*?)(?=\nANGLE:|$)/i);
       const angleMatch  = block.match(/ANGLE:\s*([\s\S]*?)$/i);
-
       if (!hookMatch && !scriptMatch) return;
-
       generatedIdeas.push({
-        hook:   (hookMatch?.[1]||'').trim(),
-        script: (scriptMatch?.[1]||'').trim(),
-        angle:  (angleMatch?.[1]||'').trim(),
+        hook:   (hookMatch?.[1]  || '').replace(/^\*+|\*+$/g,'').trim(),
+        script: (scriptMatch?.[1]|| '').replace(/^\*+|\*+$/g,'').trim(),
+        angle:  (angleMatch?.[1] || '').replace(/^\*+|\*+$/g,'').trim(),
       });
     });
 
+    // Fallback: try IDEA_N markers
     if (!generatedIdeas.length) {
-      // Fallback: try to split by line groups
-      toast('تم التوليد — قد يكون التنسيق مختلفاً');
+      const ideaBlocks = raw.split(/IDEA_\d+/i).map(b => b.trim()).filter(Boolean);
+      ideaBlocks.forEach(block => {
+        const hm = block.match(/HOOK:\s*([\s\S]*?)(?=\nSCRIPT:|\nANGLE:|$)/i);
+        const sm = block.match(/SCRIPT:\s*([\s\S]*?)(?=\nANGLE:|$)/i);
+        const am = block.match(/ANGLE:\s*([\s\S]*?)$/i);
+        if (!hm && !sm) return;
+        generatedIdeas.push({
+          hook:   (hm?.[1]||'').trim(),
+          script: (sm?.[1]||'').trim(),
+          angle:  (am?.[1]||'').trim(),
+        });
+      });
+    }
+
+    // Last resort
+    if (!generatedIdeas.length) {
+      toast('تم التوليد — تحقق من الشكل');
       generatedIdeas = [{ hook: 'الفكرة', script: raw.trim(), angle: '' }];
     }
 
@@ -1158,6 +1173,16 @@ ANGLE: ...
   }
 
   function selectIdea(idx) {
+    // Toggle deselect if already selected
+    if (selectedIdeaIdx === idx) {
+      selectedIdeaIdx = -1;
+      document.querySelectorAll('.idea-card').forEach(c => {
+        c.classList.remove('selected');
+        c.querySelector('.idea-select-badge').textContent = 'اختر';
+      });
+      document.getElementById('selected-actions').classList.remove('visible');
+      return;
+    }
     selectedIdeaIdx = idx;
     // Update cards
     document.querySelectorAll('.idea-card').forEach((c,i) => {
@@ -1187,18 +1212,21 @@ ANGLE: ...
 
     try {
       const result = await callMainAPI(
-        `طوّر وحسّن هذه الفكرة — اجعل السكريبت أقوى وأكثر إقناعاً وطبيعية.
-اللهجة: ${dialectStr}. النوع: ${contentType}. المنصة: ${plat}.
+        `طوّر وحسّن هذه الفكرة. اجعل السكريبت أقوى وأكثر طبيعية وتأثيراً.
 
 الفكرة الحالية:
-${idea.hook}
-${idea.script}
+الهوك: ${idea.hook}
+السكريبت: ${idea.script}
 
-أعطني السكريبت المطوّر فقط — بدون عنوان أو شرح. جاهز للتصوير مباشرة.`,
-        `أنت محرر سكريبت محترف. اكتب بلهجة ${dialectStr} فقط.`
+قواعد صارمة:
+- اللهجة ${dialectStr} في كل كلمة — لا إنجليزي أبداً
+- لا توقيتات — لا هاشتاقات — لا شرح
+- فقط النص الكامل الجاهز للتصوير
+- ابدأ مباشرة بالكلام`,
+        `أنت محرر سكريبت محترف متخصص باللهجة ${dialectStr}. ممنوع استخدام أي كلمة إنجليزية في السكريبت.`
       );
 
-      const clean = result.replace(/^(السكريبت|النص|المطوّر|:)+\s*/i, '').trim();
+      const clean = result.replace(/^(السكريبت|النص|المطوّر|الناتج|Here|Here's|Script|هنا)[:\s]*/i, '').trim();
       generatedIdeas[selectedIdeaIdx].script = clean;
       document.getElementById('selected-preview').textContent = idea.hook + '\n\n' + clean;
       showScriptEditor(clean);
@@ -1220,23 +1248,32 @@ ${idea.script}
     document.getElementById('script-spinner').style.display = 'inline-block';
 
     try {
+      const { durationSec, approxWords } = buildContext();
       const result = await callMainAPI(
-        `اكتب سكريبت فيديو كامل ومفصّل بناءً على الفكرة التالية.
-الموضوع: ${topic}
-الفكرة: ${idea.hook}
-النوع: ${contentType} | المنصة: ${plat} | اللهجة: ${dialectStr}
-${extra ? 'تفاصيل: ' + extra : ''}
+        `اكتب سكريبت فيديو كامل جاهز للتصوير.
 
-اكتب السكريبت الكامل جاهزاً للتصوير:
-- الهوك أول 3 ثواني
-- جسم المحتوى كاملاً
-- الخاتمة
+المعلومات:
+- الموضوع: ${topic}
+- الفكرة: ${idea.hook}
+- النوع: ${contentType}
+- المنصة: ${plat}
+- المدة: ~${durationSec} ثانية (~${approxWords} كلمة)
+${extra ? '- تفاصيل: ' + extra : ''}
 
-اكتب الكلام كما سيُقال فعلاً أمام الكاميرا. ${dialectStr} فقط. لا توقيتات لا هاشتاقات لا شرح.`,
-        `أنت كاتب سكريبت محترف. اكتب بلهجة ${dialectStr} فقط، بشكل طبيعي وعفوي.`
+الهيكل المطلوب:
+[الهوك] الجملة الأولى التي تشد المشاهد في أول 3 ثوانٍ
+[الجسم] المحتوى الكامل جملة جملة
+[الخاتمة] نهاية تدفع للتفاعل
+
+قواعد صارمة:
+- اللهجة ${dialectStr} في كل كلمة — ممنوع أي إنجليزي
+- الكلام كما سيُقال فعلاً أمام الكاميرا
+- لا توقيتات — لا هاشتاقات — لا تسميات مقاطع
+- لا شرح أو مقدمة — ابدأ مباشرة بالهوك`,
+        `أنت كاتب سكريبت محترف متخصص باللهجة ${dialectStr}. ممنوع أي كلمة إنجليزية في السكريبت.`
       );
 
-      const clean = result.trim();
+      const clean = result.replace(/^(السكريبت|النص|الهوك|\[الهوك\]|Here)[:\s]*/i, '').trim();
       generatedIdeas[selectedIdeaIdx].script = clean;
       document.getElementById('selected-preview').textContent = idea.hook + '\n\n' + clean;
       showScriptEditor(clean);
