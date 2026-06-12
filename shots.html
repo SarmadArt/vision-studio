@@ -1404,6 +1404,7 @@
     <a href="index.html" class="topbar-nav-link">⌂ الرئيسية</a>
     <a href="ideas.html" class="topbar-nav-link">✦ Idea Studio</a>
     <a href="shots.html" class="topbar-nav-link active">◈ Shot List</a>
+    <a href="settings.html" class="topbar-nav-link">⚙ الإعدادات</a>
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="active-prov-pill" id="active-prov-pill">anthropic</div>
@@ -4048,24 +4049,13 @@ Existing shots:${shotsData.length} | New shot:${desc}
             scriptEl.value = pendingScript;
             scriptEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }
-          // Apply content type → map to VIDEO_TYPE_MAP key
+          // Apply content type — now receives direct VIDEO_TYPE_MAP key
           if (pendingContentType) {
-            const typeMap = {
-              'شخصية تتكلم للكاميرا':   'talking_head',
-              'شخصيتين يتحاوران':        'dialog',
-              'مشهد تمثيلي كوميدي':      'comedy',
-              'محتوى توعوي تعليمي':      'educational',
-              'عرض منتج احترافي':        'product',
-              'شخصية CGI متحركة':        'cgi_character',
-              'قصة سينمائية درامية':     'cinematic',
-              'توكينج هيد مع B-Roll':    'talking_broll',
-            };
-            const mappedType = typeMap[pendingContentType];
-            if (mappedType) {
-              selectedVideoTypes = new Set([mappedType]);
-              currentVideoType = mappedType;
-              updateVtypeDisplay();
-            }
+            const validKeys = Object.keys(VIDEO_TYPE_MAP);
+            const key = validKeys.includes(pendingContentType) ? pendingContentType : 'cinematic';
+            selectedVideoTypes = new Set([key]);
+            currentVideoType   = key;
+            updateVtypeDisplay();
           }
           // Apply suggested shot count
           const pendingShotsCount = localStorage.getItem('is_pending_shots_count');
