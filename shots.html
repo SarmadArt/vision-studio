@@ -3524,12 +3524,24 @@ Return ONLY valid JSON (no markdown, no explanation):
     document.getElementById('gen-shots-spinner').style.display = 'inline-block';
     document.getElementById('gen-shots-label').textContent = 'Generating...';
     const body = document.getElementById('shots-output-body');
-    body.innerHTML = `<div class="loading-state"><div class="spinner"></div><span>Building ${currentShotCount} shots...</span></div>`;
+    const beatsInfo = beatsData?.beats?.length ? ` (${beatsData.beats.length} beats)` : '';
+    body.innerHTML = `<div class="loading-state"><div class="spinner"></div><span>Building ${currentShotCount} shots${beatsInfo}...</span></div>`;
 
     const charNames = characters.filter(c=>c.role.trim()).map(c=>c.role.trim());
     const activeLocations = locations.filter(l=>l.name.trim());
     const multiLoc = activeLocations.length > 1;
     const styleRefText = window._styleRefText || '';
+
+    // ── BEATS from ideas.html director analysis ──
+    const beatsData = window._pendingBeats || null;
+    const beatsContext = beatsData?.beats?.length ? (() => {
+      const isDialog = ['dialog','comedy'].includes(currentVideoType);
+      const lines = beatsData.beats.map((b,i) => {
+        const abNote = b.needs_ab ? ' [needs A+B coverage]' : '';
+        return `BEAT ${b.beat_num}${abNote}\n  Script: "${b.script_text}"\n  Visual: ${b.visual_idea}\n  Duration: ~${b.duration_sec}s`;
+      }).join('\n\n');
+      return `\n\nDIRECTOR BEAT BREAKDOWN (from script analysis — follow this structure):\n${beatsData.director_note ? 'Overall approach: ' + beatsData.director_note + '\n' : ''}${lines}\n\n${isDialog ? 'DIALOG RULE: For dialog beats — describe REACTIONS and BODY LANGUAGE only. Never write what characters say in the prompt. Show the emotion, tension, subtext visually.' : ''}`;
+    })() : '';
 
     const noTalkInstruction = noTalk ? `
 NO TALKING MODE:
@@ -3577,7 +3589,7 @@ ${multiLoc
 
 VIDEO TYPE: ${videoType}
 SCRIPT:
-${script}
+${script}${beatsContext}
 ${directorNote ? `\nDIRECTOR'S NOTE (follow strictly throughout all shots):\n${directorNote}` : ''}
 ${locInstruction}
 ${charsCtx ? `\nCHARACTERS:\n${charsCtx}` : ''}
@@ -4073,6 +4085,16 @@ Existing shots:${shotsData.length} | New shot:${desc}
             scriptEl.value = pendingScript;
             scriptEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }
+          // Load beats analysis from ideas.html
+          const pendingBeatsRaw = localStorage.getItem('is_pending_beats');
+          if (pendingBeatsRaw) {
+            try {
+              window._pendingBeats = JSON.parse(pendingBeatsRaw);
+              console.log('[Beats]', window._pendingBeats.shot_count, 'shots,', window._pendingBeats.beats?.length, 'beats');
+            } catch(e) { window._pendingBeats = null; }
+            localStorage.removeItem('is_pending_beats');
+          }
+
           // Apply content type — now receives direct VIDEO_TYPE_MAP key
           if (pendingContentType) {
             const validKeys = Object.keys(VIDEO_TYPE_MAP);

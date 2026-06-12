@@ -1490,20 +1490,123 @@ ${text}
   }
 
   // ─── SEND TO SHOT LIST ───
-  function sendToShotList() {
+  // ─── BEAT ANALYSIS ───
+  // Called before sending to shots — AI reads script as director
+  async function analyzeBeats(script) {
+    const { dialectStr, contentType, contentTypeKey: ctKey, durationSec } = buildContext();
+    const ct = ctKey || contentTypeKey || 'cinematic';
+
+    // Shot density rules per content type
+    const densityMap = {
+      cinematic:    { perSec: 0.6,  abRatio: 0.5, note: 'wide + close coverage per beat' },
+      talking_head: { perSec: 0.25, abRatio: 0.1, note: 'minimal cuts, hold on speaker' },
+      talking_broll:{ perSec: 0.4,  abRatio: 0.2, note: 'speaker + b-roll inserts' },
+      dialog:       { perSec: 0.5,  abRatio: 0.3, note: 'reaction shots, OTS cuts' },
+      educational:  { perSec: 0.3,  abRatio: 0.15,note: 'presenter + graphic inserts' },
+      comedy:       { perSec: 0.5,  abRatio: 0.25,note: 'timing cuts, reaction shots' },
+      product:      { perSec: 0.5,  abRatio: 0.3, note: 'hero shots + detail close-ups' },
+      demonstration:{ perSec: 0.45, abRatio: 0.3, note: 'action + result shots' },
+      cgi:          { perSec: 0.55, abRatio: 0.4, note: 'wide world + detail renders' },
+      cgi_character:{ perSec: 0.5,  abRatio: 0.35,note: 'character + environment' },
+      cgi_human:    { perSec: 0.5,  abRatio: 0.35,note: 'human + CGI integration' },
+      vfx:          { perSec: 0.6,  abRatio: 0.45,note: 'build-up + reveal shots' },
+    };
+    const density = densityMap[ct] || densityMap['cinematic'];
+    const suggestedCount = Math.max(3, Math.min(20, Math.round(durationSec * density.perSec)));
+
+    const isDialog = ['dialog','comedy'].includes(ct);
+    const isTalking = ['talking_head','talking_broll','educational'].includes(ct);
+
+    const prompt = `You are a film director analyzing a script to plan the shot list.
+
+SCRIPT:
+${script}
+
+CONTENT TYPE: ${ct} (${density.note})
+DURATION: ~${durationSec} seconds
+SUGGESTED SHOTS: ${suggestedCount}
+
+Analyze this script and return ONLY a JSON object (no markdown, no explanation):
+{
+  "shot_count": <number — exact shots needed, between 3-20>,
+  "beats": [
+    {
+      "beat_num": 1,
+      "script_text": "<the exact words spoken/shown in this beat>",
+      "visual_idea": "<what the camera sees — NOT what is said, but the visual action/emotion>",
+      "duration_sec": <estimated seconds for this beat>,
+      "needs_ab": <true/false — does this beat need A+B coverage?>
+    }
+  ],
+  "director_note": "<one line: overall visual approach for this script>"
+}
+
+CRITICAL RULES:
+${isDialog ? `- This is DIALOG: visual_idea must describe REACTIONS and BODY LANGUAGE, never transcribe speech
+- "Where were you?" → visual: woman stands at door, arms crossed, jaw tight — NOT: character says "Where were you?"
+- Show the emotion between the words, not the words themselves` : ''}
+${isTalking ? `- This is TALKING HEAD: beats are topic shifts, not sentences
+- Combine sentences on same topic into one beat
+- visual_idea = speaker + what prop/graphic/action supports the point` : ''}
+- visual_idea is always a camera description: who, doing what, framing hint
+- shot_count = total shots (A and B count as 2 if needs_ab=true)
+- beats array length may differ from shot_count (some beats = 2 shots)`;
+
+    try {
+      const raw = await callMainAPI(prompt, 'You are a professional film director. Return only valid JSON.');
+      const clean = raw.replace(/```json|```/g,'').trim();
+      const data = JSON.parse(clean);
+      return data;
+    } catch(e) {
+      // Fallback: simple line split
+      const lines = (script.match(/[^.!\n]+/g)||[script]).map(l=>l.trim()).filter(l=>l.length>3);
+      return {
+        shot_count: suggestedCount,
+        beats: lines.slice(0,suggestedCount).map((l,i)=>({
+          beat_num: i+1,
+          script_text: l,
+          visual_idea: l,
+          duration_sec: Math.round(durationSec/lines.length),
+          needs_ab: false
+        })),
+        director_note: ''
+      };
+    }
+  }
+
+  async function sendToShotList() {
     const script = document.getElementById('script-editor').value.trim();
     if (!script) { toast('السكريبت فارغ'); return; }
-    const idea = generatedIdeas[selectedIdeaIdx] || {};
-    // Pass script + context to shots.html
-    localStorage.setItem('is_pending_script', script);
-    localStorage.setItem('is_pending_idea_hook', idea.hook || '');
+    const idea   = generatedIdeas[selectedIdeaIdx] || {};
+    const btn    = document.getElementById('send-to-shots-btn');
+    const origTxt = btn.textContent;
+
+    btn.disabled  = true;
+    btn.textContent = '⏳ يحلل السكريبت...';
+
+    // AI director analysis
+    let beatsData = null;
+    try {
+      beatsData = await analyzeBeats(script);
+    } catch(e) { /* use fallback */ }
+
+    const shotCount = beatsData?.shot_count || buildContext().suggestedShots || 5;
+
+    // Pass everything to shots.html
+    localStorage.setItem('is_pending_script',       script);
+    localStorage.setItem('is_pending_idea_hook',    idea.hook || '');
     localStorage.setItem('is_pending_content_type', contentTypeKey || 'cinematic');
-    localStorage.setItem('is_pending_platform', platform || 'instagram');
-    localStorage.setItem('is_pending_duration', videoDuration || 30);
-    const ctx = buildContext();
-    localStorage.setItem('is_pending_shots_count', ctx.suggestedShots || 5);
-    toast('جاري الانتقال لـ Shot List...');
-    setTimeout(() => { window.location.href = 'shots.html?from_ideas=1'; }, 700);
+    localStorage.setItem('is_pending_platform',     platform || 'instagram');
+    localStorage.setItem('is_pending_duration',     videoDuration || 30);
+    localStorage.setItem('is_pending_shots_count',  shotCount);
+    if (beatsData) {
+      localStorage.setItem('is_pending_beats', JSON.stringify(beatsData));
+    } else {
+      localStorage.removeItem('is_pending_beats');
+    }
+
+    btn.textContent = '✓ جاري الانتقال...';
+    setTimeout(() => { window.location.href = 'shots.html?from_ideas=1'; }, 600);
   }
 
   // ─── HELPERS ───
