@@ -3524,6 +3524,17 @@ Return ONLY valid JSON (no markdown, no explanation):
     document.getElementById('gen-shots-spinner').style.display = 'inline-block';
     document.getElementById('gen-shots-label').textContent = 'Generating...';
     const body = document.getElementById('shots-output-body');
+    // ── BEATS from ideas.html director analysis — declare BEFORE use ──
+    const beatsData = window._pendingBeats || null;
+    const beatsContext = beatsData?.beats?.length ? (() => {
+      const isDialog = ['dialog','comedy'].includes(currentVideoType);
+      const lines = beatsData.beats.map((b,i) => {
+        const abNote = b.needs_ab ? ' [needs A+B coverage]' : '';
+        return `BEAT ${b.beat_num}${abNote}\n  Script: "${b.script_text}"\n  Visual: ${b.visual_idea}\n  Duration: ~${b.duration_sec}s`;
+      }).join('\n\n');
+      return `\n\nDIRECTOR BEAT BREAKDOWN (from script analysis):\n${beatsData.director_note ? 'Overall approach: ' + beatsData.director_note + '\n' : ''}${lines}\n\n${isDialog ? 'DIALOG RULE: describe REACTIONS and BODY LANGUAGE only — never write what characters say.' : ''}`;
+    })() : '';
+
     const beatsInfo = beatsData?.beats?.length ? ` (${beatsData.beats.length} beats)` : '';
     body.innerHTML = `<div class="loading-state"><div class="spinner"></div><span>Building ${currentShotCount} shots${beatsInfo}...</span></div>`;
 
@@ -3532,16 +3543,7 @@ Return ONLY valid JSON (no markdown, no explanation):
     const multiLoc = activeLocations.length > 1;
     const styleRefText = window._styleRefText || '';
 
-    // ── BEATS from ideas.html director analysis ──
-    const beatsData = window._pendingBeats || null;
-    const beatsContext = beatsData?.beats?.length ? (() => {
-      const isDialog = ['dialog','comedy'].includes(currentVideoType);
-      const lines = beatsData.beats.map((b,i) => {
-        const abNote = b.needs_ab ? ' [needs A+B coverage]' : '';
-        return `BEAT ${b.beat_num}${abNote}\n  Script: "${b.script_text}"\n  Visual: ${b.visual_idea}\n  Duration: ~${b.duration_sec}s`;
-      }).join('\n\n');
-      return `\n\nDIRECTOR BEAT BREAKDOWN (from script analysis — follow this structure):\n${beatsData.director_note ? 'Overall approach: ' + beatsData.director_note + '\n' : ''}${lines}\n\n${isDialog ? 'DIALOG RULE: For dialog beats — describe REACTIONS and BODY LANGUAGE only. Never write what characters say in the prompt. Show the emotion, tension, subtext visually.' : ''}`;
-    })() : '';
+
 
     const noTalkInstruction = noTalk ? `
 NO TALKING MODE:
