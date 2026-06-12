@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KADR Studio — استوديو الإنتاج بالذكاء الاصطناعي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#15161C; --bg2:#1B1D26; --surface:#21232E; --surface2:#292C3A;
+    --line:#343847; --line2:#3E4356;
+    --ink:#EDEDF2; --muted:#9A9DB0; --muted2:#71748A;
+    --amber:#F0A93B; --amber-soft:rgba(240,169,59,.14);
+    --teal:#58C7BE; --teal-soft:rgba(88,199,190,.13);
+    --rose:#E5736B; --green:#5FB07A; --violet:#9B8CF0; --violet-soft:rgba(155,140,240,.13);
+    --r:14px;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+    --body:'IBM Plex Sans Arabic','Tajawal',system-ui,sans-serif;
+    --disp:'Tajawal','IBM Plex Sans Arabic',sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(1100px 500px at 85% -10%, rgba(240,169,59,.06), transparent 60%),
+      radial-gradient(900px 500px at 0% 110%, rgba(88,199,190,.05), transparent 55%),
+      var(--bg);
+    color:var(--ink); font-family:var(--body); line-height:1.6;
+    -webkit-font-smoothing:antialiased; min-height:100vh;
+  }
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:920px;margin:0 auto;padding:24px 20px 70px}
+
+  /* token counter — corner */
+  .meter{position:fixed;top:14px;left:14px;z-index:50;display:flex;align-items:center;gap:9px;
+    background:var(--surface);border:1px solid var(--line2);border-radius:11px;padding:8px 13px;cursor:pointer;
+    font-family:var(--mono);font-size:12.5px;box-shadow:0 6px 20px rgba(0,0,0,.3);transition:.18s}
+  .meter:hover{border-color:var(--amber)}
+  .meter .bolt{color:var(--amber)}
+  .meter .tok{color:var(--ink)}
+  .meter .cost{color:var(--teal)}
+  .meter .sep{color:var(--muted2)}
+
+  /* header */
+  header{display:flex;align-items:center;gap:14px;margin:6px 0 4px}
+  .clap{width:48px;height:48px;border-radius:12px;flex:none;position:relative;overflow:hidden;
+    background:linear-gradient(135deg,#2a2d3b,#20222d);border:1px solid var(--line2)}
+  .clap::before{content:"";position:absolute;top:0;right:0;left:0;height:14px;
+    background:repeating-linear-gradient(115deg,var(--ink) 0 9px,#15161C 9px 18px);opacity:.85}
+  .brand h1{font-family:var(--disp);font-weight:800;font-size:26px;margin:0;letter-spacing:-.4px}
+  .brand p{margin:1px 0 0;color:var(--muted);font-size:13px}
+
+  .hero{margin:26px 0 8px}
+  .hero h2{font-family:var(--disp);font-weight:800;font-size:24px;margin:0 0 6px;letter-spacing:-.3px}
+  .hero h2 b{color:var(--amber)} .hero h2 b.t{color:var(--teal)}
+  .hero p{color:var(--muted);font-size:14.5px;margin:0;max-width:600px}
+
+  /* app grid */
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--teal);text-transform:uppercase;margin:26px 0 12px}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  .app{position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--r);padding:20px;transition:.2s;display:block}
+  .app:hover{transform:translateY(-3px);border-color:var(--line2)}
+  .app .topline{height:3px;width:42px;border-radius:3px;margin-bottom:15px}
+  .app .ic{font-size:26px;margin-bottom:10px;display:block}
+  .app .no{position:absolute;top:18px;left:18px;font-family:var(--mono);font-size:12px;color:var(--muted2)}
+  .app h3{font-family:var(--disp);font-weight:800;font-size:18px;margin:0 0 2px}
+  .app .ar{color:var(--muted);font-size:13px;margin:0 0 8px}
+  .app p{color:var(--muted2);font-size:12.5px;margin:0;line-height:1.6}
+  .app .go{margin-top:13px;font-weight:700;font-size:13.5px}
+  .app.soon{opacity:.78}
+  .app .badge{position:absolute;top:16px;left:16px;font-family:var(--mono);font-size:10px;letter-spacing:1px;
+    color:var(--amber);background:var(--amber-soft);border:1px solid rgba(240,169,59,.3);padding:2px 8px;border-radius:6px}
+  .c-amber .topline{background:var(--amber)} .c-amber .go{color:var(--amber)} .c-amber .ic{filter:none}
+  .c-teal .topline{background:var(--teal)} .c-teal .go{color:var(--teal)}
+  .c-violet .topline{background:var(--violet)} .c-violet .go{color:var(--violet)}
+  .c-rose .topline{background:var(--rose)} .c-rose .go{color:var(--rose)}
+  .c-green .topline{background:var(--green)} .c-green .go{color:var(--green)}
+
+  /* settings */
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:22px;margin-top:14px}
+  h3.sec{font-family:var(--disp);font-weight:700;font-size:19px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:13.5px;margin:0 0 18px}
+  .glabel{font-family:var(--disp);font-weight:700;font-size:14px;color:var(--ink);margin:20px 0 2px}
+  .glabel span{color:var(--muted2);font-weight:400;font-size:12.5px}
+  .prov{background:var(--bg2);border:1px solid var(--line2);border-radius:12px;padding:16px;margin-top:12px}
+  .prov .ph{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .prov .ph .dot{width:9px;height:9px;border-radius:50%}
+  .prov .ph h4{font-family:var(--disp);font-weight:700;font-size:15px;margin:0}
+  .prov .ph .use{margin-right:auto;color:var(--muted2);font-size:12px}
+  label.f{display:block;font-size:13px;font-weight:600;margin:10px 0 6px;color:var(--ink)}
+  input[type=text],select{width:100%;background:var(--surface);border:1px solid var(--line2);color:var(--ink);
+    border-radius:9px;padding:11px 12px;font-family:var(--body);font-size:14px;transition:.2s}
+  input:focus,select:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-soft)}
+  ::placeholder{color:var(--muted2)}
+  .two{display:flex;gap:12px;flex-wrap:wrap}.two>*{flex:1;min-width:180px}
+  .price{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:6px}
+  .price b{color:var(--green)}
+  .btn{appearance:none;border:none;cursor:pointer;font-family:var(--disp);font-weight:700;font-size:14.5px;
+    padding:12px 20px;border-radius:11px;display:inline-flex;align-items:center;gap:8px;transition:.2s}
+  .btn.primary{background:var(--amber);color:#1a1206}
+  .btn.primary:hover{filter:brightness(1.07);transform:translateY(-1px)}
+  .btn.ghost{background:var(--surface2);color:var(--ink);border:1px solid var(--line2)}
+  .btn.ghost:hover{border-color:var(--muted)}
+  .btn.small{padding:9px 14px;font-size:13px}
+  .bar{display:flex;gap:10px;margin-top:18px;align-items:center;flex-wrap:wrap}
+  .spacer{flex:1}
+  .ok{background:rgba(95,176,122,.1);border:1px solid rgba(95,176,122,.4);color:#a7d9b6;border-radius:10px;padding:10px 14px;font-size:13px;margin-top:14px}
+  .saved{font-family:var(--mono);font-size:12px;color:var(--muted2);transition:.3s}
+  .saved.flash{color:var(--green)}
+  .btn.danger{color:#f1b3ad;border-color:rgba(229,115,107,.4)}
+  .btn.danger:hover{border-color:var(--rose);background:rgba(229,115,107,.1)}
+  footer{margin-top:30px;text-align:center;color:var(--muted2);font-size:12px;line-height:1.9}
+  @media(max-width:600px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="meter" id="meter" onclick="document.getElementById('settings').scrollIntoView({behavior:'smooth'})">
+  <span class="bolt">⚡</span><span class="tok" id="mTok">٠ توكن</span>
+  <span class="sep">·</span><span class="cost" id="mCost">$0.000</span>
+</div>
+
+<div class="wrap">
+  <header>
+    <div class="clap"></div>
+    <div class="brand">
+      <h1>KADR Studio</h1>
+      <p>استوديو الإنتاج بالذكاء الاصطناعي — من الفكرة إلى الفيديو</p>
+    </div>
+  </header>
+
+  <div class="hero">
+    <h2>كل <b>مرحلة إنتاج</b> في <b class="t">أداة</b>.</h2>
+    <p>اختر أداة وابدأ. كل أداة تأخذ مخرجات اللي قبلها: فكرة ← برومبتات ← ستوري بورد ← حركة، مع تقسيم اللوحة إلى لقطات.</p>
+  </div>
+
+  <div class="eyebrow">الأدوات</div>
+  <div class="grid">
+
+    <a class="app c-amber" href="ideate.html">
+      <span class="no">٠١</span>
+      <span class="topline"></span>
+      <span class="ic">💡</span>
+      <h3>Ideate</h3>
+      <p class="ar">صناعة الفكرة</p>
+      <p>توليد أفكار الترند وصياغتها حسب المنصة والمدة.</p>
+      <div class="go">افتح ←</div>
+    </a>
+
+    <a class="app c-teal soon" href="promptforge.html">
+      <span class="badge">قريباً</span>
+      <span class="topline"></span>
+      <span class="ic">⚡</span>
+      <h3>Prompt Forge</h3>
+      <p class="ar">تحويل الفكرة إلى برومبتات</p>
+      <p>يكسّر الفكرة إلى برومبتات دقيقة جاهزة للتوليد.</p>
+      <div class="go">افتح ←</div>
+    </a>
+
+    <a class="app c-violet soon" href="storyboard.html">
+      <span class="badge">قريباً</span>
+      <span class="topline"></span>
+      <span class="ic">🎞️</span>
+      <h3>Storyboard</h3>
+      <p class="ar">النص إلى لوحة لقطات</p>
+      <p>يحوّل النص إلى ستوري بورد لكامل الفكرة ببرومبت واحد.</p>
+      <div class="go">افتح ←</div>
+    </a>
+
+    <a class="app c-rose soon" href="motion.html">
+      <span class="badge">قريباً</span>
+      <span class="topline"></span>
+      <span class="ic">🌀</span>
+      <h3>Motion</h3>
+      <p class="ar">صورة إلى برومبت حركة</p>
+      <p>ترفع صورة فيعطيك برومبت حركة لمواقع تحريك الصور (image-to-video).</p>
+      <div class="go">افتح ←</div>
+    </a>
+
+    <a class="app c-green soon" href="split.html">
+      <span class="badge">قريباً</span>
+      <span class="topline"></span>
+      <span class="ic">✂️</span>
+      <h3>Frame Split</h3>
+      <p class="ar">تقسيم لوحة الستوري بورد</p>
+      <p>يقسّم صورة الستوري بورد إلى لقطات منفصلة جاهزة للحركة.</p>
+      <div class="go">افتح ←</div>
+    </a>
+
+  </div>
+
+  <!-- SETTINGS (merged) -->
+  <div class="eyebrow" id="settings">الإعدادات · المفاتيح والموديلات</div>
+  <div class="card">
+    <h3 class="sec">مفاتيح الـAPI</h3>
+    <p class="sub">عبّي مفاتيحك واختر الموديل لكل مزوّد. تُحفظ في متصفحك فقط ولا تُرفع للريبو. الأسعار لكل مليون توكن (إدخال/إخراج).</p>
+
+    <div class="glabel">محرّكات التوليد <span>— تختار واحداً داخل كل أداة</span></div>
+
+    <!-- OpenAI -->
+    <div class="prov">
+      <div class="ph"><span class="dot" style="background:#10A37F"></span><h4>OpenAI · GPT</h4><span class="use">توليد وصياغة</span></div>
+      <label class="f">API Key</label>
+      <input type="text" id="oaiKey" placeholder="sk-...">
+      <div class="two" style="margin-top:8px">
+        <div>
+          <label class="f">الموديل</label>
+          <select id="oaiModel" onchange="updatePrice('oai')">
+            <option value="gpt-5.4-mini">gpt-5.4-mini — أفضل قيمة ✓</option>
+            <option value="gpt-5.4-nano">gpt-5.4-nano — الأرخص</option>
+            <option value="gpt-5.4">gpt-5.4 — متوازن</option>
+            <option value="gpt-5.5">gpt-5.5 — الأقوى</option>
+          </select>
+        </div>
+      </div>
+      <div class="price" id="oaiPrice"></div>
+    </div>
+
+    <!-- Anthropic -->
+    <div class="prov">
+      <div class="ph"><span class="dot" style="background:#D97757"></span><h4>Anthropic · Claude</h4><span class="use">توليد وصياغة</span></div>
+      <label class="f">API Key</label>
+      <input type="text" id="anthKey" placeholder="sk-ant-...">
+      <div class="two" style="margin-top:8px">
+        <div>
+          <label class="f">الموديل</label>
+          <select id="anthModel" onchange="updatePrice('anth')">
+            <option value="claude-sonnet-4-6">claude-sonnet-4-6 — أفضل قيمة ✓</option>
+            <option value="claude-haiku-4-5">claude-haiku-4-5 — الأرخص</option>
+            <option value="claude-opus-4-8">claude-opus-4-8 — الأقوى</option>
+          </select>
+        </div>
+      </div>
+      <div class="price" id="anthPrice"></div>
+    </div>
+
+    <!-- Gemini -->
+    <div class="prov">
+      <div class="ph"><span class="dot" style="background:#4285F4"></span><h4>Google · Gemini</h4><span class="use">توليد وصياغة</span></div>
+      <label class="f">API Key</label>
+      <input type="text" id="gemKey" placeholder="AIza...">
+      <div class="two" style="margin-top:8px">
+        <div>
+          <label class="f">الموديل</label>
+          <select id="gemModel" onchange="updatePrice('gem')">
+            <option value="gemini-3-flash">gemini-3-flash — أفضل قيمة ✓</option>
+            <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite — الأرخص</option>
+            <option value="gemini-3.5-flash">gemini-3.5-flash — أحدث</option>
+            <option value="gemini-3.1-pro">gemini-3.1-pro — الأقوى</option>
+          </select>
+        </div>
+      </div>
+      <div class="price" id="gemPrice"></div>
+    </div>
+
+    <div class="glabel">مصادر البحث <span>— اختياري، تشغّلها داخل الأداة</span></div>
+
+    <!-- Perplexity -->
+    <div class="prov">
+      <div class="ph"><span class="dot" style="background:#20B8CD"></span><h4>Perplexity</h4><span class="use">بحث الترند بمصادر</span></div>
+      <label class="f">API Key</label>
+      <input type="text" id="pplxKey" placeholder="pplx-...">
+      <div class="two" style="margin-top:8px">
+        <div>
+          <label class="f">الموديل</label>
+          <select id="pplxModel" onchange="updatePrice('pplx')">
+            <option value="sonar">sonar — موصى به (الأرخص)</option>
+            <option value="sonar-pro">sonar-pro — أدق</option>
+            <option value="sonar-reasoning">sonar-reasoning</option>
+          </select>
+        </div>
+      </div>
+      <div class="price" id="pplxPrice"></div>
+    </div>
+
+    <!-- YouTube -->
+    <div class="prov">
+      <div class="ph"><span class="dot" style="background:#FF3B30"></span><h4>YouTube Data API</h4><span class="use">فيديوهات رائجة بالمجال</span></div>
+      <label class="f">API Key</label>
+      <input type="text" id="ytKey" placeholder="AIza...">
+      <div class="price">مجاني حتى ١٠٬٠٠٠ وحدة/يوم — لا يستهلك توكنز.</div>
+    </div>
+
+    <div class="bar">
+      <span class="saved" id="saved">⟳ يُحفظ تلقائياً</span>
+      <span class="spacer"></span>
+      <button class="btn ghost small" onclick="resetUsage()">تصفير العدّاد</button>
+      <button class="btn ghost small danger" onclick="resetAll()">↺ البدء من الصفر</button>
+    </div>
+  </div>
+
+  <footer>المفاتيح تبقى في متصفحك · الأسعار تقديرية وقد تتغيّر</footer>
+</div>
+
+<script>
+/* ---------- price table ($ per 1M tokens: [in,out]) ---------- */
+const PRICES = {
+  pplx:{ "sonar":[1,1], "sonar-pro":[3,15], "sonar-reasoning":[1,5] },
+  oai:{ "gpt-5.4-mini":[0.75,4.5], "gpt-5.4-nano":[0.20,1.25], "gpt-5.4":[2.5,15], "gpt-5.5":[5,30] },
+  anth:{ "claude-sonnet-4-6":[3,15], "claude-haiku-4-5":[1,5], "claude-opus-4-8":[5,25] },
+  gem:{ "gemini-3-flash":[0.5,3], "gemini-3.1-flash-lite":[0.25,1.5], "gemini-3.5-flash":[1.5,9], "gemini-3.1-pro":[2,12] }
+};
+
+/* ---------- storage (guarded) ---------- */
+function ls(){ try{ return window.localStorage; }catch(e){ return null; } }
+function getCfg(){ const s=ls(); if(!s) return {}; try{ return JSON.parse(s.getItem("kadr_cfg")||"{}"); }catch(e){ return {}; } }
+function getUsage(){ const s=ls(); if(!s) return {tokens:0,cost:0}; try{ return JSON.parse(s.getItem("kadr_usage")||'{"tokens":0,"cost":0}'); }catch(e){ return {tokens:0,cost:0}; } }
+
+function toAr(n){ return String(n).replace(/[0-9]/g,d=>"٠١٢٣٤٥٦٧٨٩"[d]); }
+function fmtTok(n){ if(n>=1000) return toAr((n/1000).toFixed(1))+"k"; return toAr(n); }
+
+/* ---------- meter ---------- */
+function paintMeter(){
+  const u=getUsage();
+  document.getElementById("mTok").textContent = fmtTok(u.tokens||0)+" توكن";
+  document.getElementById("mCost").textContent = "$"+(u.cost||0).toFixed(3);
+}
+function resetUsage(){ const s=ls(); if(s) s.setItem("kadr_usage",JSON.stringify({tokens:0,cost:0})); paintMeter(); toast("تم تصفير العدّاد"); }
+
+/* ---------- price hint ---------- */
+function updatePrice(which){
+  const sel=document.getElementById(which+"Model").value;
+  const p=PRICES[which][sel];
+  document.getElementById(which+"Price").innerHTML = p ? `السعر: <b>$${p[0]}</b> إدخال · <b>$${p[1]}</b> إخراج / مليون توكن` : "";
+}
+
+/* ---------- load / save ---------- */
+function loadCfg(){
+  const c=getCfg();
+  const set=(id,v)=>{ if(v!=null&&document.getElementById(id)) document.getElementById(id).value=v; };
+  set("pplxKey",c.pplxKey); set("oaiKey",c.oaiKey); set("anthKey",c.anthKey); set("gemKey",c.gemKey); set("ytKey",c.ytKey);
+  set("pplxModel",c.pplxModel); set("oaiModel",c.oaiModel); set("anthModel",c.anthModel); set("gemModel",c.gemModel);
+  ["pplx","oai","anth","gem"].forEach(updatePrice);
+}
+function saveCfg(){
+  const s=ls(); const v=id=>document.getElementById(id).value.trim(), m=id=>document.getElementById(id).value;
+  const c={
+    pplxKey:v("pplxKey"), pplxModel:m("pplxModel"),
+    oaiKey:v("oaiKey"), oaiModel:m("oaiModel"),
+    anthKey:v("anthKey"), anthModel:m("anthModel"),
+    gemKey:v("gemKey"), gemModel:m("gemModel"),
+    ytKey:v("ytKey")
+  };
+  if(s) s.setItem("kadr_cfg",JSON.stringify(c));
+}
+let savedTimer;
+function showSaved(){
+  const e=document.getElementById("saved"); if(!e) return;
+  e.textContent="✓ محفوظ"; e.classList.add("flash");
+  clearTimeout(savedTimer);
+  savedTimer=setTimeout(()=>{ e.textContent="⟳ يُحفظ تلقائياً"; e.classList.remove("flash"); },1400);
+}
+function autoSave(){ saveCfg(); showSaved(); }
+function wireAutoSave(){
+  ["pplxKey","pplxModel","oaiKey","oaiModel","anthKey","anthModel","gemKey","gemModel","ytKey"].forEach(id=>{
+    const e=document.getElementById(id); if(!e) return;
+    e.addEventListener("input",autoSave); e.addEventListener("change",autoSave);
+  });
+}
+function resetAll(){
+  if(!confirm("بدء من الصفر؟ راح يُمسح كل شي: المفاتيح، الموديلات، والعدّاد.")) return;
+  const s=ls();
+  if(s){ Object.keys(s).filter(k=>k.indexOf("kadr_")===0).forEach(k=>s.removeItem(k)); }
+  location.reload();
+}
+function toast(m){
+  const t=document.createElement("div");t.textContent=m;
+  t.style.cssText="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#292C3A;border:1px solid #3E4356;color:#EDEDF2;padding:11px 20px;border-radius:11px;font-family:'IBM Plex Sans Arabic',sans-serif;font-size:14px;z-index:99";
+  document.body.appendChild(t);setTimeout(()=>t.remove(),1700);
+}
+
+loadCfg(); paintMeter(); wireAutoSave();
+</script>
+</body>
+</html>
