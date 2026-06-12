@@ -572,7 +572,7 @@
       &nbsp;·&nbsp;
       <span class="token-cost" id="td-cost">$0.0000</span>
     </div>
-    <a href="index.html" class="back-btn">⌂ الرئيسية</a><a href="shots.html" class="back-btn" style="margin-right:4px;">◈ Shot List</a><a href="settings.html" class="back-btn" style="margin-right:4px;">⚙ الإعدادات</a>
+    <a href="index.html" class="back-btn">⌂ الرئيسية</a><a href="shots.html" class="back-btn" style="margin-right:4px;">◈ Shot List</a><a href="settings.html" class="back-btn" style="margin-right:4px;" target="_blank">⚙ الإعدادات</a>
   </div>
 </header>
 
@@ -938,9 +938,9 @@
         headers: { 'Content-Type':'application/json','Authorization':'Bearer '+key },
         body: JSON.stringify({
           model: 'sonar',
-          max_tokens: 600,
+          max_tokens: 800,
           messages: [
-            { role: 'system', content: 'You are a social media trend analyst. Return results in Arabic. Be concise and direct.' },
+            { role: 'system', content: 'You are a social media trend analyst. Return results in Arabic with source URLs when available.' },
             { role: 'user', content: query }
           ]
         })
@@ -948,9 +948,12 @@
       const d = await res.json();
       if (d.error) throw new Error(d.error.message);
       const text = d.choices?.[0]?.message?.content || '';
+      // Perplexity returns citations in d.citations array
+      const citations = d.citations || [];
       const inp = d.usage?.prompt_tokens||0, out = d.usage?.completion_tokens||0;
       trackUsage(inp, out, 'perplexity');
-      return text;
+      // Return object with text + citations
+      return { text, citations };
     } catch(e) { return null; }
   }
 
@@ -1039,11 +1042,13 @@
     let trendsText = '';
     if (perplexityKey) {
       // Real search via Perplexity
-      trendsText = await callPerplexity(
+      const plexResult = await callPerplexity(
         `ابحث عن أحدث ترندات وأفكار محتوى فيديو عن "${searchQ}" على ${platform_label} في 2025-2026. ` +
-        `أعطني 5-7 ترندات أو أفكار شائعة، كل ترند في سطر مع وصف مختصر جداً. ` +
-        `اكتب بالعربية. لا تكتب مقدمة أو خاتمة، فقط القائمة.`
+        `أعطني 5-7 ترندات شائعة، كل ترند في سطر مع وصف قصير. ` +
+        `اكتب بالعربية. لا مقدمة ولا خاتمة، فقط القائمة.`
       );
+      trendsText = plexResult?.text || plexResult || '';
+      window._lastCitations = plexResult?.citations || [];
     }
 
     if (!trendsText) {
@@ -1065,11 +1070,28 @@
     // Clean lines: remove leading dashes, numbers, etc.
     const cleaned = lines.map(l => l.replace(/^[-•*\d\.]+\s*/, '').trim()).filter(Boolean);
 
+    const citations = window._lastCitations || [];
+    const sourcesHtml = citations.length ? `
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+        <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-bottom:6px;">📎 المصادر</div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          ${citations.slice(0,5).map(url => {
+            let domain = '';
+            try { domain = new URL(url).hostname.replace('www.',''); } catch(e) { domain = url.slice(0,30); }
+            return `<a href="${url}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none;display:flex;align-items:center;gap:6px;padding:3px 0;">
+              <span style="font-size:9px;opacity:0.5;">↗</span>
+              <span style="font-family:'IBM Plex Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${domain}</span>
+            </a>`;
+          }).join('')}
+        </div>
+      </div>` : '';
+
     resultsEl.innerHTML = `
       <div style="font-size:11px;color:var(--text3);margin-bottom:6px;font-family:'IBM Plex Mono',monospace;">${perplexityKey ? '● نتائج حقيقية من الإنترنت' : '● أفكار مقترحة (لا يوجد مفتاح Perplexity)'}</div>
       <div class="trend-chips">
         ${cleaned.map((t,i) => `<button class="trend-chip" onclick="toggleTrend(this,'${escapeAttr(t)}')" title="${escapeAttr(t)}"><span class="chip-dot"></span>${escapeHtml(t.length > 55 ? t.slice(0,55)+'...' : t)}</button>`).join('')}
-      </div>`;
+      </div>
+      ${sourcesHtml}`;
 
     btn.textContent = 'بحث'; btn.disabled = false;
     updateSelectedTrendsPreview();

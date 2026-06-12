@@ -1404,7 +1404,7 @@
     <a href="index.html" class="topbar-nav-link">⌂ الرئيسية</a>
     <a href="ideas.html" class="topbar-nav-link">✦ Idea Studio</a>
     <a href="shots.html" class="topbar-nav-link active">◈ Shot List</a>
-    <a href="settings.html" class="topbar-nav-link">⚙ الإعدادات</a>
+    <a href="settings.html" class="topbar-nav-link" target="_blank">⚙ الإعدادات</a>
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="active-prov-pill" id="active-prov-pill">anthropic</div>
@@ -4181,19 +4181,34 @@ Existing shots:${shotsData.length} | New shot:${desc}
       const raw = sessionStorage.getItem('cs_shots_session');
       if (raw) {
         const state = JSON.parse(raw);
-        if (state.shotScript) document.getElementById('shot-script').value = state.shotScript || '';
-        if (state.directorNote) document.getElementById('director-note').value = state.directorNote || '';
-        if (state.camera) document.getElementById('camera-type').value = state.camera;
+        if (state.shotScript)   document.getElementById('shot-script').value   = state.shotScript;
+        if (state.directorNote) document.getElementById('director-note').value = state.directorNote;
+        if (state.camera)   document.getElementById('camera-type').value   = state.camera;
         if (state.lighting) document.getElementById('lighting-type').value = state.lighting;
-        if (state.mood) document.getElementById('mood-type').value = state.mood;
+        if (state.mood)     document.getElementById('mood-type').value     = state.mood;
         if (state.selectedVideoTypes?.length) {
           selectedVideoTypes = new Set(state.selectedVideoTypes);
           updateVtypeDisplay();
         }
         currentShotCount = state.shotCount || 5;
         document.querySelectorAll('.shot-pill').forEach(p => p.classList.toggle('active', parseInt(p.textContent) === currentShotCount));
+        // Restore shots + characters + locations
+        if (state.shotsData?.length) {
+          shotsData = state.shotsData;
+          renderAllShots();
+          document.getElementById('panels-area').style.display = 'block';
+          document.getElementById('img-prompts-area').style.display = 'block';
+        }
+        if (state.characters?.length) {
+          characters = state.characters;
+          renderCharacters();
+        }
+        if (state.locations?.length) {
+          locations = state.locations;
+          renderLocations();
+        }
       }
-    } catch(e) {}
+    } catch(e) { console.warn('[restore session]', e); }
 
     // Auto-save session on change
     ['shot-script','director-note'].forEach(id => {
@@ -4210,13 +4225,16 @@ Existing shots:${shotsData.length} | New shot:${desc}
   function saveQuickSession() {
     try {
       sessionStorage.setItem('cs_shots_session', JSON.stringify({
-        shotScript: document.getElementById('shot-script')?.value || '',
-        directorNote: document.getElementById('director-note')?.value || '',
-        camera: document.getElementById('camera-type')?.value || '',
-        lighting: document.getElementById('lighting-type')?.value || '',
-        mood: document.getElementById('mood-type')?.value || '',
-        shotCount: currentShotCount,
-        selectedVideoTypes: [...selectedVideoTypes],
+        shotScript:        document.getElementById('shot-script')?.value || '',
+        directorNote:      document.getElementById('director-note')?.value || '',
+        camera:            document.getElementById('camera-type')?.value || '',
+        lighting:          document.getElementById('lighting-type')?.value || '',
+        mood:              document.getElementById('mood-type')?.value || '',
+        shotCount:         currentShotCount,
+        selectedVideoTypes:[...selectedVideoTypes],
+        shotsData:         shotsData || [],
+        characters:        characters || [],
+        locations:         locations  || [],
       }));
     } catch(e) {}
   }
