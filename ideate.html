@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ideate — صناعة الفكرة · KADR Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#15161C; --bg2:#1B1D26; --surface:#21232E; --surface2:#292C3A;
+    --line:#343847; --line2:#3E4356;
+    --ink:#EDEDF2; --muted:#9A9DB0; --muted2:#71748A;
+    --amber:#F0A93B; --amber-soft:rgba(240,169,59,.14);
+    --teal:#58C7BE; --teal-soft:rgba(88,199,190,.13);
+    --rose:#E5736B; --green:#5FB07A; --violet:#9B8CF0;
+    --r:14px;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+    --body:'IBM Plex Sans Arabic','Tajawal',system-ui,sans-serif;
+    --disp:'Tajawal','IBM Plex Sans Arabic',sans-serif;
+  }
+  *{box-sizing:border-box} html,body{margin:0;padding:0}
+  body{background:
+      radial-gradient(1100px 500px at 85% -10%, rgba(240,169,59,.06), transparent 60%),
+      radial-gradient(900px 500px at 0% 110%, rgba(88,199,190,.05), transparent 55%), var(--bg);
+    color:var(--ink); font-family:var(--body); line-height:1.6; -webkit-font-smoothing:antialiased; min-height:100vh}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:880px;margin:0 auto;padding:22px 20px 70px}
+
+  .meter{position:fixed;top:14px;left:14px;z-index:50;display:flex;align-items:center;gap:9px;
+    background:var(--surface);border:1px solid var(--line2);border-radius:11px;padding:8px 13px;
+    font-family:var(--mono);font-size:12.5px;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+  .meter .bolt{color:var(--amber)} .meter .cost{color:var(--teal)} .meter .sep{color:var(--muted2)}
+
+  .top{display:flex;align-items:center;gap:13px;margin-bottom:6px}
+  .back{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;background:var(--surface);
+    border:1px solid var(--line2);font-size:18px;flex:none;transition:.18s}
+  .back:hover{border-color:var(--amber)}
+  .ttl h1{font-family:var(--disp);font-weight:800;font-size:22px;margin:0}
+  .ttl p{margin:0;color:var(--muted);font-size:12.5px}
+  .saved{margin-right:auto;font-family:var(--mono);font-size:11.5px;color:var(--muted2);transition:.3s}
+  .saved.flash{color:var(--green)}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-top:14px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--teal);text-transform:uppercase;margin-bottom:6px}
+  h2{font-family:var(--disp);font-weight:700;font-size:18px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+
+  label.f{display:block;font-size:13px;font-weight:600;margin:13px 0 7px}
+  label.f span{color:var(--muted2);font-weight:400}
+  input[type=text],textarea,select{width:100%;background:var(--bg2);border:1px solid var(--line2);color:var(--ink);
+    border-radius:10px;padding:11px 12px;font-family:var(--body);font-size:14px;transition:.2s;resize:vertical}
+  textarea{min-height:84px;line-height:1.7}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-soft)}
+  ::placeholder{color:var(--muted2)}
+  .row{display:flex;gap:12px;flex-wrap:wrap}.row>*{flex:1;min-width:150px}
+
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{padding:8px 14px;border-radius:9px;background:var(--bg2);border:1px solid var(--line2);
+    color:var(--muted);font-size:13.5px;font-weight:600;cursor:pointer;transition:.16s}
+  .chip:hover{border-color:var(--teal);color:var(--ink)}
+  .chip.on{background:var(--teal-soft);border-color:var(--teal);color:var(--ink)}
+  .chip.mono{font-family:var(--mono)}
+
+  .seg{display:inline-flex;background:var(--bg2);border:1px solid var(--line2);border-radius:11px;padding:4px;gap:4px;flex-wrap:wrap}
+  .seg button{appearance:none;border:none;background:transparent;color:var(--muted);font-family:var(--disp);
+    font-weight:700;font-size:13.5px;padding:8px 15px;border-radius:8px;cursor:pointer;transition:.16s}
+  .seg button.on{background:var(--surface2);color:var(--ink)}
+  .seg button[data-e="gem"].on{background:#4285F4;color:#fff}
+  .seg button[data-e="anth"].on{background:#D97757;color:#fff}
+  .seg button[data-e="oai"].on{background:#10A37F;color:#fff}
+
+  .switch{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--line2);
+    border-radius:10px;padding:10px 13px;cursor:pointer;flex:1;min-width:150px}
+  .switch .box{width:38px;height:22px;border-radius:12px;background:var(--surface2);border:1px solid var(--line2);position:relative;flex:none;transition:.2s}
+  .switch .box::after{content:"";position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:var(--muted);transition:.2s}
+  .switch.on .box{background:var(--teal-soft);border-color:var(--teal)} .switch.on .box::after{background:var(--teal);right:auto;left:2px}
+  .switch .t{font-size:13.5px;font-weight:600} .switch .t small{display:block;color:var(--muted2);font-size:11px;font-weight:400}
+
+  .btn{appearance:none;border:none;cursor:pointer;font-family:var(--disp);font-weight:700;font-size:14.5px;
+    padding:12px 20px;border-radius:11px;display:inline-flex;align-items:center;gap:8px;transition:.2s}
+  .btn.primary{background:var(--amber);color:#1a1206} .btn.primary:hover{filter:brightness(1.07);transform:translateY(-1px)}
+  .btn.ghost{background:var(--surface2);color:var(--ink);border:1px solid var(--line2)} .btn.ghost:hover{border-color:var(--muted)}
+  .btn.small{padding:9px 14px;font-size:13px}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none;filter:none}
+  .bar{display:flex;gap:10px;margin-top:16px;align-items:center;flex-wrap:wrap}.spacer{flex:1}
+  .hint{color:var(--muted2);font-size:12px;margin-top:8px}
+  .modelpill{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:8px}
+  .modelpill b{color:var(--green)}
+
+  .loading{display:flex;align-items:center;gap:11px;color:var(--muted);font-size:13.5px;padding:14px 2px}
+  .spin{width:18px;height:18px;border:2.5px solid var(--line2);border-top-color:var(--amber);border-radius:50%;animation:sp .8s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .err{background:rgba(229,115,107,.1);border:1px solid rgba(229,115,107,.4);color:#f1b3ad;border-radius:10px;padding:11px 13px;font-size:13px;margin-top:12px}
+  .warn{background:var(--amber-soft);border:1px solid rgba(240,169,59,.4);color:#f3cd8d;border-radius:10px;padding:10px 13px;font-size:12.5px;margin-top:10px}
+
+  /* research sources */
+  .src{display:block;background:var(--bg2);border:1px solid var(--line2);border-radius:10px;padding:11px 13px;margin-top:9px;transition:.16s}
+  .src:hover{border-color:var(--teal)}
+  .src h5{margin:0 0 3px;font-size:13.5px;font-family:var(--disp);font-weight:700}
+  .src p{margin:0;color:var(--muted);font-size:12px}
+  .src .u{color:var(--teal);font-size:11px;font-family:var(--mono);margin-top:4px;display:block;word-break:break-all}
+
+  /* idea cards */
+  .idea{background:var(--bg2);border:1px solid var(--line2);border-radius:12px;padding:15px;margin-top:11px;cursor:pointer;transition:.16s}
+  .idea:hover{border-color:var(--amber)} .idea.on{border-color:var(--amber);background:linear-gradient(180deg,var(--amber-soft),transparent)}
+  .idea .h{display:flex;align-items:center;gap:9px;margin-bottom:6px}
+  .idea .n{font-family:var(--mono);font-size:12px;color:#1a1206;background:var(--amber);width:24px;height:24px;border-radius:7px;display:grid;place-items:center;flex:none}
+  .idea h4{margin:0;font-family:var(--disp);font-weight:700;font-size:15.5px}
+  .idea .log{color:var(--muted);font-size:13px;margin:0 0 8px}
+  .idea .meta{font-size:12.5px;margin:4px 0;display:flex;gap:8px}
+  .idea .meta b{color:var(--teal);font-family:var(--mono);font-size:11px;min-width:42px}
+
+  /* script segments */
+  .seg-out{position:relative;background:var(--surface);border:1px solid var(--line2);border-radius:11px;margin-top:10px;padding:13px 15px 13px 38px;overflow:hidden}
+  .seg-out::before{content:"";position:absolute;top:0;bottom:0;left:0;width:22px;background:repeating-linear-gradient(0deg,#101117 0 7px,#2c2f3d 7px 14px);border-left:1px solid var(--line2)}
+  .seg-out .no{font-family:var(--mono);font-weight:600;font-size:13px;background:var(--violet);color:#0e0a1f;width:30px;height:26px;border-radius:7px;display:grid;place-items:center;margin-bottom:7px}
+  .seg-out .v{font-size:14px;margin:0 0 6px;line-height:1.6}
+  .seg-out .l{font-size:13px;color:var(--muted);display:flex;gap:7px}
+  .seg-out .l b{color:var(--teal);font-family:var(--mono);font-size:11px}
+  .seg-out .nt{font-size:12px;color:var(--muted2);margin-top:5px}
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<div class="meter" onclick="location.href='index.html#settings'">
+  <span class="bolt">⚡</span><span id="mTok">٠ توكن</span><span class="sep">·</span><span class="cost" id="mCost">$0.000</span>
+</div>
+
+<div class="wrap">
+  <div class="top">
+    <a class="back" href="index.html">→</a>
+    <div class="ttl"><h1>Ideate</h1><p>صناعة الفكرة — ٣ أفكار ← سكربت نظيف مرقّم</p></div>
+    <span class="saved" id="saved">⟳ يُحفظ تلقائياً</span>
+  </div>
+
+  <!-- research -->
+  <div class="card">
+    <div class="eyebrow">بحث · اختياري</div>
+    <h2>الترند والمصادر</h2>
+    <p class="sub">شغّل المصادر لو تبي الأفكار مبنية على واقع. تطلع لك بروابط.</p>
+    <div class="row">
+      <div class="switch" id="swPplx" onclick="toggleSw('pplx')"><span class="box"></span><span class="t">Perplexity<small>بحث ويب بمصادر</small></span></div>
+      <div class="switch" id="swYt" onclick="toggleSw('yt')"><span class="box"></span><span class="t">YouTube<small>فيديوهات رائجة</small></span></div>
+    </div>
+    <div class="bar"><button class="btn ghost small" id="srcBtn" onclick="runResearch()">🔍 اجلب المصادر</button></div>
+    <div id="srcState"></div>
+    <div id="srcList"></div>
+  </div>
+
+  <!-- inputs -->
+  <div class="card">
+    <div class="eyebrow">الفكرة</div>
+    <h2>عرّف اللي تبيه</h2>
+
+    <label class="f">الموضوع</label>
+    <input type="text" id="topic" placeholder="مثال: قهوة مختصة، تطبيق توصيل، عطر جديد...">
+
+    <label class="f">نوع الفكرة <span>(اختر واحد أو أكثر)</span></label>
+    <div class="chips" id="typeChips">
+      <div class="chip" data-v="دراما">دراما</div>
+      <div class="chip" data-v="ديمونستريشن">ديمونستريشن</div>
+      <div class="chip" data-v="شخصية CGI تتكلم">شخصية CGI تتكلم</div>
+      <div class="chip" data-v="حوار">حوار</div>
+      <div class="chip" data-v="تشويقي">تشويقي</div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label class="f">اللهجة</label>
+        <select id="dialect">
+          <option>خليجي</option><option>سعودي نجدي</option><option>إماراتي</option><option>مصري</option>
+          <option>شامي</option><option>فصحى</option><option>عامي عام</option>
+        </select>
+      </div>
+      <div>
+        <label class="f">النبرة <span>(اختياري)</span></label>
+        <input type="text" id="tone" placeholder="حماسي، دافئ، طريف، فخم...">
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label class="f">المنصة</label>
+        <div class="seg" id="platSeg">
+          <button data-p="instagram" class="on">📸 إنستقرام</button>
+          <button data-p="youtube">▶️ يوتيوب</button>
+        </div>
+      </div>
+    </div>
+
+    <label class="f">المدة <span>(ثانية)</span></label>
+    <div class="chips" id="durChips">
+      <div class="chip mono on" data-d="15">15s</div>
+      <div class="chip mono" data-d="30">30s</div>
+      <div class="chip mono" data-d="45">45s</div>
+      <div class="chip mono" data-d="60">60s</div>
+      <div class="chip mono" data-d="90">90s</div>
+    </div>
+
+    <label class="f">كيف تبي الفكرة؟ <span>(تفاصيل حرة)</span></label>
+    <textarea id="brief" placeholder="اشرح الرسالة، الجمهور، الإحساس، أي تفصيل تبي يظهر بالفكرة..."></textarea>
+  </div>
+
+  <!-- engine -->
+  <div class="card">
+    <div class="eyebrow">المحرّك</div>
+    <h2>اختر محرّك التوليد</h2>
+    <div class="seg" id="engSeg">
+      <button data-e="gem">Gemini</button>
+      <button data-e="anth">Claude</button>
+      <button data-e="oai">GPT</button>
+    </div>
+    <div style="margin-top:12px;max-width:340px">
+      <label class="f">الموديل</label>
+      <select id="modelSel" onchange="saveModel()"></select>
+      <div class="modelpill" id="modelPrice"></div>
+    </div>
+    <div id="engNote"></div>
+
+    <div class="bar">
+      <button class="btn primary" id="genBtn" onclick="genIdeas()">💡 ولّد ٣ أفكار</button>
+    </div>
+    <div id="genState"></div>
+  </div>
+
+  <!-- ideas -->
+  <div class="card hidden" id="ideasCard">
+    <div class="eyebrow">اختر فكرة</div>
+    <h2>٣ أفكار</h2>
+    <div id="ideas"></div>
+    <div class="bar">
+      <button class="btn primary" id="scriptBtn" onclick="genScript()" disabled>🎬 حوّلها لسكربت مرقّم</button>
+    </div>
+    <div id="scriptState"></div>
+  </div>
+
+  <!-- script -->
+  <div class="card hidden" id="scriptCard">
+    <div class="eyebrow">السكربت</div>
+    <h2 id="scriptTitle">سكربت نظيف</h2>
+    <div id="segments"></div>
+    <div class="bar">
+      <button class="btn ghost small" onclick="copyScript()">📋 نسخ</button>
+      <button class="btn ghost small" onclick="downloadScript()">⬇ تنزيل</button>
+      <span class="spacer"></span>
+      <span class="hint">محفوظ — جاهز لأداة Prompt Forge</span>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============ shared config / pricing ============ */
+const PRICES = {
+  oai:{ "gpt-5.4-mini":[0.75,4.5], "gpt-5.4-nano":[0.20,1.25], "gpt-5.4":[2.5,15], "gpt-5.5":[5,30] },
+  anth:{ "claude-sonnet-4-6":[3,15], "claude-haiku-4-5":[1,5], "claude-opus-4-8":[5,25] },
+  gem:{ "gemini-3-flash":[0.5,3], "gemini-3.1-flash-lite":[0.25,1.5], "gemini-3.5-flash":[1.5,9], "gemini-3.1-pro":[2,12] }
+};
+const MODELS = {
+  gem:[["gemini-3-flash","أفضل قيمة ✓"],["gemini-3.1-flash-lite","الأرخص"],["gemini-3.5-flash","أحدث"],["gemini-3.1-pro","الأقوى"]],
+  anth:[["claude-sonnet-4-6","أفضل قيمة ✓"],["claude-haiku-4-5","الأرخص"],["claude-opus-4-8","الأقوى"]],
+  oai:[["gpt-5.4-mini","أفضل قيمة ✓"],["gpt-5.4-nano","الأرخص"],["gpt-5.4","متوازن"],["gpt-5.5","الأقوى"]]
+};
+function ls(){ try{ return window.localStorage; }catch(e){ return null; } }
+function getCfg(){ const s=ls(); if(!s) return {}; try{ return JSON.parse(s.getItem("kadr_cfg")||"{}"); }catch(e){ return {}; } }
+function setCfg(o){ const s=ls(); if(s) s.setItem("kadr_cfg",JSON.stringify({...getCfg(),...o})); }
+function getUsage(){ const s=ls(); if(!s) return {tokens:0,cost:0}; try{ return JSON.parse(s.getItem("kadr_usage")||'{"tokens":0,"cost":0}'); }catch(e){ return {tokens:0,cost:0}; } }
+function addUsage(eng,model,inT,outT){
+  const p=(PRICES[eng]||{})[model]||[0,0];
+  const cost=(inT/1e6)*p[0]+(outT/1e6)*p[1];
+  const u=getUsage(); u.tokens=(u.tokens||0)+inT+outT; u.cost=(u.cost||0)+cost;
+  const s=ls(); if(s) s.setItem("kadr_usage",JSON.stringify(u)); paintMeter();
+}
+function toAr(n){ return String(n).replace(/[0-9]/g,d=>"٠١٢٣٤٥٦٧٨٩"[d]); }
+function fmtTok(n){ return n>=1000?toAr((n/1000).toFixed(1))+"k":toAr(n); }
+function paintMeter(){ const u=getUsage();
+  document.getElementById("mTok").textContent=fmtTok(u.tokens||0)+" توكن";
+  document.getElementById("mCost").textContent="$"+(u.cost||0).toFixed(3); }
+
+/* ============ state ============ */
+const S = { type:[], duration:15, platform:"instagram", engine:"gem", sources:[], ideas:[], chosen:-1 };
+
+/* ============ LLM calls (direct browser) ============ */
+function stripJSON(t){ if(!t) return null; t=String(t).replace(/```json/gi,"").replace(/```/g,"").trim();
+  try{ return JSON.parse(t); }catch(e){}
+  for(const [o,c] of [["{","}"],["[","]"]]){ const i=t.indexOf(o); if(i<0)continue; let d=0;
+    for(let j=i;j<t.length;j++){ if(t[j]===o)d++; else if(t[j]===c){ d--; if(!d){ try{ return JSON.parse(t.slice(i,j+1)); }catch(e){} } } } }
+  return null; }
+
+async function callLLM(system,user,jsonMode){
+  const eng=S.engine, c=getCfg();
+  const model=c[eng+"Model"]||MODELS[eng][0][0];
+  if(eng==="gem"){
+    if(!c.gemKey) throw new Error("أضف مفتاح Gemini في الإعدادات.");
+    const url=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(c.gemKey)}`;
+    const body={ systemInstruction:{parts:[{text:system}]}, contents:[{role:"user",parts:[{text:user}]}],
+      generationConfig:{ temperature:0.85, maxOutputTokens:2600, responseMimeType: jsonMode?"application/json":"text/plain" } };
+    const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    const d=await r.json(); if(!r.ok) throw new Error(d.error?.message||("خطأ Gemini "+r.status));
+    const txt=(d.candidates?.[0]?.content?.parts||[]).map(p=>p.text||"").join("");
+    const um=d.usageMetadata||{}; addUsage("gem",model,um.promptTokenCount||0,um.candidatesTokenCount||0);
+    return txt;
+  }
+  if(eng==="anth"){
+    if(!c.anthKey) throw new Error("أضف مفتاح Claude في الإعدادات.");
+    const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",
+      headers:{"Content-Type":"application/json","x-api-key":c.anthKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+      body:JSON.stringify({ model, max_tokens:2600, system, messages:[{role:"user",content:user}] })});
+    const d=await r.json(); if(!r.ok) throw new Error(d.error?.message||("خطأ Claude "+r.status));
+    const txt=(d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
+    const u=d.usage||{}; addUsage("anth",model,u.input_tokens||0,u.output_tokens||0);
+    return txt;
+  }
+  if(eng==="oai"){
+    const proxy=(c.proxy||"").replace(/\/+$/,"");
+    if(!proxy) throw new Error("GPT يحتاج وسيطاً (CORS). استخدم Gemini أو Claude الآن، أو أضف الوسيط لاحقاً.");
+    const r=await fetch(proxy+"/openai",{method:"POST",headers:{"Content-Type":"application/json","x-openai-key":c.oaiKey||""},
+      body:JSON.stringify({ model, messages:[{role:"system",content:system},{role:"user",content:user}], response_format: jsonMode?{type:"json_object"}:undefined })});
+    const d=await r.json(); if(!r.ok) throw new Error(d.error?.message||("خطأ GPT "+r.status));
+    const u=d.usage||{}; addUsage("oai",model,u.prompt_tokens||0,u.completion_tokens||0);
+    return d.choices?.[0]?.message?.content||"";
+  }
+}
+
+/* ============ research ============ */
+function toggleSw(k){ const id=k==="pplx"?"swPplx":"swYt"; document.getElementById(id).classList.toggle("on"); }
+function isOn(k){ return document.getElementById(k==="pplx"?"swPplx":"swYt").classList.contains("on"); }
+
+async function runResearch(){
+  const topic=document.getElementById("topic").value.trim();
+  if(!topic){ document.getElementById("srcState").innerHTML='<div class="err">اكتب الموضوع أولاً.</div>'; return; }
+  if(!isOn("pplx")&&!isOn("yt")){ document.getElementById("srcState").innerHTML='<div class="warn">شغّل مصدراً واحداً على الأقل.</div>'; return; }
+  const c=getCfg(); S.sources=[]; document.getElementById("srcBtn").disabled=true;
+  document.getElementById("srcState").innerHTML='<div class="loading"><div class="spin"></div>نجلب المصادر...</div>';
+  try{
+    if(isOn("yt")){
+      if(!c.ytKey) throw new Error("أضف مفتاح YouTube في الإعدادات أو أطفئه.");
+      const u=`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&order=viewCount&maxResults=5&q=${encodeURIComponent(topic)}&key=${encodeURIComponent(c.ytKey)}`;
+      const r=await fetch(u); const d=await r.json(); if(!r.ok) throw new Error(d.error?.message||"خطأ YouTube");
+      (d.items||[]).forEach(it=>S.sources.push({ kind:"YouTube", title:it.snippet?.title||"", desc:it.snippet?.channelTitle||"",
+        url:"https://youtube.com/watch?v="+(it.id?.videoId||"") }));
+    }
+    if(isOn("pplx")){
+      const proxy=(c.proxy||"").replace(/\/+$/,"");
+      if(!proxy) throw new Error("Perplexity يحتاج وسيطاً — أطفئه الآن أو أضف الوسيط لاحقاً.");
+      const r=await fetch(proxy+"/perplexity",{method:"POST",headers:{"Content-Type":"application/json","x-pplx-key":c.pplxKey||""},
+        body:JSON.stringify({ model:c.pplxModel||"sonar", messages:[{role:"user",content:"أحدث الزوايا الرائجة حول: "+topic+". بإيجاز."}], search_recency_filter:"month" })});
+      const d=await r.json(); if(!r.ok) throw new Error(d.error?.message||"خطأ Perplexity");
+      const txt=d.choices?.[0]?.message?.content||""; if(txt) S.sources.push({kind:"Perplexity",title:"ملخص الترند",desc:txt.slice(0,200),url:""});
+      (d.citations||[]).forEach((u,i)=>S.sources.push({kind:"مصدر",title:"مرجع "+(i+1),desc:"",url:typeof u==="string"?u:(u.url||"")}));
+    }
+    renderSources(); document.getElementById("srcState").innerHTML="";
+  }catch(e){ document.getElementById("srcState").innerHTML='<div class="err">'+(e.message||"خطأ")+'</div>'; }
+  finally{ document.getElementById("srcBtn").disabled=false; }
+}
+function renderSources(){
+  document.getElementById("srcList").innerHTML = S.sources.map(s=>{
+    const link=s.url?`href="${s.url}" target="_blank"`:"";
+    return `<a class="src" ${link}><h5>${esc(s.kind)} · ${esc(s.title)}</h5>${s.desc?`<p>${esc(s.desc)}</p>`:""}${s.url?`<span class="u">${esc(s.url)}</span>`:""}</a>`;
+  }).join("");
+}
+
+/* ============ generate ideas ============ */
+function buildContext(){
+  return { topic:document.getElementById("topic").value.trim(),
+    type:S.type.join("، ")||"غير محدد", dialect:document.getElementById("dialect").value,
+    tone:document.getElementById("tone").value.trim(), platform:S.platform==="instagram"?"إنستقرام":"يوتيوب",
+    duration:S.duration, brief:document.getElementById("brief").value.trim(),
+    sources:S.sources.map(s=>s.kind+": "+s.title).join(" | ") };
+}
+async function genIdeas(){
+  const x=buildContext();
+  if(!x.topic && !x.brief){ document.getElementById("genState").innerHTML='<div class="err">اكتب الموضوع أو وصف الفكرة.</div>'; return; }
+  document.getElementById("genBtn").disabled=true;
+  document.getElementById("genState").innerHTML='<div class="loading"><div class="spin"></div>نولّد ٣ أفكار...</div>';
+  const sys="أنت كاتب أفكار محتوى ومخرج مبدع للسوشال ميديا. أجب بالعربية وبصيغة JSON فقط بدون أي نص أو Markdown.";
+  const user=`الموضوع: ${x.topic}\nنوع الفكرة: ${x.type}\nاللهجة: ${x.dialect}\nالنبرة: ${x.tone||"حر"}\nالمنصة: ${x.platform}\nالمدة: ${x.duration}ث\n`+
+    `${x.brief?("تفاصيل: "+x.brief+"\n"):""}${x.sources?("سياق من المصادر: "+x.sources+"\n"):""}`+
+    `أعطني ٣ أفكار مختلفة وقوية. أعد JSON فقط: {"ideas":[{"title":"عنوان جذاب","logline":"الفكرة بسطر","hook":"الافتتاحية","why":"ليش تنجح"}]}`;
+  try{
+    const txt=await callLLM(sys,user,true); const d=stripJSON(txt);
+    if(!d||!d.ideas||!d.ideas.length) throw new Error("ما قدرنا نقرأ الأفكار، أعد المحاولة.");
+    S.ideas=d.ideas.slice(0,3); S.chosen=-1; renderIdeas();
+    document.getElementById("ideasCard").classList.remove("hidden");
+    document.getElementById("genState").innerHTML="";
+    document.getElementById("ideasCard").scrollIntoView({behavior:"smooth",block:"nearest"});
+  }catch(e){ document.getElementById("genState").innerHTML='<div class="err">'+(e.message||"خطأ")+'</div>'; }
+  finally{ document.getElementById("genBtn").disabled=false; }
+}
+function renderIdeas(){
+  document.getElementById("ideas").innerHTML = S.ideas.map((it,i)=>`
+    <div class="idea" data-i="${i}" onclick="pickIdea(${i})">
+      <div class="h"><div class="n">${toAr(i+1)}</div><h4>${esc(it.title||"")}</h4></div>
+      <p class="log">${esc(it.logline||"")}</p>
+      ${it.hook?`<div class="meta"><b>HOOK</b><span>${esc(it.hook)}</span></div>`:""}
+      ${it.why?`<div class="meta"><b>WHY</b><span>${esc(it.why)}</span></div>`:""}
+    </div>`).join("");
+}
+function pickIdea(i){
+  S.chosen=i;
+  document.querySelectorAll(".idea").forEach((e,k)=>e.classList.toggle("on",k===i));
+  document.getElementById("scriptBtn").disabled=false;
+}
+
+/* ============ generate script ============ */
+async function genScript(){
+  if(S.chosen<0) return;
+  const it=S.ideas[S.chosen], x=buildContext();
+  document.getElementById("scriptBtn").disabled=true;
+  document.getElementById("scriptState").innerHTML='<div class="loading"><div class="spin"></div>نكتب السكربت المرقّم...</div>';
+  const sys="أنت كاتب سيناريو محترف. حوّل الفكرة إلى سكربت نظيف مقسّم لمقاطع مرقّمة جاهزة للإنتاج. أجب بالعربية وبصيغة JSON فقط.";
+  const user=`الفكرة: ${it.title} — ${it.logline}\nالافتتاحية: ${it.hook||""}\n`+
+    `نوع: ${x.type} · لهجة: ${x.dialect} · نبرة: ${x.tone||"حر"} · منصة: ${x.platform} · مدة: ${x.duration}ث\n`+
+    `${x.brief?("تفاصيل: "+x.brief+"\n"):""}`+
+    `قسّمه لمقاطع مرقّمة، كل مقطع: الوصف البصري/الأكشن + الحوار أو التعليق الصوتي + ملاحظة إخراجية مختصرة.\n`+
+    `أعد JSON فقط: {"title":"عنوان السكربت","segments":[{"n":1,"visual":"","line":"","note":""}]}`;
+  try{
+    const txt=await callLLM(sys,user,true); const d=stripJSON(txt);
+    if(!d||!d.segments||!d.segments.length) throw new Error("ما قدرنا نقرأ السكربت، أعد المحاولة.");
+    renderScript(d); saveResult(it,d);
+    document.getElementById("scriptState").innerHTML="";
+    document.getElementById("scriptCard").classList.remove("hidden");
+    document.getElementById("scriptCard").scrollIntoView({behavior:"smooth",block:"nearest"});
+  }catch(e){ document.getElementById("scriptState").innerHTML='<div class="err">'+(e.message||"خطأ")+'</div>'; }
+  finally{ document.getElementById("scriptBtn").disabled=false; }
+}
+let CURRENT=null;
+function renderScript(d){
+  CURRENT=d;
+  document.getElementById("scriptTitle").textContent=d.title||"سكربت نظيف";
+  document.getElementById("segments").innerHTML = d.segments.map((s,i)=>`
+    <div class="seg-out">
+      <div class="no">${toAr(s.n||i+1)}</div>
+      <p class="v">${esc(s.visual||"")}</p>
+      ${s.line?`<div class="l"><b>الكلام</b><span>${esc(s.line)}</span></div>`:""}
+      ${s.note?`<div class="nt">↳ ${esc(s.note)}</div>`:""}
+    </div>`).join("");
+}
+function saveResult(idea,script){
+  const s=ls(); if(!s) return;
+  s.setItem("kadr_ideate_result",JSON.stringify({ idea, script, ctx:buildContext(), ts:Date.now() }));
+}
+function scriptText(){
+  if(!CURRENT) return ""; let o=(CURRENT.title||"سكربت")+"\n====================\n";
+  CURRENT.segments.forEach((s,i)=>{ o+=`مقطع ${s.n||i+1}\n  مشهد: ${s.visual||""}\n`; if(s.line)o+=`  كلام: ${s.line}\n`; if(s.note)o+=`  ملاحظة: ${s.note}\n`; o+="\n"; });
+  return o;
+}
+function copyScript(){ navigator.clipboard.writeText(scriptText()); toast("📋 تم النسخ"); }
+function downloadScript(){ const b=new Blob([scriptText()],{type:"text/plain;charset=utf-8"}); const u=URL.createObjectURL(b);
+  const a=document.createElement("a"); a.href=u; a.download="script.txt"; a.click(); setTimeout(()=>URL.revokeObjectURL(u),1000); }
+
+/* ============ engine / model ui ============ */
+function setEngine(e){
+  S.engine=e; setCfg({lastEngine:e});
+  document.querySelectorAll("#engSeg button").forEach(b=>b.classList.toggle("on",b.dataset.e===e));
+  const sel=document.getElementById("modelSel");
+  sel.innerHTML=MODELS[e].map(([v,l])=>`<option value="${v}">${v} — ${l}</option>`).join("");
+  const c=getCfg(); if(c[e+"Model"]) sel.value=c[e+"Model"];
+  updateModelPrice();
+  const note=document.getElementById("engNote");
+  note.innerHTML = (e==="oai") ? '<div class="warn">GPT يحتاج وسيطاً للعمل من الموقع. Gemini و Claude يشتغلون مباشرة الآن.</div>' : "";
+}
+function saveModel(){ setCfg({[S.engine+"Model"]:document.getElementById("modelSel").value}); updateModelPrice(); flashSaved(); }
+function updateModelPrice(){ const m=document.getElementById("modelSel").value; const p=(PRICES[S.engine]||{})[m];
+  document.getElementById("modelPrice").innerHTML=p?`<b>$${p[0]}</b> إدخال · <b>$${p[1]}</b> إخراج / مليون توكن`:""; }
+
+/* ============ chips / segments / autosave ============ */
+function flashSaved(){ const e=document.getElementById("saved"); e.textContent="✓ محفوظ"; e.classList.add("flash");
+  clearTimeout(window._st); window._st=setTimeout(()=>{ e.textContent="⟳ يُحفظ تلقائياً"; e.classList.remove("flash"); },1300); }
+function saveInputs(){
+  const s=ls(); if(!s) return;
+  s.setItem("kadr_ideate_inputs",JSON.stringify({
+    topic:document.getElementById("topic").value, type:S.type, dialect:document.getElementById("dialect").value,
+    tone:document.getElementById("tone").value, platform:S.platform, duration:S.duration,
+    brief:document.getElementById("brief").value, engine:S.engine }));
+  flashSaved();
+}
+function restoreInputs(){
+  const s=ls(); if(!s) return; let v={}; try{ v=JSON.parse(s.getItem("kadr_ideate_inputs")||"{}"); }catch(e){}
+  if(v.topic) document.getElementById("topic").value=v.topic;
+  if(v.tone) document.getElementById("tone").value=v.tone;
+  if(v.dialect) document.getElementById("dialect").value=v.dialect;
+  if(v.brief) document.getElementById("brief").value=v.brief;
+  if(Array.isArray(v.type)){ S.type=v.type; document.querySelectorAll("#typeChips .chip").forEach(c=>c.classList.toggle("on",S.type.includes(c.dataset.v))); }
+  if(v.platform){ S.platform=v.platform; document.querySelectorAll("#platSeg button").forEach(b=>b.classList.toggle("on",b.dataset.p===v.platform)); }
+  if(v.duration){ S.duration=v.duration; document.querySelectorAll("#durChips .chip").forEach(c=>c.classList.toggle("on",+c.dataset.d===+v.duration)); }
+}
+function esc(s){ return (s==null?"":String(s)).replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m])); }
+function toast(m){ const t=document.createElement("div"); t.textContent=m;
+  t.style.cssText="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#292C3A;border:1px solid #3E4356;color:#EDEDF2;padding:11px 20px;border-radius:11px;font-family:'IBM Plex Sans Arabic',sans-serif;font-size:14px;z-index:99";
+  document.body.appendChild(t); setTimeout(()=>t.remove(),1700); }
+
+/* ============ wire ============ */
+document.querySelectorAll("#typeChips .chip").forEach(c=>c.onclick=()=>{
+  c.classList.toggle("on"); const v=c.dataset.v, i=S.type.indexOf(v);
+  if(i<0&&c.classList.contains("on")) S.type.push(v); else if(i>=0) S.type.splice(i,1); saveInputs(); });
+document.querySelectorAll("#durChips .chip").forEach(c=>c.onclick=()=>{
+  document.querySelectorAll("#durChips .chip").forEach(x=>x.classList.remove("on")); c.classList.add("on"); S.duration=+c.dataset.d; saveInputs(); });
+document.querySelectorAll("#platSeg button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("#platSeg button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); S.platform=b.dataset.p; saveInputs(); });
+document.querySelectorAll("#engSeg button").forEach(b=>b.onclick=()=>{ setEngine(b.dataset.e); saveInputs(); });
+["topic","tone","brief","dialect"].forEach(id=>{ const e=document.getElementById(id); e.addEventListener("input",saveInputs); e.addEventListener("change",saveInputs); });
+
+/* init */
+(function(){
+  paintMeter(); restoreInputs();
+  const c=getCfg();
+  let eng=c.lastEngine || (c.gemKey?"gem":c.anthKey?"anth":c.oaiKey?"oai":"gem");
+  setEngine(eng);
+})();
+</script>
+</body>
+</html>
