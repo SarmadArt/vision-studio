@@ -796,7 +796,7 @@
 
     if (useProv === 'anthropic') {
       const messages = [{ role: 'user', content: prompt }];
-      const body = { model: getModel('anthropic'), max_tokens: 2000, messages };
+      const body = { model: getModel('anthropic'), max_tokens: 4000, messages };
       if (systemPrompt) body.system = systemPrompt;
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -815,7 +815,7 @@
       const res = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type':'application/json','Authorization':'Bearer '+useKey },
-        body: JSON.stringify({ model: getModel('openai'), max_tokens: 2000, messages: msgs })
+        body: JSON.stringify({ model: getModel('openai'), max_tokens: 4000, messages: msgs })
       });
       const d = await res.json();
       if (d.error) throw new Error(d.error.message);
@@ -829,7 +829,7 @@
       const res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${getModel('gemini')}:generateContent?key=${useKey}`,
         { method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ contents:[{parts}], generationConfig:{maxOutputTokens:2000} }) }
+          body: JSON.stringify({ contents:[{parts}], generationConfig:{maxOutputTokens:4000} }) }
       );
       const d = await res.json();
       if (d.error) throw new Error(d.error.message);
@@ -1056,40 +1056,34 @@
     document.getElementById('selected-actions').classList.remove('visible');
     selectedIdeaIdx = -1;
 
-    const systemPrompt = `أنت منتج محتوى رقمي محترف متخصص في ${plat}. مهمتك توليد أفكار فيديو إبداعية وجذابة.
-اللهجة المطلوبة: ${dialectStr} — التزم بها بدقة في كل الكلام والحوار.
-نوع المحتوى: ${contentType}.
-مدة الفيديو: ${durationSec} ثانية — السكريبت يجب أن يُقرأ في هذا الوقت تقريباً.
-لا تستخدم لهجة مختلفة أو فصحى إلا إذا طُلب ذلك صراحة.`;
+    const systemPrompt = `أنت منتج محتوى رقمي محترف. التزم باللهجة ${dialectStr} في كل كلمة. ممنوع أي كلمة إنجليزية في السكريبت. ممنوع الفصحى.`;
 
     const prompt = `الموضوع: ${topic}
-${trendCtx ? trendCtx + '\n' : ''}${extra ? 'تفاصيل إضافية: ' + extra + '\n' : ''}
-أنشئ 3 أفكار فيديو مختلفة تماماً لـ ${plat}.
+المنصة: ${plat} | النوع: ${contentType} | المدة: ~${durationSec} ثانية (~${approxWords} كلمة)
+${trendCtx ? trendCtx + '\n' : ''}${extra ? 'تفاصيل: ' + extra + '\n' : ''}
+اللهجة: ${dialectStr} — في كل كلمة بدون استثناء
 
-مدة الفيديو: ${durationLabel} (${durationSec} ثانية)
-عدد الكلمات المستهدف في كل سكريبت: ~${approxWords} كلمة (بما في ذلك الهوك)
+اكتب 3 أفكار فيديو مختلفة. استخدم هذا الشكل بالضبط ولا تغيره:
 
-لكل فكرة اتبع هذا الهيكل بالضبط:
-IDEA_1
-HOOK: جملة الهوك (أول 2-3 ثواني تشد المشاهد)
-SCRIPT: السكريبت الكامل — ${dialectStr} — جاهز للتصوير — لا توقيتات لا هاشتاقات — يستغرق قراءته ~${durationSec} ثانية
-ANGLE: كيف هذه الفكرة مختلفة ومثيرة (جملة واحدة)
----
-IDEA_2
-HOOK: ...
-SCRIPT: ...
-ANGLE: ...
----
-IDEA_3
-HOOK: ...
-SCRIPT: ...
-ANGLE: ...
+===IDEA_1===
+HOOK: [الهوك هنا]
+SCRIPT: [السكريبت الكامل باللهجة ${dialectStr} — جملة جملة — ~${approxWords} كلمة]
+ANGLE: [ما يميز هذه الفكرة]
 
-قواعد صارمة:
-- اللهجة ${dialectStr} في كل السكريبت بدون استثناء
-- SCRIPT = النص الكامل الجاهز للتصوير (~${approxWords} كلمة)
-- كل فكرة مختلفة في الأسلوب والزاوية
-- لا مقدمة لا خاتمة — فقط الهيكل المطلوب`;
+===IDEA_2===
+HOOK: [الهوك هنا]
+SCRIPT: [السكريبت الكامل باللهجة ${dialectStr} — جملة جملة — ~${approxWords} كلمة]
+ANGLE: [ما يميز هذه الفكرة]
+
+===IDEA_3===
+HOOK: [الهوك هنا]
+SCRIPT: [السكريبت الكامل باللهجة ${dialectStr} — جملة جملة — ~${approxWords} كلمة]
+ANGLE: [ما يميز هذه الفكرة]
+
+قواعد:
+- لا توقيتات ولا هاشتاقات ولا أرقام مقاطع
+- كل فكرة مختلفة في الزاوية والأسلوب
+- ابدأ مباشرة بـ ===IDEA_1===`;
 
     try {
       const result = await callMainAPI(prompt, systemPrompt);
@@ -1106,41 +1100,63 @@ ANGLE: ...
   function parseAndRenderIdeas(raw) {
     generatedIdeas = [];
 
-    // Try primary format: split by ---
-    const blocks = raw.split(/(?:^|\n)---+(?:\n|$)/).map(b => b.trim()).filter(Boolean);
+    // Helper: extract one idea block
+    function extractIdea(block) {
+      const hm = block.match(/HOOK:\s*([^\n]*(?:\n(?!SCRIPT:|ANGLE:)[^\n]*)*)/i);
+      const sm = block.match(/SCRIPT:\s*([\s\S]*?)(?=\nANGLE:|$)/i);
+      const am = block.match(/ANGLE:\s*([^\n]*)/i);
+      const hook   = (hm?.[1]||'').replace(/^[\[\*]+|[\]\*]+$/g,'').trim();
+      const script = (sm?.[1]||'').replace(/^[\[\*]+|[\]\*]+$/g,'').replace(/\[السكريبت.*?\]/gi,'').trim();
+      const angle  = (am?.[1]||'').replace(/^[\[\*]+|[\]\*]+$/g,'').trim();
+      return (hook || script) ? { hook, script, angle } : null;
+    }
 
-    blocks.forEach(block => {
-      const hookMatch   = block.match(/HOOK:\s*([\s\S]*?)(?=\nSCRIPT:|\nANGLE:|$)/i);
-      const scriptMatch = block.match(/SCRIPT:\s*([\s\S]*?)(?=\nANGLE:|$)/i);
-      const angleMatch  = block.match(/ANGLE:\s*([\s\S]*?)$/i);
-      if (!hookMatch && !scriptMatch) return;
-      generatedIdeas.push({
-        hook:   (hookMatch?.[1]  || '').replace(/^\*+|\*+$/g,'').trim(),
-        script: (scriptMatch?.[1]|| '').replace(/^\*+|\*+$/g,'').trim(),
-        angle:  (angleMatch?.[1] || '').replace(/^\*+|\*+$/g,'').trim(),
-      });
-    });
-
-    // Fallback: try IDEA_N markers
-    if (!generatedIdeas.length) {
-      const ideaBlocks = raw.split(/IDEA_\d+/i).map(b => b.trim()).filter(Boolean);
-      ideaBlocks.forEach(block => {
-        const hm = block.match(/HOOK:\s*([\s\S]*?)(?=\nSCRIPT:|\nANGLE:|$)/i);
-        const sm = block.match(/SCRIPT:\s*([\s\S]*?)(?=\nANGLE:|$)/i);
-        const am = block.match(/ANGLE:\s*([\s\S]*?)$/i);
-        if (!hm && !sm) return;
-        generatedIdeas.push({
-          hook:   (hm?.[1]||'').trim(),
-          script: (sm?.[1]||'').trim(),
-          angle:  (am?.[1]||'').trim(),
-        });
+    // Method 1: ===IDEA_N=== separator (our new format)
+    const ideaSections = raw.split(/===IDEA_\d+===/i).map(b => b.trim()).filter(Boolean);
+    if (ideaSections.length >= 2) {
+      ideaSections.forEach(block => {
+        const idea = extractIdea(block);
+        if (idea) generatedIdeas.push(idea);
       });
     }
 
-    // Last resort
+    // Method 2: IDEA_N on its own line
     if (!generatedIdeas.length) {
-      toast('تم التوليد — تحقق من الشكل');
-      generatedIdeas = [{ hook: 'الفكرة', script: raw.trim(), angle: '' }];
+      const byMarker = raw.split(/^IDEA_\d+\s*$/im).map(b => b.trim()).filter(Boolean);
+      if (byMarker.length >= 2) {
+        byMarker.forEach(block => {
+          const idea = extractIdea(block);
+          if (idea) generatedIdeas.push(idea);
+        });
+      }
+    }
+
+    // Method 3: --- separator
+    if (!generatedIdeas.length) {
+      const byDash = raw.split(/\n---+\n/).map(b => b.trim()).filter(Boolean);
+      byDash.forEach(block => {
+        const idea = extractIdea(block);
+        if (idea) generatedIdeas.push(idea);
+      });
+    }
+
+    // Method 4: numbered headings like **1.** or **فكرة 1**
+    if (!generatedIdeas.length) {
+      const byNum = raw.split(/\*{0,2}(?:فكرة\s*)?\d+[.)\-:]\*{0,2}/i).map(b => b.trim()).filter(Boolean);
+      if (byNum.length >= 2) {
+        byNum.forEach(block => {
+          const idea = extractIdea(block);
+          if (idea) generatedIdeas.push(idea);
+        });
+      }
+    }
+
+    // Clamp to 3
+    generatedIdeas = generatedIdeas.slice(0, 3);
+
+    // Last resort — whole text as one idea
+    if (!generatedIdeas.length) {
+      generatedIdeas = [{ hook: '', script: raw.trim(), angle: '' }];
     }
 
     renderIdeas();
