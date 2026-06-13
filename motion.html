@@ -54,6 +54,13 @@
   .pair .pic{border-radius:9px;overflow:hidden;border:1px solid var(--line2)}
   .pair .pic img{width:100%;display:block}
   .pair .pn{font-family:var(--mono);font-size:11px;color:var(--amber);margin-bottom:6px}
+  .dlgrow{display:flex;gap:9px;align-items:center;margin-top:9px}
+  .dlgrow .t{width:56px;height:56px;border-radius:9px;overflow:hidden;border:1px solid var(--line2);flex:none}
+  .dlgrow .t img{width:100%;height:100%;object-fit:cover}
+  .dlgrow .t .i{font-family:var(--mono);font-size:9px;color:var(--amber)}
+  .dlgrow input{flex:1}
+  .pair .dlgline{margin-top:9px}
+  .pair .dlgline input{width:100%}
   @media(max-width:560px){.pair{grid-template-columns:1fr}}
   /* models */
   .models{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px;margin-top:6px}
@@ -120,6 +127,11 @@
     <p class="sub" id="imgSub">اسحب وأفلت الصورة، والنظام يحلّلها ويقترح الحركة.</p>
     <div class="drop" id="drop">اسحب صورة أو عدة صور هنا · أو اضغط للاختيار<input type="file" id="file" accept="image/*" multiple hidden></div>
     <div id="thumbs" class="thumbs"></div>
+    <div class="bar" id="dlgToggleWrap" style="margin-top:10px;display:none">
+      <button class="btn ghost small" id="dlgToggle" onclick="toggleDlgPanel()">🎙️ إضافة حوار للقطات</button>
+      <span class="hint">للصور اللي فيها كلام منطوق — تكتب جنب كل صورة، والباقي صامت.</span>
+    </div>
+    <div id="dlgPanel" class="hidden"></div>
 
     <div id="boardChars" class="hidden">
       <label class="f" style="margin-top:16px">رفرنس الشخصيات <span>(اختياري — أسماء/أدوار تضيف صورها كمراجع)</span></label>
@@ -146,12 +158,6 @@
     <p class="sub">كل محرّك له صيغة مختلفة. اضغط ؟ لشرح طريقة عمله ونصائحه.</p>
     <div class="models" id="models"></div>
     <div id="bestNote"></div>
-    <div class="bar" id="dlgWrap">
-      <div style="flex:1">
-        <label class="f">الحوار / الكلام المنطوق <span>(لـ Veo و Grok فقط)</span></label>
-        <textarea id="dialogue" style="min-height:54px" placeholder="اكتب الجملة المنطوقة من السكربت — تُضاف للصوت مع لِب‑سنك..."></textarea>
-      </div>
-    </div>
   </div>
 
   <!-- engine -->
@@ -280,7 +286,7 @@ const ENGINES={
 const ENG_ORDER=["veo","grok","kling","hailuo","seedance"];
 
 /* ===== state ===== */
-const S={engine:"gem",mode:"single",images:[],style:null,target:"veo",charsRef:[]};
+const S={engine:"gem",mode:"single",images:[],style:null,target:"veo",charsRef:[],dlgOn:false};
 
 /* ===== build UI ===== */
 function buildStyles(){ document.getElementById("styleChips").innerHTML=STYLES.map(([ar,en])=>`<div class="chip" data-en="${en}" onclick="pickStyle(this)">${ar}</div>`).join(""); }
@@ -292,8 +298,7 @@ function buildModels(){
       <div class="ex" title="شرح" onclick="event.stopPropagation();explain('${k}')">؟</div>
       <div class="mn">${e.name}</div><div class="md">${e.tag}</div>${badge}</div>`;}).join("");
 }
-function pickTarget(k){ S.target=k; buildModels(); updateDialogueVis(); saveInputs(); }
-function updateDialogueVis(){ const e=ENGINES[S.target]; document.getElementById("dlgWrap").classList.toggle("hidden", !(e&&e.dialogue&&S.mode==="single")); }
+function pickTarget(k){ S.target=k; buildModels(); saveInputs(); }
 function explain(k){ const e=ENGINES[k];
   document.getElementById("popName").textContent=e.name;
   document.getElementById("popRole").textContent=e.tag+" · الحوار: "+(e.dialogue?"مدعوم":"غير مدعوم")+" · تقطيع لقطات: "+e.multishot;
@@ -313,9 +318,25 @@ function handleFiles(list){
 function renderThumbs(){
   document.getElementById("thumbs").innerHTML=S.images.map((im,i)=>
     `<div class="thumb"><img src="${im.url}" alt=""><button class="x" onclick="removeImg(${i})">×</button><span class="i">${toAr(i+1)}</span></div>`).join("");
+  document.getElementById("dlgToggleWrap").style.display=S.images.length?"flex":"none";
+  if(S.dlgOn) renderDlgPanel();
 }
 function removeImg(i){ S.images.splice(i,1); renderThumbs(); }
 function clearImgs(){ S.images=[]; renderThumbs(); document.getElementById("file").value=""; }
+
+/* ===== per-image dialogue ===== */
+function toggleDlgPanel(){ S.dlgOn=!S.dlgOn;
+  document.getElementById("dlgPanel").classList.toggle("hidden",!S.dlgOn);
+  document.getElementById("dlgToggle").classList.toggle("on",S.dlgOn);
+  document.getElementById("dlgToggle").textContent=S.dlgOn?"🎙️ إخفاء خانات الحوار":"🎙️ إضافة حوار للقطات";
+  if(S.dlgOn) renderDlgPanel();
+}
+function renderDlgPanel(){
+  document.getElementById("dlgPanel").innerHTML=`<label class="f">الجملة المنطوقة لكل لقطة <span>(اكتب فقط للقطات اللي فيها كلام)</span></label>`+
+    S.images.map((im,i)=>`<div class="dlgrow"><div class="t"><img src="${im.url}" alt=""></div>
+      <input type="text" placeholder="حوار اللقطة ${toAr(i+1)} (اتركه فاضي لو صامتة)" value="${esc(im.line||'')}" oninput="S.images[${i}].line=this.value">
+    </div>`).join("");
+}
 
 /* ===== char refs (board mode) ===== */
 function addCharRef(name){ S.charsRef.push({name:name||""}); renderCharsRef(); saveInputs(); }
@@ -333,38 +354,35 @@ function setMode(m){ S.mode=m;
   document.getElementById("boardChars").classList.toggle("hidden",!board);
   if(board && S.target!=="seedance" && S.target!=="veo"){ S.target="seedance"; }
   document.getElementById("bestNote").innerHTML=board?'<div class="tip">للتقطيع: <b>Seedance 2.0</b> الأفضل (مراجع مرقّمة ومشاهد متتابعة؛ للأشخاص استخدم Seedance 1.5 Pro). بديل: <b>Veo 3.1</b> عبر timestamp داخل 8ث. أما Grok / Hailuo فمقطع واحد قصير، و Kling مشهد واحد غالباً.</div>':"";
-  buildModels(); updateDialogueVis(); saveInputs();
+  buildModels(); saveInputs();
 }
 
 /* ===== generate ===== */
+function dlgClause(line){
+  if(!line||!line.trim()) return "No spoken dialogue for this shot; keep it silent (ambient/SFX only).";
+  const t=line.trim();
+  if(S.target==="veo") return `Spoken dialogue: write it exactly as — Character says: ${t} — and add (no subtitles). Put it on the Audio line.`;
+  if(S.target==="grok") return `Spoken dialogue (native lip-sync, include naturally): ${t}`;
+  return `The person speaks this line on screen (match lip movement, include in scene audio): ${t}`;
+}
 async function generate(){
   if(!S.images.length){ document.getElementById("genState").innerHTML='<div class="warn">ارفع صورة واحدة على الأقل.</div>'; return; }
   const e=ENGINES[S.target];
   const style=S.style?S.style.en:"natural";
   const clarify=document.getElementById("clarify").value.trim();
   const timing=document.getElementById("timing").value.trim();
-  const dlg=document.getElementById("dialogue").value.trim();
   const board=S.mode==="board";
   const timeLine = timing ? `Timing/sequence requested: ${timing}. Include it.` : `Do NOT mention any duration or timing.`;
   document.getElementById("genBtn").disabled=true;
 
   try{
     if(!board){
-      const dlgLine=(e.dialogue&&dlg)?`Spoken dialogue to include in audio: "${dlg}".`:(e.dialogue?`No dialogue provided.`:`This engine has no audio; ignore dialogue.`);
       const sys="أنت مهندس برومبتات تحريك فيديو (image-to-video). تحلّل الصورة المرفقة وتكتب برومبت إنجليزي للحركة فقط بصيغة المحرّك المطلوب. أجب JSON فقط.";
       S.results=[];
       for(let i=0;i<S.images.length;i++){
         document.getElementById("genState").innerHTML='<div class="loading"><div class="spin"></div>نحلّل الصورة '+toAr(i+1)+' / '+toAr(S.images.length)+' لمحرّك '+esc(e.name)+'...</div>';
-        const user=`حلّل الصورة المرفقة (لا تعيد وصفها — هي الإطار الأول).
-نوع الحركة: ${style}. ${clarify?("توضيح: "+clarify):""}
-${e.rules}
-${dlgLine}
-${timeLine}
-اكتب motion_prompt إنجليزي: الحركة داخل الإطار + حركة الكاميرا (منفصلة) + صوت إن دُعم. نظيف بدون أقواس [].
-أعد JSON فقط: {"motion_prompt":"...","tip":"نصيحة قصيرة بالعربي لهذا المحرّك"}`;
-        let prompt="",tip="";
-        try{ const d=stripJSON(await callLLM(sys,user,[S.images[i]])); prompt=clean(d&&d.motion_prompt); tip=(d&&d.tip)||""; }catch(err){ prompt=""; tip="⚠ "+(err.message||"تعذّر"); }
-        S.results.push({url:S.images[i].url,prompt,tip});
+        const prompt=await genOne(i,sys,style,clarify,timeLine);
+        S.results.push({url:S.images[i].url,prompt:prompt.p,tip:prompt.tip,line:S.images[i].line||""});
         renderPairs(); document.getElementById("outCard").classList.remove("hidden");
       }
       document.getElementById("genState").innerHTML="";
@@ -394,6 +412,29 @@ ${timeLine}
   }catch(err){ document.getElementById("genState").innerHTML='<div class="err">'+(err.message||"خطأ")+'</div>'; }
   finally{ document.getElementById("genBtn").disabled=false; }
 }
+async function genOne(i,sys,style,clarify,timeLine){
+  const e=ENGINES[S.target];
+  const user=`حلّل الصورة المرفقة (لا تعيد وصفها — هي الإطار الأول).
+نوع الحركة: ${style}. ${clarify?("توضيح: "+clarify):""}
+${e.rules}
+${dlgClause(S.images[i].line)}
+${timeLine}
+اكتب motion_prompt إنجليزي: الحركة داخل الإطار + حركة الكاميرا (منفصلة) + الصوت/الحوار إن وُجد. نظيف بدون أقواس [].
+أعد JSON فقط: {"motion_prompt":"...","tip":"نصيحة قصيرة بالعربي لهذا المحرّك"}`;
+  try{ const d=stripJSON(await callLLM(sys,user,[S.images[i]])); return {p:clean(d&&d.motion_prompt),tip:(d&&d.tip)||""}; }
+  catch(err){ return {p:"",tip:"⚠ "+(err.message||"تعذّر")}; }
+}
+async function regenOne(i){
+  const btn=document.getElementById("rg"+i); if(btn){ btn.disabled=true; btn.textContent="↻ يولّد..."; }
+  const style=S.style?S.style.en:"natural";
+  const clarify=document.getElementById("clarify").value.trim();
+  const timing=document.getElementById("timing").value.trim();
+  const timeLine=timing?`Timing/sequence requested: ${timing}. Include it.`:`Do NOT mention any duration or timing.`;
+  const sys="أنت مهندس برومبتات تحريك فيديو (image-to-video). أجب JSON فقط.";
+  const r=await genOne(i,sys,style,clarify,timeLine);
+  if(r.p){ S.results[i].prompt=r.p; S.results[i].tip=r.tip; S.results[i].line=S.images[i].line||""; renderPairs(); saveResult(); toast("↻ تم تحديث اللقطة "+toAr(i+1)); }
+  else { toast("تعذّر التوليد"); if(btn){ btn.disabled=false; btn.textContent="↻ أعد التوليد"; } }
+}
 function clean(p){ if(!p) return ""; return String(p).replace(/\[[^\]]*\]/g,"").replace(/\s{2,}/g," ").trim(); }
 function renderPairs(){
   const e=ENGINES[S.target];
@@ -404,7 +445,11 @@ function renderPairs(){
       <div class="pn">صورة ${toAr(i+1)}</div>
       <div class="prompt-en">${esc(r.prompt||"—")}</div>
       ${r.tip?`<div class="tip">💡 ${esc(r.tip)}</div>`:""}
-      <div class="bar"><button class="btn ghost small" onclick="copyText(S.results[${i}].prompt)">📋 نسخ</button></div>
+      ${!r.board?`<div class="dlgline"><input type="text" placeholder="🎙️ حوار هذه اللقطة (اختياري) ثم أعد التوليد" value="${esc(S.images[i]?S.images[i].line||'':r.line||'')}" oninput="if(S.images[${i}])S.images[${i}].line=this.value"></div>`:""}
+      <div class="bar">
+        <button class="btn ghost small" onclick="copyText(S.results[${i}].prompt)">📋 نسخ</button>
+        ${!r.board?`<button class="btn ghost small" id="rg${i}" onclick="regenOne(${i})">↻ أعد التوليد</button>`:""}
+      </div>
     </div>
   </div>`).join("")+(S.results.length>1?`<div class="bar"><button class="btn ghost small" onclick="copyAll()">📋 نسخ الكل</button><button class="btn ghost small" onclick="downloadAll()">⬇ تنزيل</button></div>`:"");
 }
@@ -433,11 +478,10 @@ function flashSaved(){ const el=document.getElementById("saved"); el.textContent
   clearTimeout(window._st); window._st=setTimeout(()=>{ el.textContent="⟳ يُحفظ تلقائياً"; el.classList.remove("flash"); },1300); }
 function saveInputs(){ const s=ls(); if(!s) return; s.setItem("kadr_motion_inputs",JSON.stringify({
   mode:S.mode,style:S.style,target:S.target,charsRef:S.charsRef,
-  clarify:document.getElementById("clarify").value,timing:document.getElementById("timing").value,dialogue:document.getElementById("dialogue").value,engine:S.engine})); flashSaved(); }
+  clarify:document.getElementById("clarify").value,timing:document.getElementById("timing").value,engine:S.engine})); flashSaved(); }
 function restoreInputs(){ const s=ls(); if(!s) return; let v={}; try{ v=JSON.parse(s.getItem("kadr_motion_inputs")||"{}"); }catch(e){}
   if(v.clarify) document.getElementById("clarify").value=v.clarify;
   if(v.timing) document.getElementById("timing").value=v.timing;
-  if(v.dialogue) document.getElementById("dialogue").value=v.dialogue;
   if(Array.isArray(v.charsRef)) S.charsRef=v.charsRef;
   if(v.target) S.target=v.target;
   if(v.style){ S.style=v.style; }
@@ -447,7 +491,7 @@ function restoreInputs(){ const s=ls(); if(!s) return; let v={}; try{ v=JSON.par
 buildStyles();
 document.querySelectorAll("#modeSeg button").forEach(b=>b.onclick=()=>setMode(b.dataset.m));
 document.querySelectorAll("#engSeg button").forEach(b=>b.onclick=()=>{ setEngine(b.dataset.e); saveInputs(); });
-["clarify","timing","dialogue"].forEach(id=>document.getElementById(id).addEventListener("input",saveInputs));
+["clarify","timing"].forEach(id=>document.getElementById(id).addEventListener("input",saveInputs));
 const drop=document.getElementById("drop"), file=document.getElementById("file");
 drop.onclick=()=>file.click();
 file.onchange=()=>{ handleFiles(file.files); file.value=""; };
