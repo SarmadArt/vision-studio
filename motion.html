@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Motion — برومبت التحريك · KADR Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#15161C;--bg2:#1B1D26;--surface:#21232E;--surface2:#292C3A;--line:#343847;--line2:#3E4356;
+    --ink:#EDEDF2;--muted:#9A9DB0;--muted2:#71748A;--amber:#F0A93B;--amber-soft:rgba(240,169,59,.14);
+    --teal:#58C7BE;--teal-soft:rgba(88,199,190,.13);--rose:#E5736B;--green:#5FB07A;--violet:#9B8CF0;
+    --r:14px;--mono:'IBM Plex Mono',ui-monospace,monospace;--body:'IBM Plex Sans Arabic','Tajawal',system-ui,sans-serif;--disp:'Tajawal','IBM Plex Sans Arabic',sans-serif;}
+  *{box-sizing:border-box}html,body{margin:0;padding:0}
+  body{background:radial-gradient(1100px 500px at 85% -10%, rgba(240,169,59,.06), transparent 60%),radial-gradient(900px 500px at 0% 110%, rgba(88,199,190,.05), transparent 55%),var(--bg);color:var(--ink);font-family:var(--body);line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:880px;margin:0 auto;padding:22px 20px 70px}
+  .meter{position:fixed;top:14px;left:14px;z-index:50;display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--line2);border-radius:11px;padding:8px 13px;font-family:var(--mono);font-size:12.5px;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+  .meter .bolt{color:var(--amber)}.meter .cost{color:var(--teal)}.meter .sep{color:var(--muted2)}
+  .top{display:flex;align-items:center;gap:13px;margin-bottom:6px}
+  .back{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--line2);font-size:18px;flex:none;transition:.18s}
+  .back:hover{border-color:var(--amber)}
+  .ttl h1{font-family:var(--disp);font-weight:800;font-size:22px;margin:0}.ttl p{margin:0;color:var(--muted);font-size:12.5px}
+  .saved{margin-right:auto;font-family:var(--mono);font-size:11.5px;color:var(--muted2);transition:.3s}.saved.flash{color:var(--green)}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-top:14px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--teal);text-transform:uppercase;margin-bottom:6px}
+  h2{font-family:var(--disp);font-weight:700;font-size:18px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+  label.f{display:block;font-size:13px;font-weight:600;margin:13px 0 7px}label.f span{color:var(--muted2);font-weight:400}
+  input[type=text],textarea,select{width:100%;background:var(--bg2);border:1px solid var(--line2);color:var(--ink);border-radius:10px;padding:11px 12px;font-family:var(--body);font-size:14px;transition:.2s;resize:vertical}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-soft)}
+  ::placeholder{color:var(--muted2)}
+  .note{font-size:12px;color:var(--teal);margin-top:8px}.hint{color:var(--muted2);font-size:12px;margin-top:8px}
+  .seg{display:inline-flex;background:var(--bg2);border:1px solid var(--line2);border-radius:11px;padding:4px;gap:4px;flex-wrap:wrap}
+  .seg button{appearance:none;border:none;background:transparent;color:var(--muted);font-family:var(--disp);font-weight:700;font-size:13.5px;padding:8px 15px;border-radius:8px;cursor:pointer;transition:.16s}
+  .seg button.on{background:var(--surface2);color:var(--ink)}
+  .seg.eng button[data-e="gem"].on{background:#4285F4;color:#fff}.seg.eng button[data-e="anth"].on{background:#D97757;color:#fff}.seg.eng button[data-e="oai"].on{background:#10A37F;color:#fff}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{padding:8px 14px;border-radius:9px;background:var(--bg2);border:1px solid var(--line2);color:var(--muted);font-size:13.5px;font-weight:600;cursor:pointer;transition:.16s}
+  .chip.on{background:var(--teal-soft);border-color:var(--teal);color:var(--ink)}
+  /* drop */
+  .drop{border:1.5px dashed var(--line2);border-radius:12px;background:var(--bg2);padding:26px;text-align:center;color:var(--muted);cursor:pointer;transition:.18s;font-size:13.5px}
+  .drop.over{border-color:var(--amber);background:var(--amber-soft);color:var(--ink)}
+  .preview{margin-top:12px;display:none}
+  .preview img{max-width:100%;max-height:260px;border-radius:10px;border:1px solid var(--line2);display:block}
+  .preview .rm{margin-top:8px}
+  /* models */
+  .models{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px;margin-top:6px}
+  .mcard{background:var(--bg2);border:1.5px solid var(--line2);border-radius:11px;padding:11px 12px;cursor:pointer;transition:.15s;position:relative}
+  .mcard:hover{border-color:var(--muted)}
+  .mcard.on{border-color:var(--amber);box-shadow:0 0 0 2px var(--amber-soft)}
+  .mcard .mn{font-family:var(--disp);font-weight:700;font-size:14px}
+  .mcard .md{font-size:11px;color:var(--muted2);margin-top:2px}
+  .mcard .ex{position:absolute;top:8px;left:8px;width:22px;height:22px;border-radius:50%;background:var(--surface2);border:1px solid var(--line2);color:var(--teal);font-size:12px;display:grid;place-items:center;font-weight:700}
+  .mcard .ex:hover{border-color:var(--teal)}
+  .mcard .badge{display:inline-block;font-family:var(--mono);font-size:9px;color:#1a1206;background:var(--amber);border-radius:4px;padding:1px 5px;margin-top:5px}
+  .btn{appearance:none;border:none;cursor:pointer;font-family:var(--disp);font-weight:700;font-size:14.5px;padding:12px 20px;border-radius:11px;display:inline-flex;align-items:center;gap:8px;transition:.2s}
+  .btn.primary{background:var(--amber);color:#1a1206}.btn.primary:hover{filter:brightness(1.07);transform:translateY(-1px)}
+  .btn.ghost{background:var(--surface2);color:var(--ink);border:1px solid var(--line2)}.btn.ghost:hover{border-color:var(--muted)}
+  .btn.small{padding:9px 14px;font-size:13px}.btn:disabled{opacity:.5;cursor:not-allowed;transform:none;filter:none}
+  .bar{display:flex;gap:10px;margin-top:16px;align-items:center;flex-wrap:wrap}.spacer{flex:1}
+  .modelpill{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:8px}.modelpill b{color:var(--green)}
+  .loading{display:flex;align-items:center;gap:11px;color:var(--muted);font-size:13.5px;padding:14px 2px}
+  .spin{width:18px;height:18px;border:2.5px solid var(--line2);border-top-color:var(--amber);border-radius:50%;animation:sp .8s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .err{background:rgba(229,115,107,.1);border:1px solid rgba(229,115,107,.4);color:#f1b3ad;border-radius:10px;padding:11px 13px;font-size:13px;margin-top:12px}
+  .warn{background:var(--amber-soft);border:1px solid rgba(240,169,59,.4);color:#f3cd8d;border-radius:10px;padding:10px 13px;font-size:12.5px;margin-top:10px}
+  .prompt-en{background:#0f1015;border:1px solid var(--line);border-radius:9px;padding:12px;font-family:var(--mono);font-size:12px;line-height:1.7;color:#cdd0dd;direction:ltr;text-align:left;white-space:pre-wrap;word-break:break-word}
+  .tip{background:var(--teal-soft);border:1px solid rgba(88,199,190,.3);border-radius:10px;padding:11px 13px;font-size:12.5px;color:#bfe9e4;margin-top:10px;line-height:1.7}
+  .charRow{display:flex;gap:8px;margin-top:8px}.charRow input{flex:1}
+  .charRow .x{width:40px;flex:none;background:var(--surface2);border:1px solid var(--line2);border-radius:9px;color:var(--muted);cursor:pointer;font-size:16px}
+  .charRow .x:hover{border-color:var(--rose);color:var(--rose)}
+  .pop{position:fixed;inset:0;background:rgba(8,9,12,.8);z-index:80;display:none;align-items:center;justify-content:center;padding:20px}
+  .pop.open{display:flex}
+  .popbox{background:var(--surface);border:1px solid var(--line2);border-radius:16px;padding:22px;max-width:540px;width:100%;max-height:82vh;overflow:auto}
+  .popbox h3{font-family:var(--disp);margin:0 0 6px;font-size:18px}
+  .popbox .role{font-family:var(--mono);font-size:11px;color:var(--teal);margin-bottom:12px}
+  .popbox p{font-size:13.5px;line-height:1.85;margin:0 0 10px;color:var(--ink)}
+  .popbox .close{margin-top:6px}
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="meter" onclick="location.href='index.html#settings'">
+  <span class="bolt">⚡</span><span id="mTok">٠ توكن</span><span class="sep">·</span><span class="cost" id="mCost">$0.000</span>
+</div>
+
+<div class="wrap">
+  <div class="top">
+    <a class="back" href="index.html">→</a>
+    <div class="ttl"><h1>Motion</h1><p>صورة → برومبت تحريك (image-to-video)</p></div>
+    <span class="saved" id="saved">⟳ يُحفظ تلقائياً</span>
+  </div>
+
+  <!-- mode -->
+  <div class="card">
+    <div class="eyebrow">الوضع</div>
+    <div class="seg" id="modeSeg" style="margin-top:2px">
+      <button data-m="single" class="on">🎬 حركة لقطة واحدة</button>
+      <button data-m="board">🎞️ فيديو كامل من ستوري بورد</button>
+    </div>
+    <p class="hint" id="modeHint">لقطة واحدة → برومبت تحريك يحلّل الصورة ويعطي الحركة المناسبة.</p>
+  </div>
+
+  <!-- image -->
+  <div class="card">
+    <div class="eyebrow">الصورة</div>
+    <h2 id="imgTitle">ارفع الصورة</h2>
+    <p class="sub" id="imgSub">اسحب وأفلت الصورة، والنظام يحلّلها ويقترح الحركة.</p>
+    <div class="drop" id="drop">اسحب الصورة هنا · أو اضغط للاختيار<input type="file" id="file" accept="image/*" hidden></div>
+    <div class="preview" id="preview"><img id="pimg" alt=""><div class="rm"><button class="btn ghost small" onclick="clearImg()">✕ إزالة</button></div></div>
+
+    <div id="boardChars" class="hidden">
+      <label class="f" style="margin-top:16px">رفرنس الشخصيات <span>(اختياري — أسماء/أدوار تضيف صورها كمراجع)</span></label>
+      <div id="charsRef"></div>
+      <button class="btn ghost small" style="margin-top:9px" onclick="addCharRef()">+ شخصية</button>
+    </div>
+  </div>
+
+  <!-- motion style -->
+  <div class="card">
+    <div class="eyebrow">ستايل الحركة</div>
+    <h2>نوع الحركة</h2>
+    <div class="chips" id="styleChips"></div>
+    <label class="f" style="margin-top:14px">توضيح إضافي للحركة <span>(اختياري)</span></label>
+    <textarea id="clarify" style="min-height:60px" placeholder="مثال: الكاميرا تقترب ببطء بينما تمسح وجهها · أو: المنتج يدور ببطء..."></textarea>
+    <label class="f" style="margin-top:6px">التوقيت / المدة <span>(اختياري — فاضي = ما يُذكر)</span></label>
+    <input type="text" id="timing" placeholder="مثال: 8s · أو تسلسل: 0–3s تقترب، 3–6s تثبت...">
+  </div>
+
+  <!-- target model -->
+  <div class="card">
+    <div class="eyebrow">محرّك الفيديو الهدف</div>
+    <h2>لأي محرّك تكتب البرومبت؟</h2>
+    <p class="sub">كل محرّك له صيغة مختلفة. اضغط ؟ لشرح طريقة عمله ونصائحه.</p>
+    <div class="models" id="models"></div>
+    <div id="bestNote"></div>
+    <div class="bar" id="dlgWrap">
+      <div style="flex:1">
+        <label class="f">الحوار / الكلام المنطوق <span>(لـ Veo و Grok فقط)</span></label>
+        <textarea id="dialogue" style="min-height:54px" placeholder="اكتب الجملة المنطوقة من السكربت — تُضاف للصوت مع لِب‑سنك..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- engine -->
+  <div class="card">
+    <div class="eyebrow">محرّك التحليل</div>
+    <h2>الرؤية + التوليد</h2>
+    <div class="seg eng" id="engSeg"><button data-e="gem">Gemini</button><button data-e="anth">Claude</button><button data-e="oai">GPT</button></div>
+    <div style="margin-top:12px;max-width:340px">
+      <label class="f">الموديل</label>
+      <select id="modelSel" onchange="saveModel()"></select>
+      <div class="modelpill" id="modelPrice"></div>
+    </div>
+    <div id="engNote"></div>
+    <div class="bar"><button class="btn primary" id="genBtn" onclick="generate()">⚡ ولّد برومبت التحريك</button></div>
+    <div id="genState"></div>
+  </div>
+
+  <!-- output -->
+  <div class="card hidden" id="outCard">
+    <div class="eyebrow">الناتج</div>
+    <h2 id="outTitle">برومبت التحريك</h2>
+    <div id="out"></div>
+  </div>
+</div>
+
+<div class="pop" id="pop" onclick="if(event.target===this)closePop()">
+  <div class="popbox">
+    <h3 id="popName"></h3><div class="role" id="popRole"></div>
+    <div id="popBody"></div>
+    <button class="btn ghost small close" onclick="closePop()">إغلاق</button>
+  </div>
+</div>
+
+<script>
+/* ===== shared ===== */
+const PRICES={oai:{"gpt-5.4-mini":[0.75,4.5],"gpt-5.4-nano":[0.20,1.25],"gpt-5.4":[2.5,15],"gpt-5.5":[5,30]},
+  anth:{"claude-sonnet-4-6":[3,15],"claude-haiku-4-5":[1,5],"claude-opus-4-8":[5,25]},
+  gem:{"gemini-3.1-flash-lite":[0.25,1.5],"gemini-3.5-flash":[1.5,9],"gemini-3-flash-preview":[0.5,3],"gemini-3.1-pro-preview":[2,12]}};
+const MODELS={gem:[["gemini-3.1-flash-lite","أفضل قيمة ✓"],["gemini-3.5-flash","الأذكى · مستقر"],["gemini-3-flash-preview","متوازن"],["gemini-3.1-pro-preview","الأقوى"]],
+  anth:[["claude-sonnet-4-6","أفضل قيمة ✓"],["claude-haiku-4-5","الأرخص"],["claude-opus-4-8","الأقوى"]],
+  oai:[["gpt-5.4-mini","أفضل قيمة ✓"],["gpt-5.4-nano","الأرخص"],["gpt-5.4","متوازن"],["gpt-5.5","الأقوى"]]};
+function ls(){ try{ return window.localStorage; }catch(e){ return null; } }
+function getCfg(){ const s=ls(); if(!s) return {}; try{ return JSON.parse(s.getItem("kadr_cfg")||"{}"); }catch(e){ return {}; } }
+function setCfg(o){ const s=ls(); if(s) s.setItem("kadr_cfg",JSON.stringify({...getCfg(),...o})); }
+function getUsage(){ const s=ls(); if(!s) return {tokens:0,cost:0}; try{ return JSON.parse(s.getItem("kadr_usage")||'{"tokens":0,"cost":0}'); }catch(e){ return {tokens:0,cost:0}; } }
+function addUsage(eng,model,i,o){ const p=(PRICES[eng]||{})[model]||[0,0]; const cost=(i/1e6)*p[0]+(o/1e6)*p[1];
+  const u=getUsage(); u.tokens=(u.tokens||0)+i+o; u.cost=(u.cost||0)+cost; const s=ls(); if(s)s.setItem("kadr_usage",JSON.stringify(u)); paintMeter(); }
+function toAr(n){ return String(n).replace(/[0-9]/g,d=>"٠١٢٣٤٥٦٧٨٩"[d]); }
+function fmtTok(n){ return n>=1000?toAr((n/1000).toFixed(1))+"k":toAr(n); }
+function paintMeter(){ const u=getUsage(); document.getElementById("mTok").textContent=fmtTok(u.tokens||0)+" توكن"; document.getElementById("mCost").textContent="$"+(u.cost||0).toFixed(3); }
+function esc(s){ return (s==null?"":String(s)).replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m])); }
+function toast(m){ const t=document.createElement("div"); t.textContent=m; t.style.cssText="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#292C3A;border:1px solid #3E4356;color:#EDEDF2;padding:11px 20px;border-radius:11px;font-family:'IBM Plex Sans Arabic',sans-serif;font-size:14px;z-index:99"; document.body.appendChild(t); setTimeout(()=>t.remove(),1700); }
+function stripJSON(t){ if(!t) return null; t=String(t).replace(/```json/gi,"").replace(/```/g,"").trim();
+  try{ return JSON.parse(t); }catch(e){} for(const [o,c] of [["{","}"],["[","]"]]){ const i=t.indexOf(o); if(i<0)continue; let d=0;
+    for(let j=i;j<t.length;j++){ if(t[j]===o)d++; else if(t[j]===c){ d--; if(!d){ try{ return JSON.parse(t.slice(i,j+1)); }catch(e){} } } } } return null; }
+async function callLLM(system,user,image){
+  const eng=S.engine,c=getCfg(); const sel=document.getElementById("modelSel");
+  let model=(sel&&sel.value)||c[eng+"Model"]||MODELS[eng][0][0]; if(!(PRICES[eng]||{})[model]) model=MODELS[eng][0][0];
+  if(eng==="gem"){ if(!c.gemKey) throw new Error("أضف مفتاح Gemini في الإعدادات.");
+    const parts=[]; if(image) parts.push({inlineData:{mimeType:image.mime,data:image.data}}); parts.push({text:user});
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(c.gemKey)}`,
+      {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:[{role:"user",parts}],generationConfig:{temperature:0.6,maxOutputTokens:4096,responseMimeType:"application/json"}})});
+    const d=await r.json(); if(!r.ok) throw new Error(d.error?.message||("خطأ Gemini "+r.status));
+    const um=d.usageMetadata||{}; addUsage("gem",model,um.promptTokenCount||0,um.candidatesTokenCount||0);
+    return (d.candidates?.[0]?.content?.parts||[]).map(p=>p.text||"").join(""); }
+  if(eng==="anth"){ if(!c.anthKey) throw new Error("أضف مفتاح Claude في الإعدادات.");
+    const content=[]; if(image) content.push({type:"image",source:{type:"base64",media_type:image.mime,data:image.data}}); content.push({type:"text",text:user});
+    const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":c.anthKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+      body:JSON.stringify({model,max_tokens:4096,system,messages:[{role:"user",content}]})});
+    const d=await r.json(); if(!r.ok) throw new Error(d.error?.message||("خطأ Claude "+r.status));
+    const u=d.usage||{}; addUsage("anth",model,u.input_tokens||0,u.output_tokens||0);
+    return (d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join(""); }
+  if(eng==="oai"){ if(!c.oaiKey) throw new Error("أضف مفتاح GPT في الإعدادات.");
+    const uc=image?[{type:"text",text:user},{type:"image_url",image_url:{url:`data:${image.mime};base64,${image.data}`}}]:user;
+    const r=await fetch("/api/openai",{method:"POST",headers:{"Content-Type":"application/json","x-openai-key":c.oaiKey},
+      body:JSON.stringify({model,messages:[{role:"system",content:system},{role:"user",content:uc}],response_format:{type:"json_object"}})});
+    let d; try{ d=await r.json(); }catch(e){ throw new Error("ملف الوسيط /api غير موجود — ارفع مجلد api على Vercel."); }
+    if(!r.ok) throw new Error(d.error?.message||("خطأ GPT "+r.status));
+    const u=d.usage||{}; addUsage("oai",model,u.prompt_tokens||0,u.completion_tokens||0);
+    return d.choices?.[0]?.message?.content||""; }
+}
+
+/* ===== motion styles ===== */
+const STYLES=[["ديمنستريشن","demonstration"],["تعليمي","educational"],["ناطق","talking to camera"],["اكشن","action"],["سينمائي","cinematic"],["استعراضي","showcase"],["استعراض منتج","product showcase"],["أجواء/طبيعة","ambient atmospheric"],["إيقاع سريع","fast-paced energetic"],["بطيء سينمائي","slow cinematic"]];
+
+/* ===== target engines (from research) ===== */
+const ENGINES={
+  veo:{name:"Veo 3.1",tag:"Google · صوت+حوار",dialogue:true,multishot:"ثانوي",
+    how:[
+      "محرّك Google، الأقوى في الصوت والحوار المتزامن. مقاطع 4/6/8ث بدقة 720/1080p.",
+      "في image-to-video يحرّك الإطار: صِف ما يتحرّك + حركة الكاميرا بوضوح. قدّم الكاميرا والستايل في البداية.",
+      "البنية: كاميرا + شخصية + حركة + سياق + ستايل، ثم سطر Audio منفصل.",
+      "الحوار يُكتب: Character says: الكلام (بدون اقتباس) + (no subtitles) لتفادي النص على الشاشة.",
+      "يدعم timestamp: تقسيم المقطع لبلوكات زمنية لتسلسل مشاهد داخل 8ث."],
+    rules:"Target: Veo 3.1 image-to-video. One or two sentences. Frontload the camera move, then what moves in the frame; do not re-describe the static image. Put audio on a separate line starting with 'Audio:'. If dialogue is given, write it as: Character says: <words> and add (no subtitles)."},
+  grok:{name:"Grok Imagine",tag:"xAI · صوت+لِب‑سنك",dialogue:true,multishot:"لا",
+    how:[
+      "محرّك xAI، صوت ولِب‑سنك أصلي ممتاز للحوار. مقاطع 6–15ث.",
+      "الأفضل للمشاهد البسيطة. التفاصيل المعقّدة والبراندات تتشوّش مع حركة الكاميرا — خلّ الحركة بسيطة.",
+      "يحرّك الصورة بوصف الحركة + كاميرا بسيطة + الحوار (اللِب‑سنك تلقائي)."],
+    rules:"Target: Grok Imagine image-to-video. Keep it short and simple; one simple camera move and clear subject motion; do not re-describe the image. If dialogue is given, include it inline naturally (lip-sync is automatic). Optional brief 'Audio:' line for ambience/SFX."},
+  kling:{name:"Kling 3",tag:"Kuaishou · كاميرا+فيزياء",dialogue:false,multishot:"محدود",
+    how:[
+      "محرّك Kuaishou، الأقوى في حركة الكاميرا وفيزياء الحركة. بلا صوت/حوار.",
+      "في image-to-video: اكتب الحركة فقط، لا تعيد وصف الصورة.",
+      "حدّد حركة كاميرا واحدة واضحة منفصلة عن حركة الشخصية، وأضف نقطة نهاية للحركة (ثم تستقر) لتفادي التعليق عند 99٪.",
+      "كلمات بسيطة وحركة منطقية فيزيائياً؛ الوصف البعيد عن الصورة يسبب قطع/انتقال غير مرغوب."],
+    rules:"Target: Kling 3 image-to-video. 1-3 short sentences, motion instructions only (never re-describe the image). Specify exactly one clear camera move, separate from subject motion, and add a motion endpoint (e.g., 'then settles'). Keep physics plausible. No audio or dialogue."},
+  hailuo:{name:"Hailuo",tag:"MiniMax · سردي",dialogue:false,multishot:"لا",
+    how:[
+      "محرّك MiniMax، «مخرج» يحب السرد الزمني. مقاطع ~5ث. بلا حوار.",
+      "الصيغة: مشهد تأسيسي (شخصية+بيئة) + حركة كاميرا بسيطة + تفاصيل.",
+      "استخدم تسلسل زمني (ثم… بينما…) وأفعال قوية، وتجنّب حشو الجودة مثل 8k/masterpiece.",
+      "حركات معتدلة (بان/زوم) أفضل من المعقّدة."],
+    rules:"Target: Hailuo (MiniMax) image-to-video. Director/narrative style: establishing subject+environment, then ONE simple clear camera move, then a detail. Use temporal flow (then/as) and strong verbs. Avoid quality-stuffing words. No dialogue."},
+  seedance:{name:"Seedance 2.0",tag:"ByteDance · متعدد اللقطات",dialogue:false,multishot:"ممتاز",
+    how:[
+      "محرّك ByteDance. الصورة تعطي الهوية — ركّز على الحركة والكاميرا والقيود.",
+      "برومبت قصير، حركة واحدة في كل مرة، وأضف قيوداً (حافظ على شكل المنتج/الشعار/الوجه).",
+      "يدعم سرد متعدد اللقطات ومراجع مرقّمة (Image 1, Image 2…) — ممتاز لتقطيع ستوري بورد لمشاهد متتابعة.",
+      "ملاحظة: نسخة 2.0 مقيّدة مع الأشخاص (الأفضل للمشاهد/المنتجات)؛ للأشخاص استخدم Seedance 1.5 Pro."],
+    rules:"Target: Seedance image-to-video. Short prompt: motion + camera + constraints only (preserve product shape/logo/face), one motion focus, do not re-describe the image.",
+    rulesBoard:"Target: Seedance 2.0 multi-shot. Reference the storyboard as Image 1 (and any character references as Image 2, Image 3 with their names). Instruct it to render shots as a continuous multi-shot sequence, the camera cutting between the numbered panels in order, keeping characters and look consistent. Keep each beat's motion simple and physical."}
+};
+const ENG_ORDER=["veo","grok","kling","hailuo","seedance"];
+
+/* ===== state ===== */
+const S={engine:"gem",mode:"single",image:null,style:null,target:"veo",charsRef:[]};
+
+/* ===== build UI ===== */
+function buildStyles(){ document.getElementById("styleChips").innerHTML=STYLES.map(([ar,en])=>`<div class="chip" data-en="${en}" onclick="pickStyle(this)">${ar}</div>`).join(""); }
+function pickStyle(el){ document.querySelectorAll("#styleChips .chip").forEach(c=>c.classList.remove("on")); el.classList.add("on"); S.style={ar:el.textContent,en:el.dataset.en}; saveInputs(); }
+function buildModels(){
+  document.getElementById("models").innerHTML=ENG_ORDER.map(k=>{ const e=ENGINES[k];
+    const badge=(S.mode==="board"&&e.multishot==="ممتاز")?'<div class="badge">الأفضل للتقطيع</div>':'';
+    return `<div class="mcard ${S.target===k?'on':''}" data-k="${k}" onclick="pickTarget('${k}')">
+      <div class="ex" title="شرح" onclick="event.stopPropagation();explain('${k}')">؟</div>
+      <div class="mn">${e.name}</div><div class="md">${e.tag}</div>${badge}</div>`;}).join("");
+}
+function pickTarget(k){ S.target=k; buildModels(); updateDialogueVis(); saveInputs(); }
+function updateDialogueVis(){ const e=ENGINES[S.target]; document.getElementById("dlgWrap").classList.toggle("hidden", !(e&&e.dialogue&&S.mode==="single")); }
+function explain(k){ const e=ENGINES[k];
+  document.getElementById("popName").textContent=e.name;
+  document.getElementById("popRole").textContent=e.tag+" · الحوار: "+(e.dialogue?"مدعوم":"غير مدعوم")+" · تقطيع لقطات: "+e.multishot;
+  document.getElementById("popBody").innerHTML=e.how.map(p=>`<p>• ${esc(p)}</p>`).join("");
+  document.getElementById("pop").classList.add("open"); }
+function closePop(){ document.getElementById("pop").classList.remove("open"); }
+
+/* ===== image ===== */
+function handleFile(f){ if(!f||!f.type.startsWith("image/")){ toast("اختر ملف صورة"); return; }
+  const r=new FileReader(); r.onload=()=>{ const res=r.result; const m=/^data:(.*?);base64,(.*)$/.exec(res);
+    if(m){ S.image={mime:m[1],data:m[2],url:res}; document.getElementById("pimg").src=res; document.getElementById("preview").style.display="block"; document.getElementById("drop").style.display="none"; } };
+  r.readAsDataURL(f); }
+function clearImg(){ S.image=null; document.getElementById("preview").style.display="none"; document.getElementById("drop").style.display="block"; document.getElementById("file").value=""; }
+
+/* ===== char refs (board mode) ===== */
+function addCharRef(name){ S.charsRef.push({name:name||""}); renderCharsRef(); saveInputs(); }
+function renderCharsRef(){ document.getElementById("charsRef").innerHTML=S.charsRef.map((c,i)=>
+  `<div class="charRow"><input type="text" placeholder="اسم/دور (دكتورة، الأب...)" value="${esc(c.name)}" oninput="S.charsRef[${i}].name=this.value;saveInputs()">`+
+  `<button class="x" onclick="S.charsRef.splice(${i},1);renderCharsRef();saveInputs()">×</button></div>`).join(""); }
+
+/* ===== mode ===== */
+function setMode(m){ S.mode=m;
+  document.querySelectorAll("#modeSeg button").forEach(b=>b.classList.toggle("on",b.dataset.m===m));
+  const board=m==="board";
+  document.getElementById("imgTitle").textContent=board?"ارفع لوحة الستوري بورد":"ارفع الصورة";
+  document.getElementById("imgSub").textContent=board?"اللوحة اللي فيها كل اللقطات — النظام يقطّعها لفيديو متتابع.":"اسحب وأفلت الصورة، والنظام يحلّلها ويقترح الحركة.";
+  document.getElementById("modeHint").textContent=board?"يقطّع لقطات اللوحة لفيديو متعدد المشاهد (الأفضل: Seedance / Veo 3.1).":"لقطة واحدة → برومبت تحريك يحلّل الصورة ويعطي الحركة المناسبة.";
+  document.getElementById("boardChars").classList.toggle("hidden",!board);
+  if(board && S.target!=="seedance" && S.target!=="veo"){ S.target="seedance"; }
+  document.getElementById("bestNote").innerHTML=board?'<div class="tip">للتقطيع: <b>Seedance 2.0</b> الأفضل (مراجع مرقّمة ومشاهد متتابعة؛ للأشخاص استخدم Seedance 1.5 Pro). بديل: <b>Veo 3.1</b> عبر timestamp داخل 8ث. أما Grok / Hailuo فمقطع واحد قصير، و Kling مشهد واحد غالباً.</div>':"";
+  buildModels(); updateDialogueVis(); saveInputs();
+}
+
+/* ===== generate ===== */
+async function generate(){
+  if(!S.image){ document.getElementById("genState").innerHTML='<div class="warn">ارفع صورة أولاً.</div>'; return; }
+  const e=ENGINES[S.target];
+  const style=S.style?S.style.en:"natural";
+  const clarify=document.getElementById("clarify").value.trim();
+  const timing=document.getElementById("timing").value.trim();
+  const dlg=document.getElementById("dialogue").value.trim();
+  const board=S.mode==="board";
+  document.getElementById("genBtn").disabled=true;
+  document.getElementById("genState").innerHTML='<div class="loading"><div class="spin"></div>نحلّل الصورة ونكتب برومبت '+esc(e.name)+'...</div>';
+
+  const timeLine = timing ? `Timing/sequence requested: ${timing}. Include it.` : `Do NOT mention any duration or timing.`;
+  let sys, user;
+  if(!board){
+    const dlgLine = (e.dialogue && dlg) ? `Spoken dialogue to include in audio: "${dlg}".` : (e.dialogue?`No dialogue provided.`:`This engine has no audio; ignore any dialogue.`);
+    sys="أنت مهندس برومبتات تحريك فيديو (image-to-video). تحلّل الصورة المرفقة وتكتب برومبت إنجليزي للحركة فقط بصيغة المحرّك المطلوب. أجب JSON فقط.";
+    user=`حلّل الصورة المرفقة (لا تعيد وصفها في البرومبت — هي موجودة كإطار أول).
+نوع الحركة المطلوب: ${style}.
+${clarify?("توضيح المستخدم للحركة: "+clarify):""}
+${e.rules}
+${dlgLine}
+${timeLine}
+اكتب motion_prompt إنجليزي يصف فقط: الحركة داخل الإطار + حركة الكاميرا (منفصلة) + أي صوت إن دعم المحرّك. نظيف بدون أقواس [] ولا علامات اقتباس عدا صيغة الحوار المطلوبة.
+أعد JSON فقط: {"motion_prompt":"...","tip":"نصيحة قصيرة بالعربي خاصة بهذا المحرّك لتقليل الأخطاء"}`;
+  } else {
+    const names=S.charsRef.map(c=>(c.name||"").trim()).filter(Boolean);
+    const refLine = names.length ? `Character references provided (as Image 2, Image 3...): ${names.join(", ")}. Use them for faces/identities.` : `No extra character references; use the storyboard people as-is.`;
+    const rules = e.rulesBoard || e.rules;
+    sys="أنت مهندس برومبتات تحريك. تحلّل لوحة ستوري بورد مرفقة وتكتب برومبت يقطّعها لفيديو متعدد المشاهد بصيغة المحرّك المطلوب. أجب JSON فقط.";
+    user=`الصورة المرفقة هي لوحة ستوري بورد فيها لقطات مرقّمة (Image 1).
+نوع الحركة العام: ${style}. ${clarify?("توضيح: "+clarify):""}
+${refLine}
+${rules}
+${timeLine}
+اكتب sequence_prompt إنجليزي: يطلب من المحرّك إنتاج فيديو متتابع يمرّ على لقطات اللوحة بالترتيب كمشاهد متتالية، حركة بسيطة وكاميرا واضحة لكل لقطة، مع ثبات الشخصيات والستايل. أشر للمراجع المرقّمة إن وُجدت. نظيف بدون أقواس [].
+أعد JSON فقط: {"sequence_prompt":"...","tip":"نصيحة قصيرة بالعربي خاصة بهذا المحرّك"}`;
+  }
+  try{
+    const txt=await callLLM(sys,user,S.image); const d=stripJSON(txt);
+    const prompt=clean(board?(d&&d.sequence_prompt):(d&&d.motion_prompt));
+    if(!prompt) throw new Error("ما قدرنا نقرأ الناتج، أعد المحاولة.");
+    S.result={engine:e.name,prompt,tip:(d&&d.tip)||"",board};
+    renderOut(); saveResult();
+    document.getElementById("outCard").classList.remove("hidden");
+    document.getElementById("genState").innerHTML="";
+    document.getElementById("outCard").scrollIntoView({behavior:"smooth",block:"nearest"});
+  }catch(err){ document.getElementById("genState").innerHTML='<div class="err">'+(err.message||"خطأ")+'</div>'; }
+  finally{ document.getElementById("genBtn").disabled=false; }
+}
+function clean(p){ if(!p) return ""; return String(p).replace(/\[[^\]]*\]/g,"").replace(/\s{2,}/g," ").trim(); }
+function renderOut(){
+  const r=S.result;
+  document.getElementById("outTitle").textContent=(r.board?"برومبت الفيديو المتتابع · ":"برومبت التحريك · ")+r.engine;
+  document.getElementById("out").innerHTML=`<div class="prompt-en">${esc(r.prompt)}</div>
+    ${r.tip?`<div class="tip">💡 ${esc(r.tip)}</div>`:""}
+    <div class="bar"><button class="btn ghost small" onclick="copyText(S.result.prompt)">📋 نسخ البرومبت</button>
+      <button class="btn ghost small" onclick="downloadText()">⬇ تنزيل</button>
+      <span class="spacer"></span><span class="hint">محفوظ</span></div>`;
+}
+function copyText(t){ navigator.clipboard.writeText(t); toast("📋 تم النسخ"); }
+function downloadText(){ const b=new Blob([S.result.prompt],{type:"text/plain;charset=utf-8"}); const u=URL.createObjectURL(b);
+  const a=document.createElement("a"); a.href=u; a.download="motion-prompt.txt"; a.click(); setTimeout(()=>URL.revokeObjectURL(u),1000); }
+function saveResult(){ const s=ls(); if(!s||!S.result) return; s.setItem("kadr_motion_result",JSON.stringify({...S.result,ts:Date.now()})); }
+
+/* ===== engine ui ===== */
+function setEngine(e){ S.engine=e; setCfg({lastEngine:e});
+  document.querySelectorAll("#engSeg button").forEach(b=>b.classList.toggle("on",b.dataset.e===e));
+  const sel=document.getElementById("modelSel"); sel.innerHTML=MODELS[e].map(([v,l])=>`<option value="${v}">${v} — ${l}</option>`).join("");
+  const c=getCfg(); if(c[e+"Model"]) sel.value=c[e+"Model"];
+  if(!MODELS[e].some(m=>m[0]===sel.value)){ sel.value=MODELS[e][0][0]; setCfg({[e+"Model"]:sel.value}); }
+  updateModelPrice();
+  document.getElementById("engNote").innerHTML=(e==="oai")?'<div class="warn">GPT يشتغل عبر /api على موقعك. Gemini و Claude مباشرة. كلهم يدعمون تحليل الصور.</div>':'<div class="hint">هذا المحرّك يحلّل الصورة (رؤية) ثم يكتب البرومبت.</div>';
+}
+function saveModel(){ setCfg({[S.engine+"Model"]:document.getElementById("modelSel").value}); updateModelPrice(); flashSaved(); }
+function updateModelPrice(){ const m=document.getElementById("modelSel").value; const p=(PRICES[S.engine]||{})[m];
+  document.getElementById("modelPrice").innerHTML=p?`<b>$${p[0]}</b> إدخال · <b>$${p[1]}</b> إخراج / مليون توكن`:""; }
+
+/* ===== autosave ===== */
+function flashSaved(){ const el=document.getElementById("saved"); el.textContent="✓ محفوظ"; el.classList.add("flash");
+  clearTimeout(window._st); window._st=setTimeout(()=>{ el.textContent="⟳ يُحفظ تلقائياً"; el.classList.remove("flash"); },1300); }
+function saveInputs(){ const s=ls(); if(!s) return; s.setItem("kadr_motion_inputs",JSON.stringify({
+  mode:S.mode,style:S.style,target:S.target,charsRef:S.charsRef,
+  clarify:document.getElementById("clarify").value,timing:document.getElementById("timing").value,dialogue:document.getElementById("dialogue").value,engine:S.engine})); flashSaved(); }
+function restoreInputs(){ const s=ls(); if(!s) return; let v={}; try{ v=JSON.parse(s.getItem("kadr_motion_inputs")||"{}"); }catch(e){}
+  if(v.clarify) document.getElementById("clarify").value=v.clarify;
+  if(v.timing) document.getElementById("timing").value=v.timing;
+  if(v.dialogue) document.getElementById("dialogue").value=v.dialogue;
+  if(Array.isArray(v.charsRef)) S.charsRef=v.charsRef;
+  if(v.target) S.target=v.target;
+  if(v.style){ S.style=v.style; }
+}
+
+/* ===== wire ===== */
+buildStyles();
+document.querySelectorAll("#modeSeg button").forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+document.querySelectorAll("#engSeg button").forEach(b=>b.onclick=()=>{ setEngine(b.dataset.e); saveInputs(); });
+["clarify","timing","dialogue"].forEach(id=>document.getElementById(id).addEventListener("input",saveInputs));
+const drop=document.getElementById("drop"), file=document.getElementById("file");
+drop.onclick=()=>file.click();
+file.onchange=()=>handleFile(file.files[0]);
+drop.addEventListener("dragover",e=>{ e.preventDefault(); drop.classList.add("over"); });
+drop.addEventListener("dragleave",()=>drop.classList.remove("over"));
+drop.addEventListener("drop",e=>{ e.preventDefault(); drop.classList.remove("over"); if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+
+(function(){ paintMeter(); restoreInputs(); renderCharsRef();
+  if(S.style) document.querySelectorAll("#styleChips .chip").forEach(c=>c.classList.toggle("on",c.dataset.en===S.style.en));
+  const c=getCfg(); setEngine(c.lastEngine||(c.gemKey?"gem":c.anthKey?"anth":c.oaiKey?"oai":"gem"));
+  setMode(S.mode||"single");
+})();
+</script>
+</body>
+</html>
