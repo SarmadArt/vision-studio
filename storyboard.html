@@ -103,6 +103,12 @@
       </div>
     </div>
     <p class="hint">مثال: ١٢ كلي و ٦ مجموعة ← برومبتان للمجموعات (١–٦ و ٧–١٢) + برومبت اللوحة الشامل.</p>
+
+    <div class="chips" style="margin-top:14px">
+      <div class="chip" id="tgCharRef" onclick="toggleCharRef()">👤 استخدم رفرنس شخصية</div>
+    </div>
+    <input type="text" id="charRefName" class="hidden" placeholder="اسم/وصف الشخصية المرجعية (لو بدّلت شخصية اللوحة)" style="margin-top:9px">
+    <p class="hint">شغّله لو تبي تبدّل شخصية اللوحة بشخصية من صورة مرجعية — يطبّق على المجموعات والاستخراج.</p>
   </div>
 
   <!-- engine -->
@@ -141,10 +147,6 @@
         <input type="text" id="pickNums" placeholder="1,4,5">
       </div>
     </div>
-    <div class="chips" style="margin-top:12px">
-      <div class="chip" id="tgCharRef" onclick="toggleCharRef()">👤 استخدم رفرنس شخصية</div>
-    </div>
-    <input type="text" id="charRefName" class="hidden" placeholder="اسم/وصف الشخصية المرجعية (مثال: نفس المرأة العراقية)" style="margin-top:9px">
     <div class="bar"><button class="btn primary" id="extBtn" onclick="extract()">🔍 استخرج كادر كامل</button></div>
     <div id="extState"></div>
     <div id="extOut"></div>
@@ -211,41 +213,43 @@ async function generate(){
   const group=parseInt(document.getElementById("group").value)||0;
   if(!total||!group){ document.getElementById("genState").innerHTML='<div class="warn">حدّد العدد الكلي وحجم المجموعة.</div>'; return; }
   document.getElementById("genBtn").disabled=true;
-  document.getElementById("genState").innerHTML='<div class="loading"><div class="spin"></div>نبني برومبت اللوحة والمجموعات...</div>';
+  document.getElementById("genState").innerHTML='<div class="loading"><div class="spin"></div>نبني برومبت اللوحة...</div>';
 
-  // group ranges
   const ranges=[]; for(let a=1;a<=total;a+=group){ ranges.push([a,Math.min(a+group-1,total)]); }
+  const useChar=document.getElementById("tgCharRef").classList.contains("on");
+  const charName=document.getElementById("charRefName").value.trim();
   const styleLine=`${S.style} style, ${S.look}, ${S.ambiance?S.ambiance+", ":""}consistent characters, lighting and color across all frames`;
 
-  const sys="أنت مدير فني ومهندس برومبتات لتوليد الصور. تكتب برومبتات إنجليزية نظيفة. أجب JSON فقط بدون أي نص.";
+  const sys="أنت مدير فني ومهندس برومبتات لتوليد الصور. أجب JSON فقط بدون أي نص.";
   const user=`اللقطات (مرقّمة):
 ${shotsText}
 
 السياق العام: ${styleLine}
-عدد اللقطات الكلي: ${total} · حجم الشبكة المقترح للوحة: ${gridFor(total)}
-مجموعات الاستخراج: ${ranges.map(r=>r[0]+"–"+r[1]).join("، ")}
+عدد اللقطات: ${total} · شبكة مقترحة: ${gridFor(total)}
 
-اكتب:
-1) board_prompt: برومبت إنجليزي واحد يولّد لوحة ستوري بورد واحدة فيها كل اللقطات الـ${total} كصور مصغّرة واقعية في شبكة (${gridFor(total)})، كل خانة مرقّمة بالترتيب بزاوية صغيرة، بنفس الستايل والشخصيات والإضاءة في كل الخانات. اذكر "numbered grid of realistic thumbnails, consistent style and characters".
-2) group_prompts: لكل مجموعة برومبت إنجليزي يطلب من المولّد استخراج/إعادة رسم اللقطات ضمن المدى المحدد من اللوحة المرجعية كصور منفصلة كاملة الإطار، بنفس الستايل والشخصيات تماماً (using the attached storyboard and character reference images, recreate shots N–M as separate full-frame images, identical style, characters, lighting). كل لقطة لحظة واحدة بدون تقسيم.
+اكتب board_prompt: برومبت إنجليزي واحد يولّد لوحة ستوري بورد واحدة فيها كل اللقطات الـ${total} كصور مصغّرة واقعية في شبكة (${gridFor(total)})، كل خانة مرقّمة بالترتيب بزاوية صغيرة، بنفس الستايل والشخصيات والإضاءة في كل الخانات. اذكر "numbered grid of realistic thumbnails, consistent style and characters". إنجليزي فقط، بدون أقواس [] ولا علامات اقتباس ولا كلام منطوق ولا نص على الشاشة عدا أرقام الخانات.
 
-كل البرومبتات إنجليزية فقط، بدون أقواس [] ولا علامات اقتباس ولا كلام منطوق ولا نص على الشاشة.
-
-أعد JSON فقط:
-{"board_prompt":"...","groups":[{"range":"1-6","prompt":"..."}]}`;
+أعد JSON فقط: {"board_prompt":"..."}`;
 
   try{
     const txt=await callLLM(sys,user); const d=stripJSON(txt);
-    if(!d||!d.board_prompt) throw new Error("ما قدرنا نقرأ المخرجات، أعد المحاولة.");
+    if(!d||!d.board_prompt) throw new Error("ما قدرنا نقرأ اللوحة، أعد المحاولة.");
     S.board=clean(d.board_prompt);
-    S.groups=(d.groups||ranges.map(r=>({range:r[0]+"-"+r[1],prompt:""}))).map(g=>({range:g.range,prompt:clean(g.prompt||"")}));
+    S.groups=ranges.map(r=>({range:r[0]+"-"+r[1],prompt:groupPrompt(r[0],r[1],useChar,charName)}));
+    S.extract=[];
     renderOut(); saveResult();
     document.getElementById("outCard").classList.remove("hidden");
     document.getElementById("extractCard").classList.remove("hidden");
+    document.getElementById("extOut").innerHTML="";
     document.getElementById("genState").innerHTML="";
     document.getElementById("outCard").scrollIntoView({behavior:"smooth",block:"nearest"});
   }catch(e){ document.getElementById("genState").innerHTML='<div class="err">'+(e.message||"خطأ")+'</div>'; }
   finally{ document.getElementById("genBtn").disabled=false; }
+}
+function groupPrompt(a,b,useChar,charName){
+  return useChar
+    ? `From the storyboard reference, recreate shots ${a}-${b} as separate full-frame images, one per shot. Use the attached character reference${charName?` (${charName})`:""} for the person's face and identity; keep the storyboard framing, wardrobe and look. Single full-frame, no split, no grid.`
+    : `From the attached storyboard, recreate shots ${a}-${b} as separate full-frame images, one per shot. Keep the same characters, wardrobe and look. Single full-frame, no split, no grid.`;
 }
 function clean(p){ return String(p).replace(/\[[^\]]*\]/g,"").replace(/["“”]/g,"").replace(/\s{2,}/g," ").trim(); }
 function renderOut(){
@@ -274,39 +278,26 @@ function saveResult(){ const s=ls(); if(!s) return; s.setItem("kadr_storyboard_r
 /* ===== single extraction ===== */
 function toggleCharRef(){ const on=document.getElementById("tgCharRef").classList.toggle("on");
   document.getElementById("charRefName").classList.toggle("hidden",!on); if(on) document.getElementById("charRefName").focus(); }
-async function extract(){
+function extractPrompt(n,useChar,charName){
+  return useChar
+    ? `From the storyboard reference, recreate shot ${n} as one full-frame image. Use the attached character reference${charName?` (${charName})`:""} for the person's face and identity; keep the wardrobe and look. Single full-frame, no split.`
+    : `From the reference storyboard, recreate shot ${n} as one full-frame image. Same character, wardrobe and look. Single full-frame, no split.`;
+}
+function extract(){
   const raw=document.getElementById("pickNums").value.trim();
   const nums=raw.split(/[,\s]+/).map(x=>x.trim()).filter(Boolean);
   if(!nums.length){ document.getElementById("extState").innerHTML='<div class="warn">اكتب رقم لقطة واحد على الأقل.</div>'; return; }
   if(!S.board){ document.getElementById("extState").innerHTML='<div class="warn">ولّد اللوحة أولاً.</div>'; return; }
   const useChar=document.getElementById("tgCharRef").classList.contains("on");
   const charName=document.getElementById("charRefName").value.trim();
-  document.getElementById("extBtn").disabled=true;
-  document.getElementById("extState").innerHTML='<div class="loading"><div class="spin"></div>نستخرج البرومبتات الكاملة...</div>';
-  const styleLine=`${S.style} style, ${S.look}, ${S.ambiance?S.ambiance+", ":""}identical characters, wardrobe, lighting and color palette as the storyboard`;
-  const refLine=useChar
-    ? `using the attached storyboard sheet AND the attached character reference image${charName?(" ("+charName+")"):""} as references`
-    : `using the attached storyboard sheet as the reference`;
-  const sys="أنت مهندس برومبتات لتوليد الصور. تستخرج لقطة واحدة من لوحة ستوري بورد كصورة كاملة الإطار. أجب JSON فقط.";
-  const user=`لوحة الستوري بورد (للسياق):
-${S.board}
-
-المطلوب: لكل رقم من هذه الأرقام (${nums.join("، ")})، اكتب برومبت إنجليزي يطلب من المولّد إعادة إنتاج تلك اللقطة بالتحديد من اللوحة كصورة واحدة كاملة الإطار عالية الدقة، ${refLine}، بنفس ${styleLine}. لقطة واحدة، لحظة واحدة، صورة متكاملة (single full-frame image, no split, no grid, no panels). إنجليزي فقط بدون أقواس [] ولا علامات اقتباس ولا نص على الشاشة.
-
-أعد JSON فقط: {"items":[{"num":"1","prompt":"..."}]}`;
-  try{
-    const txt=await callLLM(sys,user); const d=stripJSON(txt);
-    if(!d||!d.items||!d.items.length) throw new Error("ما قدرنا نقرأ النتيجة، أعد المحاولة.");
-    S.extract=d.items.map(it=>({num:it.num,prompt:clean(it.prompt||"")}));
-    document.getElementById("extOut").innerHTML=S.extract.map((it,i)=>`<div class="block">
-      <div class="bh"><span class="tag">لقطة ${esc(it.num)}${useChar?' · + شخصية':''}</span></div>
-      <div class="prompt-en">${esc(it.prompt)}</div>
-      <div class="bar"><button class="btn ghost small" onclick="copyText(S.extract[${i}].prompt)">📋 نسخ</button></div>
-    </div>`).join("");
-    document.getElementById("extState").innerHTML="";
-    saveResult();
-  }catch(e){ document.getElementById("extState").innerHTML='<div class="err">'+(e.message||"خطأ")+'</div>'; }
-  finally{ document.getElementById("extBtn").disabled=false; }
+  S.extract=nums.map(n=>({num:n,prompt:extractPrompt(n,useChar,charName)}));
+  document.getElementById("extOut").innerHTML=S.extract.map((it,i)=>`<div class="block">
+    <div class="bh"><span class="tag">لقطة ${esc(it.num)}${useChar?' · + شخصية':''}</span></div>
+    <div class="prompt-en">${esc(it.prompt)}</div>
+    <div class="bar"><button class="btn ghost small" onclick="copyText(S.extract[${i}].prompt)">📋 نسخ</button></div>
+  </div>`).join("");
+  document.getElementById("extState").innerHTML="";
+  saveResult();
 }
 function setEngine(e){ S.engine=e; setCfg({lastEngine:e});
   document.querySelectorAll("#engSeg button").forEach(b=>b.classList.toggle("on",b.dataset.e===e));
