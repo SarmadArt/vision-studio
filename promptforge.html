@@ -321,6 +321,7 @@ function rulesBlock(x){
 - صِف الشخصيات بملامحها داخل الجملة حسب الجو العام.
 - اذكر الجو العام (المكان/الثقافة/الحقبة) في الوصف.
 - اختم بذكر الستايل واللوك والأبعاد طبيعياً: "${x.style} style, ${x.look}, ${x.aspect} composition${x.flags?(", "+x.flags):""}".
+- لقطة واحدة فقط: صورة واحدة متكاملة كاملة الإطار (single full-frame image, one moment). ممنوع منعاً باتاً: split screen, grid, collage, multiple panels, comic layout, diptych, montage, sequence, before/after.
 - ممنوع منعاً باتاً: أي كلام منطوق، أي نص على الشاشة، علامات اقتباس، أقواس [ ]، اختصارات، أو كلمة FLAGS.
 الجو العام (طبّقه على كل لقطة): ${x.ambiance||"غير محدد"}
 ${x.chars?("الشخصيات الثابتة: "+x.chars):""}`;
@@ -365,7 +366,9 @@ ${rulesBlock(x)}
   }catch(e){ document.getElementById("genState").innerHTML='<div class="err">'+(e.message||"خطأ")+'</div>'; }
   finally{ document.getElementById("genBtn").disabled=false; }
 }
-function cleanPrompt(p){ return String(p).replace(/\[[^\]]*\]/g,"").replace(/["“”]/g,"").replace(/\s{2,}/g," ").trim(); }
+function cleanPrompt(p){ let s=String(p).replace(/\[[^\]]*\]/g,"").replace(/["“”]/g,"").replace(/\s{2,}/g," ").trim();
+  if(!/single|full-frame|full frame|one frame/i.test(s)) s=s.replace(/\.?\s*$/,"")+". Single full-frame image, no split screen, no grid, no collage.";
+  return s; }
 function renderShots(){
   document.getElementById("outTitle").textContent=`اللقطات (${toAr(S.shots.length)})`;
   document.getElementById("shots").innerHTML=S.shots.map((s,i)=>{
