@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>أدوات · KADR Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#15161C;--bg2:#1B1D26;--surface:#21232E;--surface2:#292C3A;--line:#343847;--line2:#3E4356;
+    --ink:#EDEDF2;--muted:#9A9DB0;--muted2:#71748A;--amber:#F0A93B;--amber-soft:rgba(240,169,59,.14);
+    --teal:#58C7BE;--teal-soft:rgba(88,199,190,.13);--rose:#E5736B;--green:#5FB07A;--violet:#9B8CF0;
+    --r:14px;--mono:'IBM Plex Mono',ui-monospace,monospace;--body:'IBM Plex Sans Arabic','Tajawal',system-ui,sans-serif;--disp:'Tajawal','IBM Plex Sans Arabic',sans-serif;}
+  *{box-sizing:border-box}html,body{margin:0;padding:0}
+  body{background:radial-gradient(1100px 500px at 85% -10%, rgba(240,169,59,.06), transparent 60%),radial-gradient(900px 500px at 0% 110%, rgba(88,199,190,.05), transparent 55%),var(--bg);color:var(--ink);font-family:var(--body);line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:900px;margin:0 auto;padding:22px 20px 70px}
+  .meter{position:fixed;top:14px;left:14px;z-index:50;display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--line2);border-radius:11px;padding:8px 13px;font-family:var(--mono);font-size:12.5px;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+  .meter .bolt{color:var(--amber)}.meter .cost{color:var(--teal)}.meter .sep{color:var(--muted2)}
+  .top{display:flex;align-items:center;gap:13px;margin-bottom:6px}
+  .back{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--line2);font-size:18px;flex:none;transition:.18s;cursor:pointer}
+  .back:hover{border-color:var(--amber)}
+  .ttl h1{font-family:var(--disp);font-weight:800;font-size:22px;margin:0}.ttl p{margin:0;color:var(--muted);font-size:12.5px}
+  .saved{margin-right:auto;font-family:var(--mono);font-size:11.5px;color:var(--muted2);transition:.3s}.saved.flash{color:var(--green)}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-top:14px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--teal);text-transform:uppercase;margin-bottom:6px}
+  h2{font-family:var(--disp);font-weight:700;font-size:18px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+  label.f{display:block;font-size:13px;font-weight:600;margin:13px 0 7px}label.f span{color:var(--muted2);font-weight:400}
+  input[type=text],textarea,select{width:100%;background:var(--bg2);border:1px solid var(--line2);color:var(--ink);border-radius:10px;padding:11px 12px;font-family:var(--body);font-size:14px;transition:.2s;resize:vertical}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-soft)}
+  ::placeholder{color:var(--muted2)}
+  .note{font-size:12px;color:var(--teal);margin-top:8px}.hint{color:var(--muted2);font-size:12px;margin-top:8px}
+  .row{display:flex;gap:12px;flex-wrap:wrap}.row>*{flex:1;min-width:130px}
+  .seg{display:inline-flex;background:var(--bg2);border:1px solid var(--line2);border-radius:11px;padding:4px;gap:4px;flex-wrap:wrap}
+  .seg button{appearance:none;border:none;background:transparent;color:var(--muted);font-family:var(--disp);font-weight:700;font-size:13.5px;padding:8px 15px;border-radius:8px;cursor:pointer;transition:.16s}
+  .seg button.on{background:var(--surface2);color:var(--ink)}
+  .seg.eng button[data-e="gem"].on{background:#4285F4;color:#fff}.seg.eng button[data-e="anth"].on{background:#D97757;color:#fff}.seg.eng button[data-e="oai"].on{background:#10A37F;color:#fff}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{padding:8px 13px;border-radius:9px;background:var(--bg2);border:1px solid var(--line2);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:.16s}
+  .chip.on{background:var(--teal-soft);border-color:var(--teal);color:var(--ink)}
+  .chip.mono{font-family:var(--mono)}
+  .picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;margin-top:6px}
+  .tile{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;border:1.5px solid var(--line2);cursor:pointer;background:var(--surface2);transition:.15s}
+  .tile.on{border-color:var(--amber);box-shadow:0 0 0 2px var(--amber-soft)}
+  .tile img{width:100%;height:100%;object-fit:cover;display:block}
+  .tile .lab{position:absolute;inset:auto 0 0 0;background:linear-gradient(transparent,rgba(0,0,0,.82));color:#fff;font-size:10px;font-weight:600;padding:12px 5px 5px;text-align:center}
+  .tile.on .lab{color:var(--amber)}
+  .btn{appearance:none;border:none;cursor:pointer;font-family:var(--disp);font-weight:700;font-size:14.5px;padding:12px 20px;border-radius:11px;display:inline-flex;align-items:center;gap:8px;transition:.2s}
+  .btn.primary{background:var(--amber);color:#1a1206}.btn.primary:hover{filter:brightness(1.07);transform:translateY(-1px)}
+  .btn.ghost{background:var(--surface2);color:var(--ink);border:1px solid var(--line2)}.btn.ghost:hover{border-color:var(--muted)}
+  .btn.small{padding:9px 14px;font-size:13px}.btn:disabled{opacity:.5;cursor:not-allowed;transform:none;filter:none}
+  .bar{display:flex;gap:10px;margin-top:16px;align-items:center;flex-wrap:wrap}.spacer{flex:1}
+  .modelpill{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:8px}.modelpill b{color:var(--green)}
+  .loading{display:flex;align-items:center;gap:11px;color:var(--muted);font-size:13.5px;padding:14px 2px}
+  .spin{width:18px;height:18px;border:2.5px solid var(--line2);border-top-color:var(--amber);border-radius:50%;animation:sp .8s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .err{background:rgba(229,115,107,.1);border:1px solid rgba(229,115,107,.4);color:#f1b3ad;border-radius:10px;padding:11px 13px;font-size:13px;margin-top:12px}
+  .warn{background:var(--amber-soft);border:1px solid rgba(240,169,59,.4);color:#f3cd8d;border-radius:10px;padding:10px 13px;font-size:12.5px;margin-top:10px}
+  .prompt-en{background:#0f1015;border:1px solid var(--line);border-radius:9px;padding:12px;font-family:var(--mono);font-size:12px;line-height:1.7;color:#cdd0dd;direction:ltr;text-align:left;white-space:pre-wrap;word-break:break-word;margin-top:10px}
+  .tip{background:var(--teal-soft);border:1px solid rgba(88,199,190,.3);border-radius:10px;padding:10px 13px;font-size:12.5px;color:#bfe9e4;margin-top:10px;line-height:1.7}
+  .drop{border:1.5px dashed var(--line2);border-radius:12px;background:var(--bg2);padding:24px;text-align:center;color:var(--muted);cursor:pointer;transition:.18s;font-size:13.5px}
+  .drop.over{border-color:var(--amber);background:var(--amber-soft);color:var(--ink)}
+  .thumb{margin-top:12px;display:none}.thumb img{max-width:100%;max-height:240px;border-radius:10px;border:1px solid var(--line2)}
+  .toggle{display:flex;align-items:center;gap:12px;background:var(--bg2);border:1px solid var(--line2);border-radius:11px;padding:11px 13px;cursor:pointer;transition:.18s;margin-top:10px}
+  .toggle:hover{border-color:var(--muted)}
+  .toggle .sw{width:42px;height:24px;border-radius:13px;background:var(--line2);position:relative;flex:none;transition:.2s}
+  .toggle .sw::after{content:"";position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:var(--muted);transition:.2s}
+  .toggle.on{border-color:var(--teal)}.toggle.on .sw{background:var(--teal)}.toggle.on .sw::after{right:21px;background:#0e1412}
+  .toggle .tl b{display:block;font-size:13px;font-weight:700}.toggle .tl span{font-size:11px;color:var(--muted2)}
+  /* grid of tool cards */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-top:16px}
+  .toolcard{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;cursor:pointer;transition:.18s;position:relative;overflow:hidden}
+  .toolcard:hover{border-color:var(--amber);transform:translateY(-2px)}
+  .toolcard .ic{font-size:26px;margin-bottom:10px}
+  .toolcard h3{font-family:var(--disp);font-weight:800;font-size:17px;margin:0 0 5px}
+  .toolcard p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.6}
+  .toolcard .arr{position:absolute;top:18px;left:18px;color:var(--muted2);font-size:18px}
+  .panel{display:none}.panel.active{display:block}
+  #grid.hidden{display:none}
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="meter" onclick="location.href='index.html#settings'">
+  <span class="bolt">⚡</span><span id="mTok">٠ توكن</span><span class="sep">·</span><span class="cost" id="mCost">$0.000</span>
+</div>
+
+<div class="wrap">
+  <div class="top">
+    <div class="back" id="backBtn" onclick="goBack()">→</div>
+    <div class="ttl"><h1 id="pageTitle">أدوات</h1><p id="pageSub">صندوق أدوات صانع المحتوى</p></div>
+    <span class="saved" id="saved">⟳ يُحفظ تلقائياً</span>
+  </div>
+
+  <!-- shared engine bar -->
+  <div class="card" id="engCard">
+    <div class="row" style="align-items:flex-end">
+      <div style="flex:0 0 auto">
+        <label class="f" style="margin-top:0">المحرّك</label>
+        <div class="seg eng" id="engSeg"><button data-e="gem">Gemini</button><button data-e="anth">Claude</button><button data-e="oai">GPT</button></div>
+      </div>
+      <div style="min-width:200px">
+        <label class="f" style="margin-top:0">الموديل</label>
+        <select id="modelSel" onchange="saveModel()"></select>
+        <div class="modelpill" id="modelPrice"></div>
+      </div>
+    </div>
+    <div id="engNote"></div>
+  </div>
+
+  <!-- GRID -->
+  <div id="grid">
+    <div class="grid">
+      <div class="toolcard" onclick="openTool('angles')"><span class="arr">↗</span><div class="ic">🎥</div><h3>زوايا متعددة</h3><p>صورة → ٤ برومبتات لنفس المشهد من زوايا مختلفة للتغطية.</p></div>
+      <div class="toolcard" onclick="openTool('frames')"><span class="arr">↗</span><div class="ic">🎞️</div><h3>Start & End</h3><p>صورة → برومبت الإطار النهائي للتحكم بحركة اللقطة (start/end frame).</p></div>
+      <div class="toolcard" onclick="openTool('manual')"><span class="arr">↗</span><div class="ic">✍️</div><h3>لقطة يدوية</h3><p>تبني برومبت لقطة واحدة: لوك + زاوية + ستايل + فكرتك، مع/بدون رفرنس.</p></div>
+      <div class="toolcard" onclick="openTool('char')"><span class="arr">↗</span><div class="ic">🧍</div><h3>تكوين شخصية</h3><p>برومبت شخصية (واقعية / CGI / 3D) بخيارات كاملة للملامح والملابس.</p></div>
+      <div class="toolcard" onclick="openTool('ref')"><span class="arr">↗</span><div class="ic">🗂️</div><h3>صناعة ريفرنس</h3><p>برومبت ورقة مرجعية (model sheet) تقوّي ثبات الشخصية/المكان في التوليد.</p></div>
+    </div>
+  </div>
+
+  <!-- ===== PANEL: multi-angle ===== -->
+  <div class="panel" id="p-angles">
+    <div class="card">
+      <div class="eyebrow">زوايا متعددة</div><h2>٤ زوايا لنفس الصورة</h2>
+      <p class="sub">ارفع صورة، والنظام يحلّلها ويعطيك ٤ برومبتات لنفس المشهد من زوايا مختلفة (تغطية كاملة).</p>
+      <div class="drop" id="ang-drop">اسحب الصورة هنا · أو اضغط<input type="file" id="ang-file" accept="image/*" hidden></div>
+      <div class="thumb" id="ang-thumb"><img id="ang-img" alt=""></div>
+      <div class="bar"><button class="btn primary" id="ang-btn" onclick="genAngles()">🎥 ولّد ٤ زوايا</button></div>
+      <div id="ang-state"></div><div id="ang-out"></div>
+    </div>
+  </div>
+
+  <!-- ===== PANEL: start/end frame ===== -->
+  <div class="panel" id="p-frames">
+    <div class="card">
+      <div class="eyebrow">Start & End Frame</div><h2>برومبت الإطار النهائي</h2>
+      <p class="sub">ارفع صورة (إطار البداية)، ويعطيك برومبت **الإطار النهائي** المنطقي — تستخدمهم سوا في Veo/Kling للتحكم باللقطة.</p>
+      <div class="drop" id="frm-drop">اسحب صورة البداية · أو اضغط<input type="file" id="frm-file" accept="image/*" hidden></div>
+      <div class="thumb" id="frm-thumb"><img id="frm-img" alt=""></div>
+      <label class="f">الحركة/التغيير المطلوب <span>(اختياري)</span></label>
+      <input type="text" id="frm-move" placeholder="مثال: تقترب من النافذة · المنتج ينفتح · تبتسم وترفع يدها">
+      <div class="bar"><button class="btn primary" id="frm-btn" onclick="genFrames()">🎞️ ولّد الإطار النهائي</button></div>
+      <div id="frm-state"></div><div id="frm-out"></div>
+    </div>
+  </div>
+
+  <!-- ===== PANEL: manual shot ===== -->
+  <div class="panel" id="p-manual">
+    <div class="card">
+      <div class="eyebrow">لقطة يدوية</div><h2>برومبت لقطة واحدة</h2>
+      <label class="f">فكرة اللقطة <span>(تكتبها بنفسك)</span></label>
+      <textarea id="man-idea" style="min-height:80px" placeholder="مثال: امرأة عراقية تحضّر القهوة في مطبخ تراثي، إضاءة صباحية دافئة..."></textarea>
+      <label class="f">الجو العام / العالم <span>(اختياري)</span></label>
+      <input type="text" id="man-amb" placeholder="عراقي تاريخي · عماني معاصر · امرأة شابة بدون حجاب...">
+    </div>
+    <div class="card"><div class="eyebrow">ستايل الفيديو</div><h2>الستايل</h2><div class="picker" id="man-style"></div></div>
+    <div class="card"><div class="eyebrow">اللوك</div><h2>اللوك / الجْريد</h2><div class="picker" id="man-look"></div></div>
+    <div class="card">
+      <div class="eyebrow">الزاوية</div><h2>اختر الزاوية</h2>
+      <div class="picker" id="man-angle"></div>
+      <label class="f">أو زاوية كتابية <span>(تتقدّم على الاختيار)</span></label>
+      <input type="text" id="man-angletext" placeholder="مثال: low angle close-up · bird's-eye...">
+      <label class="f">الأبعاد</label>
+      <div class="chips" id="man-aspect"><div class="chip mono on" data-a="9:16">9:16</div><div class="chip mono" data-a="16:9">16:9</div><div class="chip mono" data-a="1:1">1:1</div></div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">المرجع</div><h2>مع رفرنس أو كتابي</h2>
+      <div class="toggle" id="man-reftog" onclick="manToggleRef()"><span class="sw"></span><div class="tl"><b>استخدم رفرنس مرفق</b><span>مطفّي = وصف كتابي · مشغّل = يعتمد على صور شخصية/مكان مرفقة</span></div></div>
+      <div id="man-reffields" class="hidden">
+        <label class="f">الشخصيات المرجعية <span>(أسماء/أدوار)</span></label>
+        <input type="text" id="man-chars" placeholder="دكتورة، الأب... (يفصلها فاصلة)">
+        <label class="f">مرجع المكان <span>(اختياري)</span></label>
+        <input type="text" id="man-place" placeholder="اسم/وصف المكان المرجعي">
+      </div>
+      <div class="bar"><button class="btn primary" id="man-btn" onclick="genManual()">✍️ ولّد البرومبت</button></div>
+      <div id="man-state"></div><div id="man-out"></div>
+    </div>
+  </div>
+
+  <!-- ===== PANEL: character builder ===== -->
+  <div class="panel" id="p-char">
+    <div class="card">
+      <div class="eyebrow">تكوين شخصية</div><h2>ابنِ شخصية</h2>
+      <label class="f">النوع</label>
+      <div class="chips" id="ch-type">
+        <div class="chip on" data-v="photorealistic human">واقعية</div>
+        <div class="chip" data-v="3D CGI character, Pixar-style">CGI / 3D</div>
+        <div class="chip" data-v="stylized CGI character">CGI مُنمنم</div>
+        <div class="chip" data-v="realistic CGI digital human">CGI واقعي</div>
+      </div>
+      <div class="row">
+        <div><label class="f">الجنس</label><select id="ch-gender"><option value="">—</option><option>woman</option><option>man</option><option>girl</option><option>boy</option><option>non-binary person</option></select></div>
+        <div><label class="f">الفئة العمرية</label><select id="ch-age"><option value="">—</option><option>child</option><option>teenager</option><option>young adult</option><option>middle-aged</option><option>elderly</option></select></div>
+        <div><label class="f">البنية</label><select id="ch-build"><option value="">—</option><option>slim</option><option>average</option><option>athletic</option><option>curvy</option><option>heavy-set</option></select></div>
+      </div>
+      <label class="f">الملامح / البشرة <span>(لون البشرة، العيون، تفاصيل الوجه)</span></label>
+      <input type="text" id="ch-face" placeholder="مثال: olive skin, brown almond eyes, defined cheekbones, light freckles">
+      <label class="f">الشعر</label>
+      <input type="text" id="ch-hair" placeholder="مثال: long dark wavy hair, hair uncovered">
+      <label class="f">الملابس</label>
+      <input type="text" id="ch-wear" placeholder="مثال: cream linen abaya with gold embroidery">
+      <div class="row">
+        <div><label class="f">التعبير</label><select id="ch-expr"><option value="">—</option><option>neutral</option><option>warm smile</option><option>serious</option><option>confident</option><option>thoughtful</option></select></div>
+        <div><label class="f">الإطار</label><select id="ch-frame"><option value="portrait headshot">بورتريه وجه</option><option value="full-body shot">جسم كامل</option><option value="upper-body shot">نصفي</option></select></div>
+        <div><label class="f">الخلفية</label><select id="ch-bg"><option value="clean studio background">ستوديو نظيف</option><option value="plain white background">أبيض</option><option value="contextual environment">بيئة سياقية</option></select></div>
+      </div>
+      <label class="f">تفاصيل إضافية <span>(اختياري)</span></label>
+      <input type="text" id="ch-extra" placeholder="إكسسوارات، ندبة، نظارة، مزاج اللقطة...">
+      <div class="bar"><button class="btn primary" id="ch-btn" onclick="genChar()">🧍 ولّد برومبت الشخصية</button></div>
+      <div id="ch-state"></div><div id="ch-out"></div>
+    </div>
+  </div>
+
+  <!-- ===== PANEL: reference maker ===== -->
+  <div class="panel" id="p-ref">
+    <div class="card">
+      <div class="eyebrow">صناعة ريفرنس</div><h2>ورقة مرجعية ثابتة</h2>
+      <p class="sub">يبني برومبت <b>model sheet</b> بأفضل ممارسات الثبات: زوايا متعددة · خلفية بيضاء · إضاءة مسطّحة · وضعية محايدة.</p>
+      <label class="f">الموضوع</label>
+      <div class="chips" id="rf-subj"><div class="chip on" data-v="char">شخصية</div><div class="chip" data-v="place">مكان / بيئة</div></div>
+      <label class="f">الوصف <span>(الصِق وصف الشخصية/المكان أو اكتبه)</span></label>
+      <textarea id="rf-desc" style="min-height:80px" placeholder="مثال: امرأة عراقية شابة، بشرة زيتونية، شعر داكن مكشوف، عباية كريمية..."></textarea>
+      <div id="rf-charopts">
+        <label class="f">نوع التنفيذ</label>
+        <div class="chips" id="rf-art"><div class="chip on" data-v="photorealistic">واقعي</div><div class="chip" data-v="3D CGI orthographic">3D</div><div class="chip" data-v="stylized">مُنمنم</div></div>
+        <label class="f">الزوايا <span>(للورقة الواحدة ٣–٤ كحد أقصى)</span></label>
+        <div class="chips" id="rf-views">
+          <div class="chip on" data-v="front view">أمامي</div>
+          <div class="chip on" data-v="three-quarter view">٣/٤</div>
+          <div class="chip on" data-v="side profile view">جانبي</div>
+          <div class="chip" data-v="back view">خلفي</div>
+        </div>
+        <div class="toggle on" id="rf-anchor" onclick="this.classList.toggle('on')"><span class="sw"></span><div class="tl"><b>لقطة وجه أمامية قريبة كمرجع رئيسي</b><span>تقوّي ثبات الوجه</span></div></div>
+        <div class="toggle" id="rf-expr" onclick="this.classList.toggle('on')"><span class="sw"></span><div class="tl"><b>أضف ورقة تعبيرات</b><span>وجه بعدة مشاعر (للأنميشن)</span></div></div>
+      </div>
+      <div class="bar"><button class="btn primary" id="rf-btn" onclick="genRef()">🗂️ ولّد برومبت الريفرنس</button></div>
+      <div id="rf-state"></div><div id="rf-out"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== shared core ===== */
+const PRICES={oai:{"gpt-5.4-mini":[0.75,4.5],"gpt-5.4-nano":[0.20,1.25],"gpt-5.4":[2.5,15],"gpt-5.5":[5,30]},
+  anth:{"claude-sonnet-4-6":[3,15],"claude-haiku-4-5":[1,5],"claude-opus-4-8":[5,25]},
+  gem:{"gemini-3.1-flash-lite":[0.25,1.5],"gemini-3.5-flash":[1.5,9],"gemini-3-flash-preview":[0.5,3],"gemini-3.1-pro-preview":[2,12]}};
+const MODELS={gem:[["gemini-3.1-flash-lite","أفضل قيمة ✓"],["gemini-3.5-flash","الأذكى · مستقر"],["gemini-3-flash-preview","متوازن"],["gemini-3.1-pro-preview","الأقوى"]],
+  anth:[["claude-sonnet-4-6","أفضل قيمة ✓"],["claude-haiku-4-5","الأرخص"],["claude-opus-4-8","الأقوى"]],
+  oai:[["gpt-5.4-mini","أفضل قيمة ✓"],["gpt-5.4-nano","الأرخص"],["gpt-5.4","متوازن"],["gpt-5.5","الأقوى"]]};
+function ls(){ try{ return window.localStorage; }catch(e){ return null; } }
+function getCfg(){ const s=ls(); if(!s) return {}; try{ return JSON.parse(s.getItem("kadr_cfg")||"{}"); }catch(e){ return {}; } }
+function setCfg(o){ const s=ls(); if(s) s.setItem("kadr_cfg",JSON.stringify({...getCfg(),...o})); }
+function getUsage(){ const s=ls(); if(!s) return {tokens:0,cost:0}; try{ return JSON.parse(s.getItem("kadr_usage")||'{"tokens":0,"cost":0}'); }catch(e){ return {tokens:0,cost:0}; } }
+function addUsage(eng,model,i,o){ const p=(PRICES[eng]||{})[model]||[0,0]; const cost=(i/1e6)*p[0]+(o/1e6)*p[1];
+  const u=getUsage(); u.tokens=(u.tokens||0)+i+o; u.cost=(u.cost||0)+cost; const s=ls(); if(s)s.setItem("kadr_usage",JSON.stringify(u)); paintMeter(); }
+function toAr(n){ return String(n).replace(/[0-9]/g,d=>"٠١٢٣٤٥٦٧٨٩"[d]); }
+function fmtTok(n){ return n>=1000?toAr((n/1000).toFixed(1))+"k":toAr(n); }
+function paintMeter(){ const u=getUsage(); document.getElementById("mTok").textContent=fmtTok(u.tokens||0)+" توكن"; document.getElementById("mCost").textContent="$"+(u.cost||0).toFixed(3); }
+function esc(s){ return (s==null?"":String(s)).replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m])); }
+function toast(m){ const t=document.createElement("div"); t.textContent=m; t.style.cssText="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#292C3A;border:1px solid #3E4356;color:#EDEDF2;padding:11px 20px;border-radius:11px;font-family:'IBM Plex Sans Arabic',sans-serif;font-size:14px;z-index:99"; document.body.appendChild(t); setTimeout(()=>t.remove(),1700); }
+function stripJSON(t){ if(!t) return null; t=String(t).replace(/```json/gi,"").replace(/```/g,"").trim();
+  try{ return JSON.parse(t); }catch(e){} for(const [o,c] of [["{","}"],["[","]"]]){ const i=t.indexOf(o); if(i<0)continue; let d=0;
+    for(let j=i;j<t.length;j++){ if(t[j]===o)d++; else if(t[j]===c){ d--; if(!d){ try{ return JSON.parse(t.slice(i,j+1)); }catch(e){} } } } } return null; }
+function clean(p){ if(!p) return ""; return String(p).replace(/\[[^\]]*\]/g,"").replace(/["“”]/g,"").replace(/\s{2,}/g," ").trim(); }
+function copyText(t){ navigator.clipboard.writeText(t); toast("📋 تم النسخ"); }
+async function callLLM(system,user,images){
+  const eng=S.engine,c=getCfg(); const sel=document.getElementById("modelSel");
+  let model=(sel&&sel.value)||c[eng+"Model"]||MODELS[eng][0][0]; if(!(PRICES[eng]||{})[model]) model=MODELS[eng][0][0];
+  const imgs=images||[];
+  if(eng==="gem"){ if(!c.gemKey) throw new Error("أضف مفتاح Gemini في الإعدادات.");
+    const parts=[]; imgs.forEach(im=>parts.push({inlineData:{mimeType:im.mime,data:im.data}})); parts.push({text:user});
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(c.gemKey)}`,
+      {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:[{role:"user",parts}],generationConfig:{temperature:0.7,maxOutputTokens:4096,responseMimeType:"application/json"}})});
+    const d=await r.json(); if(!r.ok) throw new Error(d.error?.message||("خطأ Gemini "+r.status));
+    const um=d.usageMetadata||{}; addUsage("gem",model,um.promptTokenCount||0,um.candidatesTokenCount||0);
+    return (d.candidates?.[0]?.content?.parts||[]).map(p=>p.text||"").join(""); }
+  if(eng==="anth"){ if(!c.anthKey) throw new Error("أضف مفتاح Claude في الإعدادات.");
+    const content=[]; imgs.forEach(im=>content.push({type:"image",source:{type:"base64",media_type:im.mime,data:im.data}})); content.push({type:"text",text:user});
+    const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":c.anthKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+      body:JSON.stringify({model,max_tokens:4096,system,messages:[{role:"user",content}]})});
+    const d=await r.json(); if(!r.ok) throw new Error(d.error?.message||("خطأ Claude "+r.status));
+    const u=d.usage||{}; addUsage("anth",model,u.input_tokens||0,u.output_tokens||0);
+    return (d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join(""); }
+  if(eng==="oai"){ if(!c.oaiKey) throw new Error("أضف مفتاح GPT في الإعدادات.");
+    const uc=imgs.length?[{type:"text",text:user},...imgs.map(im=>({type:"image_url",image_url:{url:`data:${im.mime};base64,${im.data}`}}))]:user;
+    const r=await fetch("/api/openai",{method:"POST",headers:{"Content-Type":"application/json","x-openai-key":c.oaiKey},
+      body:JSON.stringify({model,messages:[{role:"system",content:system},{role:"user",content:uc}],response_format:{type:"json_object"}})});
+    let d; try{ d=await r.json(); }catch(e){ throw new Error("ملف الوسيط /api غير موجود — ارفع مجلد api على Vercel."); }
+    if(!r.ok) throw new Error(d.error?.message||("خطأ GPT "+r.status));
+    const u=d.usage||{}; addUsage("oai",model,u.prompt_tokens||0,u.completion_tokens||0);
+    return d.choices?.[0]?.message?.content||""; }
+}
+function compressImage(file,maxDim){
+  maxDim=maxDim||1568;
+  return new Promise(res=>{ const url=URL.createObjectURL(file); const img=new Image();
+    img.onload=()=>{ let{width:w,height:h}=img; const s=Math.min(1,maxDim/Math.max(w,h)); w=Math.round(w*s); h=Math.round(h*s);
+      const cv=document.createElement("canvas"); cv.width=w; cv.height=h; cv.getContext("2d").drawImage(img,0,0,w,h); URL.revokeObjectURL(url);
+      let du; try{ du=cv.toDataURL("image/jpeg",0.9); }catch(e){ du=null; }
+      if(!du){ const r=new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(file); return; } res(du); };
+    img.onerror=()=>{ URL.revokeObjectURL(url); const r=new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(file); }; img.src=url; });
+}
+function wireDrop(dropId,fileId,cb){ const drop=document.getElementById(dropId),file=document.getElementById(fileId);
+  drop.onclick=()=>file.click(); file.onchange=()=>{ if(file.files[0])cb(file.files[0]); file.value=""; };
+  drop.addEventListener("dragover",e=>{e.preventDefault();drop.classList.add("over");});
+  drop.addEventListener("dragleave",()=>drop.classList.remove("over"));
+  drop.addEventListener("drop",e=>{e.preventDefault();drop.classList.remove("over"); if(e.dataTransfer.files[0])cb(e.dataTransfer.files[0]);}); }
+async function loadImg(file,maxDim){ const res=await compressImage(file,maxDim); const m=/^data:(.*?);base64,(.*)$/.exec(res||""); return m?{mime:m[1],data:m[2],url:res}:null; }
+
+/* ===== assets ===== */
+const ANGEN={ECU:"extreme close-up",CU:"close-up",MS:"medium shot",AS:"American shot",WS:"wide shot",EWS:"extreme wide shot",TWO:"two-shot",["OTS-L"]:"over-the-shoulder (left)",["OTS-R"]:"over-the-shoulder (right)",POV:"point-of-view",SIDE:"side profile",HIGH:"high-angle",LOW:"low-angle",DUTCH:"dutch tilt",CRANE:"crane shot",FISH:"fisheye",SWIDE:"super wide-angle"};
+const ANGLES=[["ECU","ecu.jpg","كلوز جداً"],["CU","cu.jpg","كلوز"],["MS","ms.jpg","متوسط"],["AS","as.jpg","أمريكان"],["WS","ws.jpg","واسع"],["EWS","ews.jpg","واسع جداً"],["TWO","two-shot.jpg","شخصين"],["OTS-L","ots-l.jpg","كتف يسار"],["OTS-R","ots-r.jpg","كتف يمين"],["POV","pov.jpg","وجهة نظر"],["SIDE","side.jpg","جانبي"],["HIGH","high-angle.png","عالية"],["LOW","low-angle.jpg","منخفضة"],["DUTCH","dutch.jpg","مائلة"],["CRANE","CRANE___Crane_Shot.png","كرين"],["FISH","FISH___Fisheye.png","عين السمكة"],["SWIDE","WIDE____Super_Wide_Angle.png","سوبر وايد"]];
+const STYLES=[["Cinematic.jpg","سينمائي","cinematic"],["Dialog.jpg","حوار","dialogue scene"],["Comedy__Skit.jpg","كوميدي","comedy skit"],["Demonstration__Show___Tell.png","ديمونستريشن","demonstration"],["Educational.jpg","تعليمي","educational"],["Product.jpg","منتج","product showcase"],["talking-head.jpg","توكينج","talking head"],["talking-broll.jpg","B-roll","talking head with b-roll"],["VFX.jpg","VFX","VFX action"],["CGI__3D.jpg","CGI/3D","3D CGI"],["cgi-character.jpg","شخصية CGI","CGI character"],["cgi-human.jpg","CGI واقعي","photoreal CGI"],["cgi-stylized.png","مُنمنم","stylized CGI"]];
+const LOOKS=[["Golden-Warm.jpg","دافئ","warm golden tones"],["Teal___Orange.jpg","T&O","teal and orange grade"],["Neon_Night.jpg","نيون","neon night"],["Vintage_Film.jpg","فيلم","vintage film"],["Pastel_Dream.jpg","باستيل","soft pastel"],["Dark_Dramatic.jpg","درامي","dark dramatic low-key"],["High_Key_White.jpg","هاي-كي","high-key white"],["Bright_Lifestyle.jpg","لايف","bright lifestyle"],["Commercial_Ad.jpg","إعلان","polished commercial"],["Social_Media_Ad.png","سوشال","social-media ad"],["Luxury_Brand.jpg","فخامة","luxury brand"],["Documentary_Raw.jpg","وثائقي","raw documentary"],["Studio_Clean.jpg","ستوديو","clean studio"],["Studio_Clinical.jpg","طبي","clinical studio"]];
+const STYLE_EN={}; STYLES.forEach(([f,n,en])=>STYLE_EN[f]=en);
+const LOOK_EN={}; LOOKS.forEach(([f,n,en])=>LOOK_EN[f]=en);
+
+/* ===== state ===== */
+const S={engine:"gem",tool:null,man:{style:null,look:null,angle:null,aspect:"9:16",ref:false},angImg:null,frmImg:null};
+
+/* ===== router ===== */
+function openTool(id){ S.tool=id; document.getElementById("grid").classList.add("hidden");
+  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+  document.getElementById("p-"+id).classList.add("active");
+  const T={angles:["زوايا متعددة","٤ زوايا لنفس المشهد"],frames:["Start & End","الإطار النهائي للتحكم باللقطة"],manual:["لقطة يدوية","برومبت لقطة واحدة"],char:["تكوين شخصية","برومبت شخصية كامل"],ref:["صناعة ريفرنس","ورقة مرجعية ثابتة"]}[id];
+  document.getElementById("pageTitle").textContent=T[0]; document.getElementById("pageSub").textContent=T[1];
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function goBack(){ if(S.tool){ S.tool=null; document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+    document.getElementById("grid").classList.remove("hidden");
+    document.getElementById("pageTitle").textContent="أدوات"; document.getElementById("pageSub").textContent="صندوق أدوات صانع المحتوى";
+    window.scrollTo({top:0,behavior:"smooth"}); } else { location.href="index.html"; } }
+
+/* ===== pickers (manual) ===== */
+function buildPicker(el,list,dir,onPick){ document.getElementById(el).innerHTML=list.map(a=>{ const f=a[0],n=a[1];
+  return `<div class="tile" data-v="${f}" onclick="${onPick}(this)"><img src="img/${dir}/${f}" onerror="this.style.display='none'"><span class="lab">${esc(n)}</span></div>`; }).join(""); }
+function pickStyle(el){ document.querySelectorAll("#man-style .tile").forEach(t=>t.classList.remove("on")); el.classList.add("on"); S.man.style=el.dataset.v; }
+function pickLook(el){ document.querySelectorAll("#man-look .tile").forEach(t=>t.classList.remove("on")); el.classList.add("on"); S.man.look=el.dataset.v; }
+function pickAngle(el){ document.querySelectorAll("#man-angle .tile").forEach(t=>t.classList.remove("on")); el.classList.add("on"); S.man.angle=el.dataset.v; }
+function manToggleRef(){ const t=document.getElementById("man-reftog"); const on=t.classList.toggle("on"); S.man.ref=on; document.getElementById("man-reffields").classList.toggle("hidden",!on); }
+
+/* ===== TOOL 1: multi-angle ===== */
+function setThumb(thumbId,imgId,im){ document.getElementById(imgId).src=im.url; document.getElementById(thumbId).style.display="block"; }
+async function genAngles(){
+  if(!S.angImg){ document.getElementById("ang-state").innerHTML='<div class="warn">ارفع صورة أولاً.</div>'; return; }
+  document.getElementById("ang-btn").disabled=true; document.getElementById("ang-state").innerHTML='<div class="loading"><div class="spin"></div>نحلّل الصورة ونطلّع ٤ زوايا...</div>';
+  const sys="أنت مدير تصوير ومهندس برومبتات صور. تحلّل الصورة وتعطي ٤ برومبتات لنفس المشهد/الشخصية من ٤ زوايا مختلفة. أجب JSON فقط.";
+  const user=`حلّل الصورة المرفقة. أعطني ٤ برومبتات إنجليزية لنفس المشهد والشخصية والملابس والإضاءة بالضبط، لكن من ٤ زوايا/أطر مختلفة (مثل close-up، wide، over-the-shoulder، low-angle... اختر الأنسب للمشهد). كل برومبت صورة واحدة كاملة الإطار، نفس الهوية والستايل، بدون أقواس [] ولا نص على الشاشة. اذكر الزاوية بالكلمات في بداية كل برومبت.
+أعد JSON فقط: {"angles":[{"angle":"close-up","prompt":"..."}]}`;
+  try{ const d=stripJSON(await callLLM(sys,user,[S.angImg]));
+    if(!d||!d.angles||!d.angles.length) throw new Error("ما قدرنا نقرأ الناتج، أعد المحاولة.");
+    document.getElementById("ang-out").innerHTML=d.angles.map((a,i)=>`<div class="card" style="margin-top:12px"><div class="eyebrow">${esc(a.angle||("زاوية "+(i+1)))}</div><div class="prompt-en">${esc(clean(a.prompt))}</div><div class="bar"><button class="btn ghost small" onclick="copyText(this.closest('.card').querySelector('.prompt-en').textContent)">📋 نسخ</button></div></div>`).join("");
+    document.getElementById("ang-state").innerHTML="";
+  }catch(e){ document.getElementById("ang-state").innerHTML='<div class="err">'+(e.message||"خطأ")+'</div>'; }
+  finally{ document.getElementById("ang-btn").disabled=false; }
+}
+
+/* ===== TOOL 2: start/end frame ===== */
+async function genFrames(){
+  if(!S.frmImg){ document.getElementById("frm-state").innerHTML='<div class="warn">ارفع صورة البداية أولاً.</div>'; return; }
+  const move=document.getElementById("frm-move").value.trim();
+  document.getElementById("frm-btn").disabled=true; document.getElementById("frm-state").innerHTML='<div class="loading"><div class="spin"></div>نحلّل إطار البداية ونكتب الإطار النهائي...</div>';
+  const sys="أنت مهندس برومبتات للتحكم بالحركة عبر start/end frame. تحلّل صورة البداية وتصف الإطار النهائي. أجب JSON فقط.";
+  const user=`الصورة المرفقة = إطار البداية (start frame).
+${move?("التغيير/الحركة المطلوبة: "+move):"اقترح تغييراً طبيعياً بسيطاً ينتج حركة جميلة."}
+اكتب:
+1) end_prompt: برومبت إنجليزي لـ"الإطار النهائي" — نفس الشخصية والمكان والستايل والإضاءة بالضبط، مع التغيير المطلوب فقط (وضعية/تعبير/موضع كاميرا). صورة واحدة كاملة الإطار، بدون أقواس [].
+2) note: نصيحة قصيرة بالعربي كيف تستخدم البداية والنهاية معاً في محرّك الفيديو (Veo/Kling) للتحكم باللقطة.
+أعد JSON فقط: {"end_prompt":"...","note":"..."}`;
+  try{ const d=stripJSON(await callLLM(sys,user,[S.frmImg]));
+    if(!d||!d.end_prompt) throw new Error("ما قدرنا نقرأ الناتج، أعد المحاولة.");
+    document.getElementById("frm-out").innerHTML=`<div class="card" style="margin-top:12px"><div class="eyebrow">الإطار النهائي (End Frame)</div><div class="prompt-en">${esc(clean(d.end_prompt))}</div>${d.note?`<div class="tip">💡 ${esc(d.note)}</div>`:""}<div class="bar"><button class="btn ghost small" onclick="copyText(this.closest('.card').querySelector('.prompt-en').textContent)">📋 نسخ</button></div></div>`;
+    document.getElementById("frm-state").innerHTML="";
+  }catch(e){ document.getElementById("frm-state").innerHTML='<div class="err">'+(e.message||"خطأ")+'</div>'; }
+  finally{ document.getElementById("frm-btn").disabled=false; }
+}
+
+/* ===== TOOL 3: manual shot ===== */
+function renderOne(elId,prompt){ document.getElementById(elId).innerHTML=`<div class="card" style="margin-top:12px"><div class="prompt-en">${esc(prompt)}</div><div class="bar"><button class="btn ghost small" onclick="copyText(this.closest('.card').querySelector('.prompt-en').textContent)">📋 نسخ</button></div></div>`; }
+async function genManual(){
+  const idea=document.getElementById("man-idea").value.trim();
+  if(!idea){ document.getElementById("man-state").innerHTML='<div class="warn">اكتب فكرة اللقطة أولاً.</div>'; return; }
+  const amb=document.getElementById("man-amb").value.trim();
+  const styleEn=S.man.style?STYLE_EN[S.man.style]:"cinematic";
+  const lookEn=S.man.look?LOOK_EN[S.man.look]:"natural grade";
+  const angleText=document.getElementById("man-angletext").value.trim();
+  const angle=angleText|| (S.man.angle?ANGEN[S.man.angle]:"medium shot");
+  const aspWord={"9:16":"vertical 9:16","16:9":"horizontal 16:9","1:1":"square 1:1"}[S.man.aspect]||S.man.aspect;
+  let refLine="";
+  if(S.man.ref){ const chars=document.getElementById("man-chars").value.trim(); const place=document.getElementById("man-place").value.trim();
+    const bits=[]; if(chars) bits.push(`character reference images (${chars}) for the people's faces and identities`); if(place) bits.push(`place reference image for the setting (${place})`);
+    refLine=bits.length?`Use the attached ${bits.join(" and ")}; keep them consistent.`:""; }
+  document.getElementById("man-btn").disabled=true; document.getElementById("man-state").innerHTML='<div class="loading"><div class="spin"></div>نكتب البرومبت...</div>';
+  const sys="أنت مهندس برومبتات صور. تكتب برومبت إنجليزي نظيف للقطة واحدة. أجب JSON فقط.";
+  const user=`فكرة اللقطة: ${idea}
+${amb?("الجو العام: "+amb):""}
+نوع اللقطة: ${angle}. الستايل: ${styleEn}. اللوك: ${lookEn}. الأبعاد: ${aspWord}.
+${refLine}
+قواعد: فقرة إنجليزية واحدة وصفية لما يُرى، ابدأ بنوع اللقطة بالكلمات، صفات إيجابية (hair uncovered بدل without hijab)، لحظة واحدة، صورة كاملة الإطار (single full-frame, no split, no grid). بدون أقواس [] ولا نص على الشاشة ولا كلام منطوق. اختم بالستايل واللوك والأبعاد طبيعياً.
+أعد JSON فقط: {"prompt":"..."}`;
+  try{ const d=stripJSON(await callLLM(sys,user)); let p=clean(d&&d.prompt);
+    if(!p) throw new Error("ما قدرنا نقرأ الناتج، أعد المحاولة.");
+    if(!/single|full-frame/i.test(p)) p=p.replace(/\.?\s*$/,"")+". Single full-frame image, no split, no grid.";
+    renderOne("man-out",p); document.getElementById("man-state").innerHTML="";
+  }catch(e){ document.getElementById("man-state").innerHTML='<div class="err">'+(e.message||"خطأ")+'</div>'; }
+  finally{ document.getElementById("man-btn").disabled=false; }
+}
+
+/* ===== TOOL 4: character builder ===== */
+function chipVal(id){ const el=document.querySelector("#"+id+" .chip.on"); return el?el.dataset.v:""; }
+async function genChar(){
+  const type=chipVal("ch-type")||"photorealistic human";
+  const g=v("ch-gender"),age=v("ch-age"),build=v("ch-build"),face=v("ch-face"),hair=v("ch-hair"),wear=v("ch-wear"),expr=v("ch-expr"),frame=v("ch-frame"),bg=v("ch-bg"),extra=v("ch-extra");
+  document.getElementById("ch-btn").disabled=true; document.getElementById("ch-state").innerHTML='<div class="loading"><div class="spin"></div>نبني برومبت الشخصية...</div>';
+  const sys="أنت مهندس برومبتات صور لتصميم الشخصيات. تكتب برومبت إنجليزي واحد نظيف. أجب JSON فقط.";
+  const user=`ابنِ برومبت إنجليزي لشخصية:
+type: ${type}; ${g?("gender: "+g+"; "):""}${age?("age: "+age+"; "):""}${build?("build: "+build+"; "):""}
+${face?("face/skin: "+face+"; "):""}${hair?("hair: "+hair+"; "):""}${wear?("wardrobe: "+wear+"; "):""}
+${expr?("expression: "+expr+"; "):""}framing: ${frame}; background: ${bg}; ${extra?("extra: "+extra+"; "):""}
+قواعد: فقرة إنجليزية واحدة وصفية دقيقة للملامح، صفات إيجابية، إضاءة واضحة، جودة عالية، صورة واحدة كاملة الإطار، بدون أقواس [] ولا نص. لو CGI/3D اذكر أسلوب الرندر.
+أعد JSON فقط: {"prompt":"..."}`;
+  try{ const d=stripJSON(await callLLM(sys,user)); const p=clean(d&&d.prompt);
+    if(!p) throw new Error("ما قدرنا نقرأ الناتج، أعد المحاولة.");
+    const s=ls(); if(s) s.setItem("kadr_tools_char",p);
+    renderOne("ch-out",p); document.getElementById("ch-state").innerHTML="";
+  }catch(e){ document.getElementById("ch-state").innerHTML='<div class="err">'+(e.message||"خطأ")+'</div>'; }
+  finally{ document.getElementById("ch-btn").disabled=false; }
+}
+function v(id){ return (document.getElementById(id).value||"").trim(); }
+
+/* ===== TOOL 5: reference maker ===== */
+function genRef(){
+  const subj=chipVal("rf-subj");
+  const desc=v("rf-desc");
+  if(!desc){ document.getElementById("rf-state").innerHTML='<div class="warn">اكتب وصف الشخصية/المكان أولاً.</div>'; return; }
+  let prompt="";
+  if(subj==="char"){
+    const art=chipVal("rf-art")||"photorealistic";
+    const views=[...document.querySelectorAll("#rf-views .chip.on")].map(c=>c.dataset.v);
+    const v3=views.slice(0,4); // cap 4
+    const anchor=document.getElementById("rf-anchor").classList.contains("on");
+    const exprSheet=document.getElementById("rf-expr").classList.contains("on");
+    prompt=`Character reference sheet (model sheet) of ${desc}. ${art} style, character turnaround showing ${v3.join(", ")} of the SAME character — keep face, hair, body proportions, wardrobe and colors identical across all views. Neutral relaxed standing pose, plain white background, flat even studio lighting, consistent scale, evenly spaced, reference-sheet style.${anchor?" Include one clean, well-lit frontal close-up of the face as the primary identity anchor.":""}${exprSheet?" Add a small expression row of the same face showing neutral, happy, serious and surprised.":""} No dramatic shadows, no scenic background, no text. High detail.`;
+  } else {
+    prompt=`Location/environment reference of ${desc}. Clean establishing reference: show the space clearly with consistent, even daylight, neutral natural lighting, no people, no text. Provide a wide establishing view and one or two secondary angles of the same place with identical style, palette and lighting so it can be used as a consistent setting reference. High detail, realistic.`;
+  }
+  document.getElementById("rf-out").innerHTML="";
+  renderOne("rf-out",clean(prompt));
+  document.getElementById("rf-state").innerHTML='<div class="tip">💡 ولّد عدة نسخ واختر الأنظف، واستخدمه كمرجع ثابت لكل توليداتك. للأشخاص: ٣–٤ زوايا كحد أقصى بالورقة الواحدة عشان تبقى التفاصيل واضحة.</div>';
+}
+
+/* ===== chips generic ===== */
+function bindChips(sel,single,cb){ document.querySelectorAll(sel+" .chip").forEach(c=>c.onclick=()=>{
+  if(single) c.parentElement.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));
+  c.classList.toggle("on"); if(cb)cb(); }); }
+
+/* ===== engine ui ===== */
+function setEngine(e){ S.engine=e; setCfg({lastEngine:e});
+  document.querySelectorAll("#engSeg button").forEach(b=>b.classList.toggle("on",b.dataset.e===e));
+  const sel=document.getElementById("modelSel"); sel.innerHTML=MODELS[e].map(([v,l])=>`<option value="${v}">${v} — ${l}</option>`).join("");
+  const c=getCfg(); if(c[e+"Model"]) sel.value=c[e+"Model"];
+  if(!MODELS[e].some(m=>m[0]===sel.value)){ sel.value=MODELS[e][0][0]; setCfg({[e+"Model"]:sel.value}); }
+  updateModelPrice();
+  document.getElementById("engNote").innerHTML=(e==="oai")?'<div class="warn">GPT يشتغل عبر /api على موقعك. Gemini و Claude مباشرة. أدوات الصور تحتاج محرّك يدعم الرؤية (كلهم يدعمون).</div>':"";
+}
+function saveModel(){ setCfg({[S.engine+"Model"]:document.getElementById("modelSel").value}); updateModelPrice(); flashSaved(); }
+function updateModelPrice(){ const m=document.getElementById("modelSel").value; const p=(PRICES[S.engine]||{})[m];
+  document.getElementById("modelPrice").innerHTML=p?`<b>$${p[0]}</b> إدخال · <b>$${p[1]}</b> إخراج / مليون توكن`:""; }
+function flashSaved(){ const el=document.getElementById("saved"); el.textContent="✓ محفوظ"; el.classList.add("flash");
+  clearTimeout(window._st); window._st=setTimeout(()=>{ el.textContent="⟳ يُحفظ تلقائياً"; el.classList.remove("flash"); },1300); }
+
+/* ===== init ===== */
+buildPicker("man-style",STYLES,"styles","pickStyle");
+buildPicker("man-look",LOOKS,"looks","pickLook");
+document.getElementById("man-angle").innerHTML=ANGLES.map(([code,f,n])=>`<div class="tile" data-v="${code}" onclick="pickAngle(this)"><img src="img/angles/${f}" onerror="this.style.display='none'"><span class="lab">${esc(n)}</span></div>`).join("");
+bindChips("#man-aspect",true,()=>{ S.man.aspect=document.querySelector("#man-aspect .chip.on").dataset.a; });
+bindChips("#ch-type",true);
+bindChips("#rf-subj",true,()=>{ document.getElementById("rf-charopts").style.display=(chipVal("rf-subj")==="char")?"block":"none"; });
+bindChips("#rf-art",true);
+document.querySelectorAll("#rf-views .chip").forEach(c=>c.onclick=()=>c.classList.toggle("on"));
+document.querySelectorAll("#engSeg button").forEach(b=>b.onclick=()=>setEngine(b.dataset.e));
+wireDrop("ang-drop","ang-file",async f=>{ S.angImg=await loadImg(f,1568); if(S.angImg) setThumb("ang-thumb","ang-img",S.angImg); });
+wireDrop("frm-drop","frm-file",async f=>{ S.frmImg=await loadImg(f,1568); if(S.frmImg) setThumb("frm-thumb","frm-img",S.frmImg); });
+
+(function(){ paintMeter(); const c=getCfg(); setEngine(c.lastEngine||(c.gemKey?"gem":c.anthKey?"anth":c.oaiKey?"oai":"gem")); })();
+</script>
+</body>
+</html>
