@@ -130,6 +130,24 @@
       <button class="btn ghost small" onclick="downloadAll()">⬇ تنزيل</button>
       <span class="spacer"></span><span class="hint">محفوظ</span>
     </div>
+  <!-- single extraction -->
+  <div class="card hidden" id="extractCard">
+    <div class="eyebrow">استخراج لقطة كاملة</div>
+    <h2>كبّر لقطة لكادر كامل</h2>
+    <p class="sub">اختر رقم/أرقام اللقطات اللي عجبتك من اللوحة، ويطلّع لكل وحدة برومبت كادر كامل يستخدم اللوحة (وصورة الشخصية لو فعّلت).</p>
+    <div class="row">
+      <div style="flex:2">
+        <label class="f">أرقام اللقطات <span>(مثال: 1 أو 1,4,5)</span></label>
+        <input type="text" id="pickNums" placeholder="1,4,5">
+      </div>
+    </div>
+    <div class="chips" style="margin-top:12px">
+      <div class="chip" id="tgCharRef" onclick="toggleCharRef()">👤 استخدم رفرنس شخصية</div>
+    </div>
+    <input type="text" id="charRefName" class="hidden" placeholder="اسم/وصف الشخصية المرجعية (مثال: نفس المرأة العراقية)" style="margin-top:9px">
+    <div class="bar"><button class="btn primary" id="extBtn" onclick="extract()">🔍 استخرج كادر كامل</button></div>
+    <div id="extState"></div>
+    <div id="extOut"></div>
   </div>
 </div>
 
@@ -223,6 +241,7 @@ ${shotsText}
     S.groups=(d.groups||ranges.map(r=>({range:r[0]+"-"+r[1],prompt:""}))).map(g=>({range:g.range,prompt:clean(g.prompt||"")}));
     renderOut(); saveResult();
     document.getElementById("outCard").classList.remove("hidden");
+    document.getElementById("extractCard").classList.remove("hidden");
     document.getElementById("genState").innerHTML="";
     document.getElementById("outCard").scrollIntoView({behavior:"smooth",block:"nearest"});
   }catch(e){ document.getElementById("genState").innerHTML='<div class="err">'+(e.message||"خطأ")+'</div>'; }
@@ -250,9 +269,45 @@ function allText(){ let o="=== BOARD PROMPT ===\n"+S.board+"\n\n"; S.groups.forE
 function copyAll(){ navigator.clipboard.writeText(allText()); toast("📋 تم نسخ الكل"); }
 function downloadAll(){ const b=new Blob([allText()],{type:"text/plain;charset=utf-8"}); const u=URL.createObjectURL(b);
   const a=document.createElement("a"); a.href=u; a.download="storyboard-prompts.txt"; a.click(); setTimeout(()=>URL.revokeObjectURL(u),1000); }
-function saveResult(){ const s=ls(); if(!s) return; s.setItem("kadr_storyboard_result",JSON.stringify({board:S.board,groups:S.groups,ts:Date.now()})); }
+function saveResult(){ const s=ls(); if(!s) return; s.setItem("kadr_storyboard_result",JSON.stringify({board:S.board,groups:S.groups,extract:S.extract||[],ts:Date.now()})); }
 
-/* ===== engine ui ===== */
+/* ===== single extraction ===== */
+function toggleCharRef(){ const on=document.getElementById("tgCharRef").classList.toggle("on");
+  document.getElementById("charRefName").classList.toggle("hidden",!on); if(on) document.getElementById("charRefName").focus(); }
+async function extract(){
+  const raw=document.getElementById("pickNums").value.trim();
+  const nums=raw.split(/[,\s]+/).map(x=>x.trim()).filter(Boolean);
+  if(!nums.length){ document.getElementById("extState").innerHTML='<div class="warn">اكتب رقم لقطة واحد على الأقل.</div>'; return; }
+  if(!S.board){ document.getElementById("extState").innerHTML='<div class="warn">ولّد اللوحة أولاً.</div>'; return; }
+  const useChar=document.getElementById("tgCharRef").classList.contains("on");
+  const charName=document.getElementById("charRefName").value.trim();
+  document.getElementById("extBtn").disabled=true;
+  document.getElementById("extState").innerHTML='<div class="loading"><div class="spin"></div>نستخرج البرومبتات الكاملة...</div>';
+  const styleLine=`${S.style} style, ${S.look}, ${S.ambiance?S.ambiance+", ":""}identical characters, wardrobe, lighting and color palette as the storyboard`;
+  const refLine=useChar
+    ? `using the attached storyboard sheet AND the attached character reference image${charName?(" ("+charName+")"):""} as references`
+    : `using the attached storyboard sheet as the reference`;
+  const sys="أنت مهندس برومبتات لتوليد الصور. تستخرج لقطة واحدة من لوحة ستوري بورد كصورة كاملة الإطار. أجب JSON فقط.";
+  const user=`لوحة الستوري بورد (للسياق):
+${S.board}
+
+المطلوب: لكل رقم من هذه الأرقام (${nums.join("، ")})، اكتب برومبت إنجليزي يطلب من المولّد إعادة إنتاج تلك اللقطة بالتحديد من اللوحة كصورة واحدة كاملة الإطار عالية الدقة، ${refLine}، بنفس ${styleLine}. لقطة واحدة، لحظة واحدة، صورة متكاملة (single full-frame image, no split, no grid, no panels). إنجليزي فقط بدون أقواس [] ولا علامات اقتباس ولا نص على الشاشة.
+
+أعد JSON فقط: {"items":[{"num":"1","prompt":"..."}]}`;
+  try{
+    const txt=await callLLM(sys,user); const d=stripJSON(txt);
+    if(!d||!d.items||!d.items.length) throw new Error("ما قدرنا نقرأ النتيجة، أعد المحاولة.");
+    S.extract=d.items.map(it=>({num:it.num,prompt:clean(it.prompt||"")}));
+    document.getElementById("extOut").innerHTML=S.extract.map((it,i)=>`<div class="block">
+      <div class="bh"><span class="tag">لقطة ${esc(it.num)}${useChar?' · + شخصية':''}</span></div>
+      <div class="prompt-en">${esc(it.prompt)}</div>
+      <div class="bar"><button class="btn ghost small" onclick="copyText(S.extract[${i}].prompt)">📋 نسخ</button></div>
+    </div>`).join("");
+    document.getElementById("extState").innerHTML="";
+    saveResult();
+  }catch(e){ document.getElementById("extState").innerHTML='<div class="err">'+(e.message||"خطأ")+'</div>'; }
+  finally{ document.getElementById("extBtn").disabled=false; }
+}
 function setEngine(e){ S.engine=e; setCfg({lastEngine:e});
   document.querySelectorAll("#engSeg button").forEach(b=>b.classList.toggle("on",b.dataset.e===e));
   const sel=document.getElementById("modelSel"); sel.innerHTML=MODELS[e].map(([v,l])=>`<option value="${v}">${v} — ${l}</option>`).join("");
