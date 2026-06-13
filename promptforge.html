@@ -97,6 +97,9 @@
   .athumb .c{position:absolute;inset:auto 0 0 0;background:rgba(0,0,0,.7);color:#fff;font-family:var(--mono);font-size:9px;text-align:center}
   .athumb:hover{border-color:var(--amber)}
   .scene-ar{font-size:14px;margin:0 0 9px;line-height:1.65}
+  .vo{font-size:12.5px;color:var(--muted);background:var(--bg2);border:1px solid var(--line2);border-radius:8px;padding:8px 11px;margin:8px 0}
+  .vo span{color:var(--ink)}
+  .sceneEdit{font-size:13.5px}
   .prompt-en{background:#0f1015;border:1px solid var(--line);border-radius:9px;padding:12px;font-family:var(--mono);font-size:12px;line-height:1.7;color:#cdd0dd;direction:ltr;text-align:left;white-space:pre-wrap;word-break:break-word}
   .shot .acts{display:flex;gap:8px;margin-top:9px}
 
@@ -161,7 +164,11 @@
   <div class="card">
     <div class="eyebrow">خيارات</div>
     <h2>الأبعاد والتبديلات</h2>
-    <label class="f">الأبعاد</label>
+
+    <label class="f">الجو العام / عالم المشهد <span>(يُذكر في كل لقطة)</span></label>
+    <textarea id="ambiance" style="min-height:70px" placeholder="مثال: مكان عراقي قديم تاريخي · أو عماني معاصر · المرأة شابة بدون حجاب · إضاءة طبيعية..."></textarea>
+
+    <label class="f" style="margin-top:14px">الأبعاد</label>
     <div class="chips" id="aspectChips">
       <div class="chip mono on" data-a="9:16">9:16</div>
       <div class="chip mono" data-a="16:9">16:9</div>
@@ -220,8 +227,11 @@
 /* ===== assets ===== */
 const ANGLES=[["ECU","ecu.jpg","كلوز جداً"],["CU","cu.jpg","كلوز"],["MS","ms.jpg","متوسط"],["AS","as.jpg","أمريكان"],["WS","ws.jpg","واسع"],["EWS","ews.jpg","واسع جداً"],["TWO","two-shot.jpg","شخصين"],["OTS-L","ots-l.jpg","فوق الكتف يسار"],["OTS-R","ots-r.jpg","فوق الكتف يمين"],["POV","pov.jpg","وجهة نظر"],["SIDE","side.jpg","جانبي"],["HIGH","high-angle.png","عالية"],["LOW","low-angle.jpg","منخفضة"],["DUTCH","dutch.jpg","مائلة"],["CRANE","CRANE___Crane_Shot.png","كرين"],["FISH","FISH___Fisheye.png","عين السمكة"],["SWIDE","WIDE____Super_Wide_Angle.png","سوبر وايد"]];
 const ANGMAP={}; ANGLES.forEach(([c,f,n])=>ANGMAP[c]={f,n});
-const STYLES=[["Cinematic.jpg","سينمائي"],["Dialog.jpg","حوار"],["Comedy__Skit.jpg","كوميدي"],["Demonstration__Show___Tell.png","ديمونستريشن"],["Educational.jpg","تعليمي"],["Product.jpg","منتج"],["talking-head.jpg","توكينج هيد"],["talking-broll.jpg","توكينج + B-roll"],["VFX.jpg","VFX"],["CGI__3D.jpg","CGI / 3D"],["cgi-character.jpg","شخصية CGI"],["cgi-human.jpg","CGI واقعي"],["cgi-stylized.png","CGI مُنمنم"]];
-const LOOKS=[["Golden-Warm.jpg","دافئ ذهبي"],["Teal___Orange.jpg","Teal & Orange"],["Neon_Night.jpg","ليلي نيون"],["Vintage_Film.jpg","فيلم قديم"],["Pastel_Dream.jpg","باستيل حالم"],["Dark_Dramatic.jpg","درامي مظلم"],["High_Key_White.jpg","هاي-كي أبيض"],["Bright_Lifestyle.jpg","لايف ستايل مشرق"],["Commercial_Ad.jpg","إعلان تجاري"],["Social_Media_Ad.png","سوشال ميديا"],["Luxury_Brand.jpg","فخامة براند"],["Documentary_Raw.jpg","وثائقي خام"],["Studio_Clean.jpg","ستوديو نظيف"],["Studio_Clinical.jpg","ستوديو طبي"]];
+const ANGEN={ECU:"extreme close-up shot",CU:"close-up shot",MS:"medium shot",AS:"American shot framed from mid-thigh up",WS:"wide shot",EWS:"extreme wide establishing shot",TWO:"two-shot framing two people together",["OTS-L"]:"over-the-shoulder shot from the left",["OTS-R"]:"over-the-shoulder shot from the right",POV:"first-person point-of-view shot",SIDE:"side profile shot",HIGH:"high-angle shot looking down",LOW:"low-angle shot looking up",DUTCH:"dutch-tilt angled shot",CRANE:"high sweeping crane shot",FISH:"fisheye lens shot",SWIDE:"super wide-angle shot"};
+const STYLES=[["Cinematic.jpg","سينمائي","cinematic"],["Dialog.jpg","حوار","dialogue scene"],["Comedy__Skit.jpg","كوميدي","comedy skit"],["Demonstration__Show___Tell.png","ديمونستريشن","demonstration show-and-tell"],["Educational.jpg","تعليمي","educational explainer"],["Product.jpg","منتج","product showcase"],["talking-head.jpg","توكينج هيد","talking head"],["talking-broll.jpg","توكينج + B-roll","talking head with b-roll"],["VFX.jpg","VFX","VFX action"],["CGI__3D.jpg","CGI / 3D","3D CGI animation"],["cgi-character.jpg","شخصية CGI","CGI character"],["cgi-human.jpg","CGI واقعي","photoreal CGI"],["cgi-stylized.png","CGI مُنمنم","stylized CGI"]];
+const LOOKS=[["Golden-Warm.jpg","دافئ ذهبي","warm golden tones"],["Teal___Orange.jpg","Teal & Orange","teal and orange grade"],["Neon_Night.jpg","ليلي نيون","neon night"],["Vintage_Film.jpg","فيلم قديم","vintage film"],["Pastel_Dream.jpg","باستيل حالم","soft pastel dream"],["Dark_Dramatic.jpg","درامي مظلم","dark dramatic low-key"],["High_Key_White.jpg","هاي-كي أبيض","high-key white"],["Bright_Lifestyle.jpg","لايف ستايل مشرق","bright lifestyle"],["Commercial_Ad.jpg","إعلان تجاري","polished commercial ad"],["Social_Media_Ad.png","سوشال ميديا","punchy social-media ad"],["Luxury_Brand.jpg","فخامة براند","luxury brand"],["Documentary_Raw.jpg","وثائقي خام","raw documentary"],["Studio_Clean.jpg","ستوديو نظيف","clean studio"],["Studio_Clinical.jpg","ستوديو طبي","clinical studio"]];
+const STYLE_EN={}; STYLES.forEach(([f,n,en])=>STYLE_EN[f]=en);
+const LOOK_EN={}; LOOKS.forEach(([f,n,en])=>LOOK_EN[f]=en);
 
 /* ===== config / pricing (shared) ===== */
 const PRICES={oai:{"gpt-5.4-mini":[0.75,4.5],"gpt-5.4-nano":[0.20,1.25],"gpt-5.4":[2.5,15],"gpt-5.5":[5,30]},
@@ -279,9 +289,9 @@ function buildPicker(el,list,dir,onPick){
     `<div class="tile" data-v="${f}" onclick="${onPick}(this)"><img src="img/${dir}/${f}" alt="" onerror="this.style.display='none'"><span class="lab">${esc(n)}</span></div>`).join("");
 }
 function pickStyle(el){ document.querySelectorAll("#stylePicker .tile").forEach(t=>t.classList.remove("on")); el.classList.add("on");
-  S.style={file:el.dataset.v,label:el.querySelector(".lab").textContent}; saveInputs(); }
+  S.style={file:el.dataset.v,label:el.querySelector(".lab").textContent,en:STYLE_EN[el.dataset.v]||""}; saveInputs(); }
 function pickLook(el){ document.querySelectorAll("#lookPicker .tile").forEach(t=>t.classList.remove("on")); el.classList.add("on");
-  S.look={file:el.dataset.v,label:el.querySelector(".lab").textContent}; saveInputs(); }
+  S.look={file:el.dataset.v,label:el.querySelector(".lab").textContent,en:LOOK_EN[el.dataset.v]||""}; saveInputs(); }
 
 /* ===== characters ===== */
 function addChar(name,desc){ S.chars.push({name:name||"",desc:desc||""}); renderChars(); saveInputs(); }
@@ -293,51 +303,61 @@ function renderChars(){
 }
 
 /* ===== generate ===== */
+function ctx(){
+  const flagsArr=[]; const asp={"9:16":"vertical 9:16","16:9":"horizontal 16:9 widescreen","1:1":"square 1:1"}[S.aspect]||S.aspect;
+  if(document.getElementById("tgNoTalk").classList.contains("on")) flagsArr.push("no dialogue, characters do not speak to camera");
+  if(document.getElementById("tgNoText").classList.contains("on")) flagsArr.push("no on-screen text, no captions, no logos");
+  return {
+    style:(S.style&&S.style.en)||"cinematic", look:(S.look&&S.look.en)||"natural grade",
+    aspect:asp, flags:flagsArr.join(", "),
+    ambiance:document.getElementById("ambiance").value.trim(),
+    chars:S.chars.filter(c=>c.name.trim()).map(c=>`${c.name.trim()}${c.desc.trim()?": "+c.desc.trim():""}`).join("; ")
+  };
+}
+function rulesBlock(x){
+  return `قواعد prompt_en الصارمة:
+- إنجليزي فقط، فقرة وصفية واحدة لما يُرى بصرياً فقط.
+- ابدأ بنوع اللقطة بالكلمات الكاملة (مثل "Close-up shot of...") — لا تستخدم اختصارات مثل CU/MS.
+- صِف الشخصيات بملامحها داخل الجملة حسب الجو العام.
+- اذكر الجو العام (المكان/الثقافة/الحقبة) في الوصف.
+- اختم بذكر الستايل واللوك والأبعاد طبيعياً: "${x.style} style, ${x.look}, ${x.aspect} composition${x.flags?(", "+x.flags):""}".
+- ممنوع منعاً باتاً: أي كلام منطوق، أي نص على الشاشة، علامات اقتباس، أقواس [ ]، اختصارات، أو كلمة FLAGS.
+الجو العام (طبّقه على كل لقطة): ${x.ambiance||"غير محدد"}
+${x.chars?("الشخصيات الثابتة: "+x.chars):""}`;
+}
 async function generate(){
   const script=document.getElementById("script").value.trim();
   if(!script){ document.getElementById("genState").innerHTML='<div class="err">أضف سكربت أو ولّده من Ideate.</div>'; return; }
   if(!S.style||!S.look){ document.getElementById("genState").innerHTML='<div class="warn">اختر ستايل ولوك أولاً.</div>'; return; }
   document.getElementById("genBtn").disabled=true;
-  document.getElementById("genState").innerHTML='<div class="loading"><div class="spin"></div>نحوّل السكربت إلى برومبتات...</div>';
+  document.getElementById("genState").innerHTML='<div class="loading"><div class="spin"></div>نحوّل السكربت إلى برومبتات نظيفة...</div>';
 
-  const flags=[S.aspect, document.getElementById("tgNoTalk").classList.contains("on")?"no dialogue":"", document.getElementById("tgNoText").classList.contains("on")?"no on-screen text":""].filter(Boolean).join(", ");
-  const charsCtx=S.chars.filter(c=>c.name.trim()).map(c=>`- ${c.name.trim()}${c.desc.trim()?": "+c.desc.trim():""}`).join("\n");
-  const angleCodes=ANGLES.map(a=>a[0]).join(", ");
-  const useSeg = (S.count==="auto") && S.srcSegments && S.srcSegments.length;
-  const segNote = useSeg
+  const x=ctx(); const angleCodes=ANGLES.map(a=>a[0]).join(", ");
+  const useSeg=(S.count==="auto")&&S.srcSegments&&S.srcSegments.length;
+  const segNote=useSeg
     ? "حافظ على نفس ترقيم ومدد مقاطع Ideate التالية:\n"+S.srcSegments.map(s=>`#${s.n} (${s.duration||"?"}ث): ${s.visual||""}${s.line?" | كلام: "+s.line:""}`).join("\n")
     : (S.count==="auto"
         ? "قسّم السكربت إلى عدد مناسب من اللقطات، مدة كل وحدة 2–5 ثوانٍ، ووزّع كامل المحتوى دون حذف."
-        : `قسّم السكربت إلى ${S.count} لقطة بالضبط، مدة كل وحدة 2–5 ثوانٍ، ووزّع كامل المحتوى على هذا العدد دون حذف أي نقطة.`);
+        : `قسّم السكربت إلى ${S.count} لقطة بالضبط، مدة كل وحدة 2–5 ثوانٍ، ووزّع كامل المحتوى دون حذف.`);
 
-  const sys="أنت مدير تصوير ومهندس برومبتات لتوليد الفيديو بالذكاء الاصطناعي. لكل لقطة تكتب برومبت إنجليزي منظّم. أجب JSON فقط بدون أي نص.";
-  const user=
-`السكربت:
+  const sys="أنت مدير تصوير ومهندس برومبتات لتوليد الصور/الفيديو بالذكاء الاصطناعي. تكتب لكل لقطة برومبت إنجليزي نظيف يصف ما يُرى بصرياً فقط. أجب JSON فقط بدون أي نص.";
+  const user=`السكربت:
 ${script}
 
 ${segNote}
 
-الستايل: ${S.style.label}
-اللوك/الجْريد: ${S.look.label}
-الأبعاد والفلاجز: ${flags}
-${charsCtx?("الشخصيات:\n"+charsCtx+"\n"):""}
-لكل لقطة اختر أنسب زاوية من هذه الأكواد فقط: ${angleCodes}
+${rulesBlock(x)}
 
-اكتب prompt_en بالإنجليزية فقط بهذه الصيغة المنظّمة (كل سطر منفصل):
-<visual action — who does what physically>
-[CHAR: Name — state]   (لكل شخصية حاضرة، إن وجدت)
-[CAM: <ANGLE CODE> | <movement>]
-[STYLE: ${S.style.label}]
-[LOOK: ${S.look.label}]
-[FLAGS: ${flags}]
+لكل لقطة اختر زاوية من هذه الأكواد فقط: ${angleCodes}
+ضع التعليق الصوتي/الكلام في حقل "line" منفصلاً (لا يدخل prompt_en إطلاقاً).
 
 أعد JSON فقط:
-{"shots":[{"n":1,"duration":4,"angle":"CU","scene_ar":"وصف عربي مختصر","prompt_en":"..."}]}`;
+{"shots":[{"n":1,"duration":4,"angle":"CU","scene_ar":"وصف عربي مختصر للقطة","line":"التعليق الصوتي إن وجد","prompt_en":"clean english visual prompt, no quotes no brackets"}]}`;
 
   try{
     const txt=await callLLM(sys,user); const d=stripJSON(txt);
     if(!d||!d.shots||!d.shots.length) throw new Error("ما قدرنا نقرأ البرومبتات، أعد المحاولة.");
-    S.shots=d.shots.map((s,i)=>({n:s.n||i+1,duration:s.duration||"",angle:(ANGMAP[s.angle]?s.angle:"MS"),scene_ar:s.scene_ar||"",prompt_en:s.prompt_en||""}));
+    S.shots=d.shots.map((s,i)=>({n:s.n||i+1,duration:s.duration||"",angle:(ANGMAP[s.angle]?s.angle:"MS"),scene_ar:s.scene_ar||"",line:s.line||"",prompt_en:cleanPrompt(s.prompt_en||"")}));
     renderShots(); saveResult();
     document.getElementById("outCard").classList.remove("hidden");
     document.getElementById("genState").innerHTML="";
@@ -345,25 +365,31 @@ ${charsCtx?("الشخصيات:\n"+charsCtx+"\n"):""}
   }catch(e){ document.getElementById("genState").innerHTML='<div class="err">'+(e.message||"خطأ")+'</div>'; }
   finally{ document.getElementById("genBtn").disabled=false; }
 }
+function cleanPrompt(p){ return String(p).replace(/\[[^\]]*\]/g,"").replace(/["“”]/g,"").replace(/\s{2,}/g," ").trim(); }
 function renderShots(){
   document.getElementById("outTitle").textContent=`اللقطات (${toAr(S.shots.length)})`;
   document.getElementById("shots").innerHTML=S.shots.map((s,i)=>{
     const a=ANGMAP[s.angle]||{f:"",n:s.angle};
-    return `<div class="shot">
+    return `<div class="shot" id="shot${i}">
       <div class="shead">
         <span class="no">${toAr(s.n)}</span>
         ${s.duration?`<span class="dur">${toAr(s.duration)}ث</span>`:""}
-        <div class="athumb" title="غيّر الزاوية" onclick="openAngle(${i})"><img src="img/angles/${a.f}" onerror="this.style.display='none'"><span class="c">${esc(s.angle)}</span></div>
+        <div class="athumb" title="غيّر الزاوية وأعد التوليد" onclick="openAngle(${i})"><img src="img/angles/${a.f}" onerror="this.style.display='none'"><span class="c">${esc(s.angle)}</span></div>
         <span style="color:var(--muted);font-size:12px">${esc(a.n)}</span>
       </div>
-      ${s.scene_ar?`<p class="scene-ar">${esc(s.scene_ar)}</p>`:""}
+      <label class="f" style="margin:2px 0 5px">وصف اللقطة <span>(عدّله ثم أعد التوليد)</span></label>
+      <textarea class="sceneEdit" style="min-height:58px" oninput="S.shots[${i}].scene_ar=this.value;saveResult()">${esc(s.scene_ar)}</textarea>
+      ${s.line?`<div class="vo">🔊 تعليق صوتي: <span>${esc(s.line)}</span></div>`:""}
       <div class="prompt-en" id="pe${i}">${esc(s.prompt_en)}</div>
-      <div class="acts"><button class="btn ghost small" onclick="copyShot(${i})">📋 نسخ البرومبت</button></div>
+      <div class="acts">
+        <button class="btn primary small" id="rg${i}" onclick="regenShot(${i})">↻ أعد توليد هذه اللقطة</button>
+        <button class="btn ghost small" onclick="copyShot(${i})">📋 نسخ البرومبت</button>
+      </div>
     </div>`;
   }).join("");
 }
 
-/* ===== angle change ===== */
+/* ===== angle change → regenerate that shot ===== */
 let ANGIDX=-1;
 function openAngle(i){ ANGIDX=i;
   document.getElementById("anglePicker").innerHTML=ANGLES.map(([code,f,n])=>
@@ -371,11 +397,26 @@ function openAngle(i){ ANGIDX=i;
   document.getElementById("anglePop").classList.add("open");
 }
 function closeAngle(){ document.getElementById("anglePop").classList.remove("open"); }
-function setAngle(code){
-  if(ANGIDX<0) return; const s=S.shots[ANGIDX]; s.angle=code;
-  s.prompt_en = s.prompt_en.replace(/\[CAM:\s*[^\|\]]*/i, "[CAM: "+code+" ");
-  if(!/\[CAM:/i.test(s.prompt_en)) s.prompt_en += `\n[CAM: ${code} | static]`;
-  renderShots(); saveResult(); closeAngle();
+function setAngle(code){ if(ANGIDX<0) return; const i=ANGIDX; S.shots[i].angle=code; closeAngle(); renderShots(); saveResult(); regenShot(i); }
+
+/* ===== regenerate single shot ===== */
+async function regenShot(i){
+  const s=S.shots[i]; const x=ctx(); const btn=document.getElementById("rg"+i);
+  if(btn){ btn.disabled=true; btn.textContent="↻ يولّد..."; }
+  const sys="أنت مهندس برومبتات لتوليد الصور/الفيديو. تكتب برومبت إنجليزي نظيف للقطة واحدة. أجب JSON فقط.";
+  const user=`لقطة واحدة. الزاوية المطلوبة: ${ANGEN[s.angle]||s.angle}.
+وصف اللقطة (عربي): ${s.scene_ar||""}
+${s.line?("التعليق الصوتي للمرجع فقط (لا يدخل البرومبت): "+s.line):""}
+
+${rulesBlock(x)}
+
+أعد JSON فقط: {"prompt_en":"clean english visual prompt starting with the camera framing words, no quotes no brackets","scene_ar":"وصف عربي محدّث مختصر"}`;
+  try{
+    const txt=await callLLM(sys,user); const d=stripJSON(txt);
+    if(!d||!d.prompt_en) throw new Error("فشل التوليد");
+    s.prompt_en=cleanPrompt(d.prompt_en); if(d.scene_ar) s.scene_ar=d.scene_ar;
+    renderShots(); saveResult(); toast("↻ تم تحديث اللقطة "+toAr(s.n));
+  }catch(e){ toast("تعذّر: "+(e.message||"خطأ")); if(btn){ btn.disabled=false; btn.textContent="↻ أعد توليد هذه اللقطة"; } }
 }
 
 /* ===== copy / save ===== */
@@ -404,10 +445,12 @@ function flashSaved(){ const e=document.getElementById("saved"); e.textContent="
   clearTimeout(window._st); window._st=setTimeout(()=>{ e.textContent="⟳ يُحفظ تلقائياً"; e.classList.remove("flash"); },1300); }
 function saveInputs(){ const s=ls(); if(!s) return;
   s.setItem("kadr_pf_inputs",JSON.stringify({script:document.getElementById("script").value,style:S.style,look:S.look,aspect:S.aspect,
+    ambiance:document.getElementById("ambiance").value,
     noTalk:document.getElementById("tgNoTalk").classList.contains("on"),noText:document.getElementById("tgNoText").classList.contains("on"),
     chars:S.chars,engine:S.engine,count:S.count})); flashSaved(); }
 function restoreInputs(){ const s=ls(); if(!s) return; let v={}; try{ v=JSON.parse(s.getItem("kadr_pf_inputs")||"{}"); }catch(e){}
   if(v.script) document.getElementById("script").value=v.script;
+  if(v.ambiance) document.getElementById("ambiance").value=v.ambiance;
   if(v.aspect){ S.aspect=v.aspect; document.querySelectorAll("#aspectChips .chip").forEach(c=>c.classList.toggle("on",c.dataset.a===v.aspect)); }
   if(v.noTalk) document.getElementById("tgNoTalk").classList.add("on");
   if(v.noText) document.getElementById("tgNoText").classList.add("on");
@@ -450,6 +493,7 @@ document.querySelectorAll("#countChips .chip").forEach(c=>c.onclick=()=>{
 document.getElementById("customCount").addEventListener("input",e=>{ const n=parseInt(e.target.value); if(n>0){ S.count=n; saveInputs(); } });
 document.querySelectorAll("#engSeg button").forEach(b=>b.onclick=()=>{ setEngine(b.dataset.e); saveInputs(); });
 document.getElementById("script").addEventListener("input",saveInputs);
+document.getElementById("ambiance").addEventListener("input",saveInputs);
 
 (function(){ paintMeter(); restoreInputs(); renderChars(); markSelected();
   const c=getCfg(); setEngine(c.lastEngine||(c.gemKey?"gem":c.anthKey?"anth":c.oaiKey?"oai":"gem"));
