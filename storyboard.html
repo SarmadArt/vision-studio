@@ -63,6 +63,15 @@
   .charRow input{flex:1}
   .charRow .x{width:40px;flex:none;background:var(--surface2);border:1px solid var(--line2);border-radius:9px;color:var(--muted);cursor:pointer;font-size:16px}
   .charRow .x:hover{border-color:var(--rose);color:var(--rose)}
+  .toggle{display:flex;align-items:center;gap:12px;background:var(--bg2);border:1px solid var(--line2);border-radius:11px;padding:12px 14px;cursor:pointer;transition:.18s}
+  .toggle:hover{border-color:var(--muted)}
+  .toggle .sw{width:42px;height:24px;border-radius:13px;background:var(--line2);position:relative;flex:none;transition:.2s}
+  .toggle .sw::after{content:"";position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:var(--muted);transition:.2s}
+  .toggle.on{border-color:var(--teal)}
+  .toggle.on .sw{background:var(--teal)}
+  .toggle.on .sw::after{right:21px;background:#0e1412}
+  .toggle .tl b{display:block;font-size:13.5px;font-weight:700}
+  .toggle .tl span{font-size:11.5px;color:var(--muted2)}
   @media(max-width:560px){.steps3{grid-template-columns:1fr}}
 </style>
 </head>
@@ -108,10 +117,10 @@
     </div>
     <p class="hint">مثال: ١٢ كلي و ٦ مجموعة ← برومبتان للمجموعات (١–٦ و ٧–١٢) + برومبت اللوحة الشامل.</p>
 
-    <div class="chips" style="margin-top:14px">
-      <div class="chip" id="tgCaptions" onclick="this.classList.toggle('on');saveInputs()">📝 وصف إنجليزي تحت كل لقطة</div>
+    <div class="toggle" id="capToggle" onclick="toggleCap()" style="margin-top:14px">
+      <span class="sw"></span>
+      <div class="tl"><b>📝 وصف إنجليزي تحت كل لقطة</b><span>مطفّي = لقطات مرقّمة فقط · مشغّل = يضيف وصف الحركة تحت كل خانة</span></div>
     </div>
-    <p class="hint">يضيف شريط نصّي تحت كل خانة (رقم + وصف الحركة) — يخلي اللوحة مرجعاً مثالياً للتقطيع في Seedance / Veo.</p>
   </div>
 
   <!-- engine -->
@@ -225,7 +234,7 @@ async function generate(){
   document.getElementById("genState").innerHTML='<div class="loading"><div class="spin"></div>نبني برومبت اللوحة...</div>';
 
   const ranges=[]; for(let a=1;a<=total;a+=group){ ranges.push([a,Math.min(a+group-1,total)]); }
-  const captions=document.getElementById("tgCaptions").classList.contains("on");
+  const captions=document.getElementById("capToggle").classList.contains("on");
   const styleLine=`${S.style} style, ${S.look}, ${S.ambiance?S.ambiance+", ":""}consistent characters, lighting and color across all frames`;
   const capRule=captions
     ? `مهم: تحت كل خانة ضع شريطاً نصّياً (caption bar) فيه رقم اللقطة ووصف إنجليزي مختصر للحركة/المشهد (مثل: "Shot 3: close-up, hands applying cream"). اذكر صراحة "each panel has a caption bar below it with the shot number and a short English description of the action".`
@@ -259,6 +268,7 @@ ${capRule}
   }catch(e){ document.getElementById("genState").innerHTML='<div class="err">'+(e.message||"خطأ")+'</div>'; }
   finally{ document.getElementById("genBtn").disabled=false; }
 }
+function toggleCap(){ document.getElementById("capToggle").classList.toggle("on"); saveInputs(); }
 function charRefClause(){ const names=S.charsRef.map(c=>(c.name||"").trim()).filter(Boolean); return {use:names.length>0,names:names.join(", ")}; }
 function groupPrompt(a,b){
   const cr=charRefClause();
@@ -335,12 +345,12 @@ function flashSaved(){ const e=document.getElementById("saved"); e.textContent="
   clearTimeout(window._st); window._st=setTimeout(()=>{ e.textContent="⟳ يُحفظ تلقائياً"; e.classList.remove("flash"); },1300); }
 function saveInputs(){ const s=ls(); if(!s) return; s.setItem("kadr_sb_inputs",JSON.stringify({
   shotsText:document.getElementById("shotsText").value,total:document.getElementById("total").value,group:document.getElementById("group").value,charsRef:S.charsRef,
-  captions:document.getElementById("tgCaptions").classList.contains("on"),engine:S.engine})); flashSaved(); }
+  captions:document.getElementById("capToggle").classList.contains("on"),engine:S.engine})); flashSaved(); }
 function restoreInputs(){ const s=ls(); if(!s) return; let v={}; try{ v=JSON.parse(s.getItem("kadr_sb_inputs")||"{}"); }catch(e){}
   if(v.shotsText) document.getElementById("shotsText").value=v.shotsText;
   if(v.total) document.getElementById("total").value=v.total;
   if(v.group) document.getElementById("group").value=v.group;
-  if(v.captions) document.getElementById("tgCaptions").classList.add("on");
+  if(v.captions) document.getElementById("capToggle").classList.add("on");
   if(Array.isArray(v.charsRef)) S.charsRef=v.charsRef;
 }
 
