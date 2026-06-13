@@ -322,6 +322,8 @@ function rulesBlock(x){
 - اذكر الجو العام (المكان/الثقافة/الحقبة) في الوصف.
 - اختم بذكر الستايل واللوك والأبعاد طبيعياً: "${x.style} style, ${x.look}, ${x.aspect} composition${x.flags?(", "+x.flags):""}".
 - لقطة واحدة فقط: صورة واحدة متكاملة كاملة الإطار (single full-frame image, one moment). ممنوع منعاً باتاً: split screen, grid, collage, multiple panels, comic layout, diptych, montage, sequence, before/after.
+- اللقطة تصوّر **لحظة/فعل واحد فقط** — ممنوع وصف تباين أو مقارنة أو حالتين أو "then" أو "before and after" أو "contrast between... and...". لو السكربت فيه مقارنة، صوّر **لحظة واحدة واضحة فقط** (أو لو احتجت التباين اجعله لقطتين منفصلتين، مو صورة مقسّمة).
+- اكتب صفات المظهر بصيغة **إيجابية** يفهمها المولّد: استخدم "hair uncovered, hair visible" بدل "without hijab"، لأن المولّد يتجاهل النفي.
 - ممنوع منعاً باتاً: أي كلام منطوق، أي نص على الشاشة، علامات اقتباس، أقواس [ ]، اختصارات، أو كلمة FLAGS.
 الجو العام (طبّقه على كل لقطة): ${x.ambiance||"غير محدد"}
 ${x.chars?("الشخصيات الثابتة: "+x.chars):""}`;
