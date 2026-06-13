@@ -265,10 +265,10 @@
 const PRICES = {
   oai:{ "gpt-5.4-mini":[0.75,4.5], "gpt-5.4-nano":[0.20,1.25], "gpt-5.4":[2.5,15], "gpt-5.5":[5,30] },
   anth:{ "claude-sonnet-4-6":[3,15], "claude-haiku-4-5":[1,5], "claude-opus-4-8":[5,25] },
-  gem:{ "gemini-3-flash":[0.5,3], "gemini-3.1-flash-lite":[0.25,1.5], "gemini-3.5-flash":[1.5,9], "gemini-3.1-pro":[2,12] }
+  gem:{ "gemini-3.1-flash-lite":[0.25,1.5], "gemini-3.5-flash":[1.5,9], "gemini-3-flash-preview":[0.5,3], "gemini-3.1-pro-preview":[2,12] }
 };
 const MODELS = {
-  gem:[["gemini-3-flash","أفضل قيمة ✓"],["gemini-3.1-flash-lite","الأرخص"],["gemini-3.5-flash","أحدث"],["gemini-3.1-pro","الأقوى"]],
+  gem:[["gemini-3.1-flash-lite","أفضل قيمة ✓"],["gemini-3.5-flash","الأذكى · مستقر"],["gemini-3-flash-preview","متوازن"],["gemini-3.1-pro-preview","الأقوى"]],
   anth:[["claude-sonnet-4-6","أفضل قيمة ✓"],["claude-haiku-4-5","الأرخص"],["claude-opus-4-8","الأقوى"]],
   oai:[["gpt-5.4-mini","أفضل قيمة ✓"],["gpt-5.4-nano","الأرخص"],["gpt-5.4","متوازن"],["gpt-5.5","الأقوى"]]
 };
@@ -323,7 +323,9 @@ function stripJSON(t){ if(!t) return null; t=String(t).replace(/```json/gi,"").r
 
 async function callLLM(system,user,jsonMode){
   const eng=S.engine, c=getCfg();
-  const model=c[eng+"Model"]||MODELS[eng][0][0];
+  const sel=document.getElementById("modelSel");
+  let model=(sel&&sel.value)||c[eng+"Model"]||MODELS[eng][0][0];
+  if(!(PRICES[eng]||{})[model]) model=MODELS[eng][0][0];
   if(eng==="gem"){
     if(!c.gemKey) throw new Error("أضف مفتاح Gemini في الإعدادات.");
     const url=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(c.gemKey)}`;
@@ -512,6 +514,7 @@ function setEngine(e){
   const sel=document.getElementById("modelSel");
   sel.innerHTML=MODELS[e].map(([v,l])=>`<option value="${v}">${v} — ${l}</option>`).join("");
   const c=getCfg(); if(c[e+"Model"]) sel.value=c[e+"Model"];
+  if(!MODELS[e].some(m=>m[0]===sel.value)){ sel.value=MODELS[e][0][0]; setCfg({[e+"Model"]:sel.value}); }
   updateModelPrice();
   const note=document.getElementById("engNote");
   note.innerHTML = (e==="oai") ? '<div class="warn">GPT و Perplexity يشتغلون عبر <b>/api</b> على موقعك — لازم ترفع مجلد <b>api</b> على Vercel. Gemini و Claude يشتغلون بدونه.</div>' : "";
