@@ -314,11 +314,11 @@ async function callLLM(system,user,jsonMode){
     return txt;
   }
   if(eng==="oai"){
-    const proxy=(c.proxy||"").replace(/\/+$/,"");
-    if(!proxy) throw new Error("GPT يحتاج وسيطاً (CORS). استخدم Gemini أو Claude الآن، أو أضف الوسيط لاحقاً.");
-    const r=await fetch(proxy+"/openai",{method:"POST",headers:{"Content-Type":"application/json","x-openai-key":c.oaiKey||""},
+    if(!c.oaiKey) throw new Error("أضف مفتاح GPT في الإعدادات.");
+    const r=await fetch("/api/openai",{method:"POST",headers:{"Content-Type":"application/json","x-openai-key":c.oaiKey},
       body:JSON.stringify({ model, messages:[{role:"system",content:system},{role:"user",content:user}], response_format: jsonMode?{type:"json_object"}:undefined })});
-    const d=await r.json(); if(!r.ok) throw new Error(d.error?.message||("خطأ GPT "+r.status));
+    let d; try{ d=await r.json(); }catch(e){ throw new Error("ملف الوسيط /api غير موجود — ارفع مجلد api على Vercel."); }
+    if(!r.ok) throw new Error(d.error?.message||("خطأ GPT "+r.status));
     const u=d.usage||{}; addUsage("oai",model,u.prompt_tokens||0,u.completion_tokens||0);
     return d.choices?.[0]?.message?.content||"";
   }
@@ -343,11 +343,11 @@ async function runResearch(){
         url:"https://youtube.com/watch?v="+(it.id?.videoId||"") }));
     }
     if(isOn("pplx")){
-      const proxy=(c.proxy||"").replace(/\/+$/,"");
-      if(!proxy) throw new Error("Perplexity يحتاج وسيطاً — أطفئه الآن أو أضف الوسيط لاحقاً.");
-      const r=await fetch(proxy+"/perplexity",{method:"POST",headers:{"Content-Type":"application/json","x-pplx-key":c.pplxKey||""},
+      if(!c.pplxKey) throw new Error("أضف مفتاح Perplexity في الإعدادات أو أطفئه.");
+      const r=await fetch("/api/perplexity",{method:"POST",headers:{"Content-Type":"application/json","x-pplx-key":c.pplxKey},
         body:JSON.stringify({ model:c.pplxModel||"sonar", messages:[{role:"user",content:"أحدث الزوايا الرائجة حول: "+topic+". بإيجاز."}], search_recency_filter:"month" })});
-      const d=await r.json(); if(!r.ok) throw new Error(d.error?.message||"خطأ Perplexity");
+      let d; try{ d=await r.json(); }catch(e){ throw new Error("ملف الوسيط /api غير موجود — ارفع مجلد api على Vercel."); }
+      if(!r.ok) throw new Error(d.error?.message||"خطأ Perplexity");
       const txt=d.choices?.[0]?.message?.content||""; if(txt) S.sources.push({kind:"Perplexity",title:"ملخص الترند",desc:txt.slice(0,200),url:""});
       (d.citations||[]).forEach((u,i)=>S.sources.push({kind:"مصدر",title:"مرجع "+(i+1),desc:"",url:typeof u==="string"?u:(u.url||"")}));
     }
@@ -460,7 +460,7 @@ function setEngine(e){
   const c=getCfg(); if(c[e+"Model"]) sel.value=c[e+"Model"];
   updateModelPrice();
   const note=document.getElementById("engNote");
-  note.innerHTML = (e==="oai") ? '<div class="warn">GPT يحتاج وسيطاً للعمل من الموقع. Gemini و Claude يشتغلون مباشرة الآن.</div>' : "";
+  note.innerHTML = (e==="oai") ? '<div class="warn">GPT و Perplexity يشتغلون عبر <b>/api</b> على موقعك — لازم ترفع مجلد <b>api</b> على Vercel. Gemini و Claude يشتغلون بدونه.</div>' : "";
 }
 function saveModel(){ setCfg({[S.engine+"Model"]:document.getElementById("modelSel").value}); updateModelPrice(); flashSaved(); }
 function updateModelPrice(){ const m=document.getElementById("modelSel").value; const p=(PRICES[S.engine]||{})[m];
