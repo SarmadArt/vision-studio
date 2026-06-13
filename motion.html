@@ -286,7 +286,7 @@ const ENGINES={
 const ENG_ORDER=["veo","grok","kling","hailuo","seedance"];
 
 /* ===== state ===== */
-const S={engine:"gem",mode:"single",images:[],style:null,target:"veo",charsRef:[],dlgOn:false};
+const S={engine:"gem",mode:"single",images:[],style:null,target:"veo",charsRef:[],dlgOn:false,accent:""};
 
 /* ===== build UI ===== */
 function buildStyles(){ document.getElementById("styleChips").innerHTML=STYLES.map(([ar,en])=>`<div class="chip" data-en="${en}" onclick="pickStyle(this)">${ar}</div>`).join(""); }
@@ -332,7 +332,10 @@ function toggleDlgPanel(){ S.dlgOn=!S.dlgOn;
   if(S.dlgOn) renderDlgPanel();
 }
 function renderDlgPanel(){
-  document.getElementById("dlgPanel").innerHTML=`<label class="f">الجملة المنطوقة لكل لقطة <span>(اكتب فقط للقطات اللي فيها كلام)</span></label>`+
+  document.getElementById("dlgPanel").innerHTML=
+    `<label class="f">اللهجة العامة <span>(تنطبق على كل اللقطات — تقدر تغيّرها لكل لقطة بعد التوليد)</span></label>`+
+    `<input type="text" id="globAccent" placeholder="مثال: عراقي · خليجي · مصري · فصحى" value="${esc(S.accent||'')}" oninput="S.accent=this.value;saveInputs()" style="margin-bottom:6px">`+
+    `<label class="f">الجملة المنطوقة لكل لقطة <span>(اكتب فقط للقطات اللي فيها كلام)</span></label>`+
     S.images.map((im,i)=>`<div class="dlgrow"><div class="t"><img src="${im.url}" alt=""></div>
       <input type="text" placeholder="حوار اللقطة ${toAr(i+1)} (اتركه فاضي لو صامتة)" value="${esc(im.line||'')}" oninput="S.images[${i}].line=this.value">
     </div>`).join("");
@@ -358,12 +361,13 @@ function setMode(m){ S.mode=m;
 }
 
 /* ===== generate ===== */
-function dlgClause(line){
+function dlgClause(line,accent){
   if(!line||!line.trim()) return "No spoken dialogue for this shot; keep it silent (ambient/SFX only).";
-  const t=line.trim();
-  if(S.target==="veo") return `Spoken dialogue: write it exactly as — Character says: ${t} — and add (no subtitles). Put it on the Audio line.`;
-  if(S.target==="grok") return `Spoken dialogue (native lip-sync, include naturally): ${t}`;
-  return `The person speaks this line on screen (match lip movement, include in scene audio): ${t}`;
+  const t=line.trim(); const ac=(accent&&accent.trim())?` (${accent.trim()} accent)`:"";
+  const keep="IMPORTANT: keep the spoken line EXACTLY as written in Arabic, verbatim between quotes — do NOT translate or romanize it.";
+  if(S.target==="veo") return `Spoken dialogue${ac}: write it exactly as — Character says: "${t}" — and add (no subtitles). Put it on the Audio line. ${keep}`;
+  if(S.target==="grok") return `Spoken dialogue${ac}, native lip-sync, include naturally: "${t}". ${keep}`;
+  return `The person speaks this line on screen${ac} (match lip movement, include in scene audio): "${t}". ${keep}`;
 }
 async function generate(){
   if(!S.images.length){ document.getElementById("genState").innerHTML='<div class="warn">ارفع صورة واحدة على الأقل.</div>'; return; }
@@ -414,12 +418,13 @@ ${timeLine}
 }
 async function genOne(i,sys,style,clarify,timeLine){
   const e=ENGINES[S.target];
+  const accent=(S.images[i].accent!=null&&S.images[i].accent!=="")?S.images[i].accent:S.accent;
   const user=`حلّل الصورة المرفقة (لا تعيد وصفها — هي الإطار الأول).
 نوع الحركة: ${style}. ${clarify?("توضيح: "+clarify):""}
 ${e.rules}
-${dlgClause(S.images[i].line)}
+${dlgClause(S.images[i].line,accent)}
 ${timeLine}
-اكتب motion_prompt إنجليزي: الحركة داخل الإطار + حركة الكاميرا (منفصلة) + الصوت/الحوار إن وُجد. نظيف بدون أقواس [].
+اكتب motion_prompt إنجليزي: الحركة داخل الإطار + حركة الكاميرا (منفصلة) + الصوت/الحوار إن وُجد. نظيف بدون أقواس []. لو فيه حوار عربي اتركه عربياً حرفياً بين اقتباس.
 أعد JSON فقط: {"motion_prompt":"...","tip":"نصيحة قصيرة بالعربي لهذا المحرّك"}`;
   try{ const d=stripJSON(await callLLM(sys,user,[S.images[i]])); return {p:clean(d&&d.motion_prompt),tip:(d&&d.tip)||""}; }
   catch(err){ return {p:"",tip:"⚠ "+(err.message||"تعذّر")}; }
@@ -445,7 +450,8 @@ function renderPairs(){
       <div class="pn">صورة ${toAr(i+1)}</div>
       <div class="prompt-en">${esc(r.prompt||"—")}</div>
       ${r.tip?`<div class="tip">💡 ${esc(r.tip)}</div>`:""}
-      ${!r.board?`<div class="dlgline"><input type="text" placeholder="🎙️ حوار هذه اللقطة (اختياري) ثم أعد التوليد" value="${esc(S.images[i]?S.images[i].line||'':r.line||'')}" oninput="if(S.images[${i}])S.images[${i}].line=this.value"></div>`:""}
+      ${!r.board?`<div class="dlgline"><input type="text" placeholder="🎙️ حوار هذه اللقطة (اختياري)" value="${esc(S.images[i]?S.images[i].line||'':r.line||'')}" oninput="if(S.images[${i}])S.images[${i}].line=this.value"></div>
+      <div class="dlgline"><input type="text" placeholder="اللهجة لهذه اللقطة (اختياري)" value="${esc(S.images[i]?(S.images[i].accent!=null?S.images[i].accent:''):'')}" oninput="if(S.images[${i}])S.images[${i}].accent=this.value"></div>`:""}
       <div class="bar">
         <button class="btn ghost small" onclick="copyText(S.results[${i}].prompt)">📋 نسخ</button>
         ${!r.board?`<button class="btn ghost small" id="rg${i}" onclick="regenOne(${i})">↻ أعد التوليد</button>`:""}
@@ -477,12 +483,13 @@ function updateModelPrice(){ const m=document.getElementById("modelSel").value; 
 function flashSaved(){ const el=document.getElementById("saved"); el.textContent="✓ محفوظ"; el.classList.add("flash");
   clearTimeout(window._st); window._st=setTimeout(()=>{ el.textContent="⟳ يُحفظ تلقائياً"; el.classList.remove("flash"); },1300); }
 function saveInputs(){ const s=ls(); if(!s) return; s.setItem("kadr_motion_inputs",JSON.stringify({
-  mode:S.mode,style:S.style,target:S.target,charsRef:S.charsRef,
+  mode:S.mode,style:S.style,target:S.target,charsRef:S.charsRef,accent:S.accent,
   clarify:document.getElementById("clarify").value,timing:document.getElementById("timing").value,engine:S.engine})); flashSaved(); }
 function restoreInputs(){ const s=ls(); if(!s) return; let v={}; try{ v=JSON.parse(s.getItem("kadr_motion_inputs")||"{}"); }catch(e){}
   if(v.clarify) document.getElementById("clarify").value=v.clarify;
   if(v.timing) document.getElementById("timing").value=v.timing;
   if(Array.isArray(v.charsRef)) S.charsRef=v.charsRef;
+  if(v.accent) S.accent=v.accent;
   if(v.target) S.target=v.target;
   if(v.style){ S.style=v.style; }
 }
