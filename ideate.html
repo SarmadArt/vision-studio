@@ -122,11 +122,18 @@
   /* script segments */
   .seg-out{position:relative;background:var(--surface);border:1px solid var(--line2);border-radius:11px;margin-top:10px;padding:13px 15px 13px 38px;overflow:hidden}
   .seg-out::before{content:"";position:absolute;top:0;bottom:0;left:0;width:22px;background:repeating-linear-gradient(0deg,#101117 0 7px,#2c2f3d 7px 14px);border-left:1px solid var(--line2)}
-  .seg-out .no{font-family:var(--mono);font-weight:600;font-size:13px;background:var(--violet);color:#0e0a1f;width:30px;height:26px;border-radius:7px;display:grid;place-items:center;margin-bottom:7px}
+  .seg-out .shead{display:flex;align-items:center;gap:9px;margin-bottom:7px}
+  .seg-out .no{font-family:var(--mono);font-weight:600;font-size:13px;background:var(--violet);color:#0e0a1f;width:30px;height:26px;border-radius:7px;display:grid;place-items:center}
+  .seg-out .sdur{font-family:var(--mono);font-size:12px;color:var(--teal);background:var(--teal-soft);border:1px solid rgba(88,199,190,.3);padding:3px 9px;border-radius:6px}
   .seg-out .v{font-size:14px;margin:0 0 6px;line-height:1.6}
   .seg-out .l{font-size:13px;color:var(--muted);display:flex;gap:7px}
   .seg-out .l b{color:var(--teal);font-family:var(--mono);font-size:11px}
   .seg-out .nt{font-size:12px;color:var(--muted2);margin-top:5px}
+  .seg-out .dbar{height:4px;border-radius:3px;background:var(--line);margin-top:10px;overflow:hidden}
+  .seg-out .dbar i{display:block;height:100%;background:linear-gradient(90deg,var(--violet),var(--teal));border-radius:3px}
+  .dstat{font-family:var(--mono);font-size:12.5px;padding:9px 13px;border-radius:9px;margin-top:4px}
+  .dstat.ok{background:rgba(95,176,122,.1);border:1px solid rgba(95,176,122,.4);color:#a7d9b6}
+  .dstat.off{background:var(--amber-soft);border:1px solid rgba(240,169,59,.4);color:#f3cd8d}
   .hidden{display:none!important}
 </style>
 </head>
@@ -466,12 +473,17 @@ async function genScript(){
   const it=S.ideas[S.chosen], x=buildContext();
   document.getElementById("scriptBtn").disabled=true;
   document.getElementById("scriptState").innerHTML='<div class="loading"><div class="spin"></div>نكتب السكربت المرقّم...</div>';
-  const sys="أنت كاتب سيناريو محترف. حوّل الفكرة إلى سكربت نظيف مقسّم لمقاطع مرقّمة جاهزة للإنتاج. أجب بالعربية وبصيغة JSON فقط.";
+  const sys="أنت كاتب سيناريو ومخرج محترف تكتب سكربت جاهز لتوليد الفيديو بالذكاء الاصطناعي (Veo/Kling/Runway). أجب بالعربية وبصيغة JSON فقط.";
+  const dur=+x.duration||30;
   const user=`الفكرة: ${it.title} — ${it.logline}\nالافتتاحية: ${it.hook||""}\n`+
-    `نوع: ${x.type} · لهجة: ${x.dialect} · نبرة: ${x.tone||"حر"} · منصة: ${x.platform} · مدة: ${x.duration}ث\n`+
+    `نوع: ${x.type} · لهجة: ${x.dialect} · نبرة: ${x.tone||"حر"} · منصة: ${x.platform} · المدة الكلية: ${dur}ث\n`+
     `${x.brief?("تفاصيل: "+x.brief+"\n"):""}`+
-    `قسّمه لمقاطع مرقّمة، كل مقطع: الوصف البصري/الأكشن + الحوار أو التعليق الصوتي + ملاحظة إخراجية مختصرة.\n`+
-    `أعد JSON فقط: {"title":"عنوان السكربت","segments":[{"n":1,"visual":"","line":"","note":""}]}`;
+    `قسّمه إلى مقاطع (لقطات) مرقّمة جاهزة لتوليد الفيديو:\n`+
+    `- مدة كل مقطع بين 2 و 5 ثوانٍ. الافتراضي 4–5ث.\n`+
+    `- استخدم 2–3ث للّقطات السريعة أو السينمائية (كلوز على وجه صامت، تفصيلة، قطع سريع).\n`+
+    `- مهم جداً: مجموع مدد كل المقاطع = ${dur} ثانية بالضبط.\n`+
+    `لكل مقطع: المدة بالثواني (duration) + الوصف البصري/الأكشن + الحوار أو التعليق الصوتي + ملاحظة إخراجية مختصرة.\n`+
+    `أعد JSON فقط: {"title":"عنوان السكربت","totalDuration":${dur},"segments":[{"n":1,"duration":4,"visual":"","line":"","note":""}]}`;
   try{
     const txt=await callLLM(sys,user,true); const d=stripJSON(txt);
     if(!d||!d.segments||!d.segments.length) throw new Error("ما قدرنا نقرأ السكربت، أعد المحاولة.");
@@ -486,13 +498,21 @@ let CURRENT=null;
 function renderScript(d){
   CURRENT=d;
   document.getElementById("scriptTitle").textContent=d.title||"سكربت نظيف";
-  document.getElementById("segments").innerHTML = d.segments.map((s,i)=>`
-    <div class="seg-out">
-      <div class="no">${toAr(s.n||i+1)}</div>
+  const segs=d.segments.map((s,i)=>({...s,n:s.n||i+1,duration:Number(s.duration)||0}));
+  const total=segs.reduce((a,s)=>a+s.duration,0);
+  const target=d.totalDuration||S.duration;
+  const match = Math.abs(total-target)<=1;
+  const stat=`<div class="dstat ${match?'ok':'off'}">المجموع: ${toAr(total)}ث / المطلوب: ${toAr(target)}ث · ${toAr(segs.length)} مقطع${match?' ✓':' ⚠'}</div>`;
+  document.getElementById("segments").innerHTML = stat + segs.map(s=>{
+    const pct=Math.max(8,Math.round((s.duration/(total||1))*100));
+    return `<div class="seg-out">
+      <div class="shead"><span class="no">${toAr(s.n)}</span><span class="sdur">${toAr(s.duration)}ث</span></div>
       <p class="v">${esc(s.visual||"")}</p>
       ${s.line?`<div class="l"><b>الكلام</b><span>${esc(s.line)}</span></div>`:""}
       ${s.note?`<div class="nt">↳ ${esc(s.note)}</div>`:""}
-    </div>`).join("");
+      <div class="dbar"><i style="width:${pct}%"></i></div>
+    </div>`;
+  }).join("");
 }
 function saveResult(idea,script){
   const s=ls(); if(!s) return;
@@ -500,7 +520,7 @@ function saveResult(idea,script){
 }
 function scriptText(){
   if(!CURRENT) return ""; let o=(CURRENT.title||"سكربت")+"\n====================\n";
-  CURRENT.segments.forEach((s,i)=>{ o+=`مقطع ${s.n||i+1}\n  مشهد: ${s.visual||""}\n`; if(s.line)o+=`  كلام: ${s.line}\n`; if(s.note)o+=`  ملاحظة: ${s.note}\n`; o+="\n"; });
+  CURRENT.segments.forEach((s,i)=>{ o+=`مقطع ${s.n||i+1} (${s.duration||"?"}ث)\n  مشهد: ${s.visual||""}\n`; if(s.line)o+=`  كلام: ${s.line}\n`; if(s.note)o+=`  ملاحظة: ${s.note}\n`; o+="\n"; });
   return o;
 }
 function copyScript(){ navigator.clipboard.writeText(scriptText()); toast("📋 تم النسخ"); }
