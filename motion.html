@@ -45,6 +45,16 @@
   .preview{margin-top:12px;display:none}
   .preview img{max-width:100%;max-height:260px;border-radius:10px;border:1px solid var(--line2);display:block}
   .preview .rm{margin-top:8px}
+  .thumbs{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}
+  .thumb{position:relative;width:84px;height:84px;border-radius:10px;overflow:hidden;border:1px solid var(--line2)}
+  .thumb img{width:100%;height:100%;object-fit:cover}
+  .thumb .x{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;border:none;cursor:pointer;font-size:13px;line-height:1}
+  .thumb .i{position:absolute;bottom:0;right:0;background:var(--amber);color:#1a1206;font-family:var(--mono);font-size:10px;padding:1px 5px;border-top-left-radius:6px}
+  .pair{display:grid;grid-template-columns:160px 1fr;gap:14px;align-items:start;background:var(--surface);border:1px solid var(--line2);border-radius:12px;padding:14px;margin-top:12px}
+  .pair .pic{border-radius:9px;overflow:hidden;border:1px solid var(--line2)}
+  .pair .pic img{width:100%;display:block}
+  .pair .pn{font-family:var(--mono);font-size:11px;color:var(--amber);margin-bottom:6px}
+  @media(max-width:560px){.pair{grid-template-columns:1fr}}
   /* models */
   .models{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px;margin-top:6px}
   .mcard{background:var(--bg2);border:1.5px solid var(--line2);border-radius:11px;padding:11px 12px;cursor:pointer;transition:.15s;position:relative}
@@ -108,8 +118,8 @@
     <div class="eyebrow">الصورة</div>
     <h2 id="imgTitle">ارفع الصورة</h2>
     <p class="sub" id="imgSub">اسحب وأفلت الصورة، والنظام يحلّلها ويقترح الحركة.</p>
-    <div class="drop" id="drop">اسحب الصورة هنا · أو اضغط للاختيار<input type="file" id="file" accept="image/*" hidden></div>
-    <div class="preview" id="preview"><img id="pimg" alt=""><div class="rm"><button class="btn ghost small" onclick="clearImg()">✕ إزالة</button></div></div>
+    <div class="drop" id="drop">اسحب صورة أو عدة صور هنا · أو اضغط للاختيار<input type="file" id="file" accept="image/*" multiple hidden></div>
+    <div id="thumbs" class="thumbs"></div>
 
     <div id="boardChars" class="hidden">
       <label class="f" style="margin-top:16px">رفرنس الشخصيات <span>(اختياري — أسماء/أدوار تضيف صورها كمراجع)</span></label>
@@ -197,25 +207,26 @@ function toast(m){ const t=document.createElement("div"); t.textContent=m; t.sty
 function stripJSON(t){ if(!t) return null; t=String(t).replace(/```json/gi,"").replace(/```/g,"").trim();
   try{ return JSON.parse(t); }catch(e){} for(const [o,c] of [["{","}"],["[","]"]]){ const i=t.indexOf(o); if(i<0)continue; let d=0;
     for(let j=i;j<t.length;j++){ if(t[j]===o)d++; else if(t[j]===c){ d--; if(!d){ try{ return JSON.parse(t.slice(i,j+1)); }catch(e){} } } } } return null; }
-async function callLLM(system,user,image){
+async function callLLM(system,user,images){
   const eng=S.engine,c=getCfg(); const sel=document.getElementById("modelSel");
   let model=(sel&&sel.value)||c[eng+"Model"]||MODELS[eng][0][0]; if(!(PRICES[eng]||{})[model]) model=MODELS[eng][0][0];
+  const imgs=images||[];
   if(eng==="gem"){ if(!c.gemKey) throw new Error("أضف مفتاح Gemini في الإعدادات.");
-    const parts=[]; if(image) parts.push({inlineData:{mimeType:image.mime,data:image.data}}); parts.push({text:user});
+    const parts=[]; imgs.forEach(im=>parts.push({inlineData:{mimeType:im.mime,data:im.data}})); parts.push({text:user});
     const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(c.gemKey)}`,
       {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:[{role:"user",parts}],generationConfig:{temperature:0.6,maxOutputTokens:4096,responseMimeType:"application/json"}})});
     const d=await r.json(); if(!r.ok) throw new Error(d.error?.message||("خطأ Gemini "+r.status));
     const um=d.usageMetadata||{}; addUsage("gem",model,um.promptTokenCount||0,um.candidatesTokenCount||0);
     return (d.candidates?.[0]?.content?.parts||[]).map(p=>p.text||"").join(""); }
   if(eng==="anth"){ if(!c.anthKey) throw new Error("أضف مفتاح Claude في الإعدادات.");
-    const content=[]; if(image) content.push({type:"image",source:{type:"base64",media_type:image.mime,data:image.data}}); content.push({type:"text",text:user});
+    const content=[]; imgs.forEach(im=>content.push({type:"image",source:{type:"base64",media_type:im.mime,data:im.data}})); content.push({type:"text",text:user});
     const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":c.anthKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
       body:JSON.stringify({model,max_tokens:4096,system,messages:[{role:"user",content}]})});
     const d=await r.json(); if(!r.ok) throw new Error(d.error?.message||("خطأ Claude "+r.status));
     const u=d.usage||{}; addUsage("anth",model,u.input_tokens||0,u.output_tokens||0);
     return (d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join(""); }
   if(eng==="oai"){ if(!c.oaiKey) throw new Error("أضف مفتاح GPT في الإعدادات.");
-    const uc=image?[{type:"text",text:user},{type:"image_url",image_url:{url:`data:${image.mime};base64,${image.data}`}}]:user;
+    const uc=imgs.length?[{type:"text",text:user},...imgs.map(im=>({type:"image_url",image_url:{url:`data:${im.mime};base64,${im.data}`}}))]:user;
     const r=await fetch("/api/openai",{method:"POST",headers:{"Content-Type":"application/json","x-openai-key":c.oaiKey},
       body:JSON.stringify({model,messages:[{role:"system",content:system},{role:"user",content:uc}],response_format:{type:"json_object"}})});
     let d; try{ d=await r.json(); }catch(e){ throw new Error("ملف الوسيط /api غير موجود — ارفع مجلد api على Vercel."); }
@@ -269,7 +280,7 @@ const ENGINES={
 const ENG_ORDER=["veo","grok","kling","hailuo","seedance"];
 
 /* ===== state ===== */
-const S={engine:"gem",mode:"single",image:null,style:null,target:"veo",charsRef:[]};
+const S={engine:"gem",mode:"single",images:[],style:null,target:"veo",charsRef:[]};
 
 /* ===== build UI ===== */
 function buildStyles(){ document.getElementById("styleChips").innerHTML=STYLES.map(([ar,en])=>`<div class="chip" data-en="${en}" onclick="pickStyle(this)">${ar}</div>`).join(""); }
@@ -290,12 +301,21 @@ function explain(k){ const e=ENGINES[k];
   document.getElementById("pop").classList.add("open"); }
 function closePop(){ document.getElementById("pop").classList.remove("open"); }
 
-/* ===== image ===== */
-function handleFile(f){ if(!f||!f.type.startsWith("image/")){ toast("اختر ملف صورة"); return; }
-  const r=new FileReader(); r.onload=()=>{ const res=r.result; const m=/^data:(.*?);base64,(.*)$/.exec(res);
-    if(m){ S.image={mime:m[1],data:m[2],url:res}; document.getElementById("pimg").src=res; document.getElementById("preview").style.display="block"; document.getElementById("drop").style.display="none"; } };
-  r.readAsDataURL(f); }
-function clearImg(){ S.image=null; document.getElementById("preview").style.display="none"; document.getElementById("drop").style.display="block"; document.getElementById("file").value=""; }
+/* ===== images (multi) ===== */
+function handleFiles(list){
+  const files=[...(list||[])].filter(f=>f.type.startsWith("image/"));
+  if(!files.length){ toast("اختر صور"); return; }
+  let pending=files.length;
+  files.forEach(f=>{ const r=new FileReader(); r.onload=()=>{ const res=r.result; const m=/^data:(.*?);base64,(.*)$/.exec(res);
+    if(m) S.images.push({mime:m[1],data:m[2],url:res}); if(--pending===0) renderThumbs(); };
+    r.onerror=()=>{ if(--pending===0) renderThumbs(); }; r.readAsDataURL(f); });
+}
+function renderThumbs(){
+  document.getElementById("thumbs").innerHTML=S.images.map((im,i)=>
+    `<div class="thumb"><img src="${im.url}" alt=""><button class="x" onclick="removeImg(${i})">×</button><span class="i">${toAr(i+1)}</span></div>`).join("");
+}
+function removeImg(i){ S.images.splice(i,1); renderThumbs(); }
+function clearImgs(){ S.images=[]; renderThumbs(); document.getElementById("file").value=""; }
 
 /* ===== char refs (board mode) ===== */
 function addCharRef(name){ S.charsRef.push({name:name||""}); renderCharsRef(); saveInputs(); }
@@ -308,7 +328,7 @@ function setMode(m){ S.mode=m;
   document.querySelectorAll("#modeSeg button").forEach(b=>b.classList.toggle("on",b.dataset.m===m));
   const board=m==="board";
   document.getElementById("imgTitle").textContent=board?"ارفع لوحة الستوري بورد":"ارفع الصورة";
-  document.getElementById("imgSub").textContent=board?"اللوحة اللي فيها كل اللقطات — النظام يقطّعها لفيديو متتابع.":"اسحب وأفلت الصورة، والنظام يحلّلها ويقترح الحركة.";
+  document.getElementById("imgSub").textContent=board?"اللوحة اللي فيها كل اللقطات — النظام يقطّعها لفيديو متتابع.":"اسحب صورة أو عدة صور دفعة وحدة — كل صورة تطلع جنبها برومبت تحريكها.";
   document.getElementById("modeHint").textContent=board?"يقطّع لقطات اللوحة لفيديو متعدد المشاهد (الأفضل: Seedance / Veo 3.1).":"لقطة واحدة → برومبت تحريك يحلّل الصورة ويعطي الحركة المناسبة.";
   document.getElementById("boardChars").classList.toggle("hidden",!board);
   if(board && S.target!=="seedance" && S.target!=="veo"){ S.target="seedance"; }
@@ -318,68 +338,82 @@ function setMode(m){ S.mode=m;
 
 /* ===== generate ===== */
 async function generate(){
-  if(!S.image){ document.getElementById("genState").innerHTML='<div class="warn">ارفع صورة أولاً.</div>'; return; }
+  if(!S.images.length){ document.getElementById("genState").innerHTML='<div class="warn">ارفع صورة واحدة على الأقل.</div>'; return; }
   const e=ENGINES[S.target];
   const style=S.style?S.style.en:"natural";
   const clarify=document.getElementById("clarify").value.trim();
   const timing=document.getElementById("timing").value.trim();
   const dlg=document.getElementById("dialogue").value.trim();
   const board=S.mode==="board";
-  document.getElementById("genBtn").disabled=true;
-  document.getElementById("genState").innerHTML='<div class="loading"><div class="spin"></div>نحلّل الصورة ونكتب برومبت '+esc(e.name)+'...</div>';
-
   const timeLine = timing ? `Timing/sequence requested: ${timing}. Include it.` : `Do NOT mention any duration or timing.`;
-  let sys, user;
-  if(!board){
-    const dlgLine = (e.dialogue && dlg) ? `Spoken dialogue to include in audio: "${dlg}".` : (e.dialogue?`No dialogue provided.`:`This engine has no audio; ignore any dialogue.`);
-    sys="أنت مهندس برومبتات تحريك فيديو (image-to-video). تحلّل الصورة المرفقة وتكتب برومبت إنجليزي للحركة فقط بصيغة المحرّك المطلوب. أجب JSON فقط.";
-    user=`حلّل الصورة المرفقة (لا تعيد وصفها في البرومبت — هي موجودة كإطار أول).
-نوع الحركة المطلوب: ${style}.
-${clarify?("توضيح المستخدم للحركة: "+clarify):""}
+  document.getElementById("genBtn").disabled=true;
+
+  try{
+    if(!board){
+      const dlgLine=(e.dialogue&&dlg)?`Spoken dialogue to include in audio: "${dlg}".`:(e.dialogue?`No dialogue provided.`:`This engine has no audio; ignore dialogue.`);
+      const sys="أنت مهندس برومبتات تحريك فيديو (image-to-video). تحلّل الصورة المرفقة وتكتب برومبت إنجليزي للحركة فقط بصيغة المحرّك المطلوب. أجب JSON فقط.";
+      S.results=[];
+      for(let i=0;i<S.images.length;i++){
+        document.getElementById("genState").innerHTML='<div class="loading"><div class="spin"></div>نحلّل الصورة '+toAr(i+1)+' / '+toAr(S.images.length)+' لمحرّك '+esc(e.name)+'...</div>';
+        const user=`حلّل الصورة المرفقة (لا تعيد وصفها — هي الإطار الأول).
+نوع الحركة: ${style}. ${clarify?("توضيح: "+clarify):""}
 ${e.rules}
 ${dlgLine}
 ${timeLine}
-اكتب motion_prompt إنجليزي يصف فقط: الحركة داخل الإطار + حركة الكاميرا (منفصلة) + أي صوت إن دعم المحرّك. نظيف بدون أقواس [] ولا علامات اقتباس عدا صيغة الحوار المطلوبة.
-أعد JSON فقط: {"motion_prompt":"...","tip":"نصيحة قصيرة بالعربي خاصة بهذا المحرّك لتقليل الأخطاء"}`;
-  } else {
-    const names=S.charsRef.map(c=>(c.name||"").trim()).filter(Boolean);
-    const refLine = names.length ? `Character references provided (as Image 2, Image 3...): ${names.join(", ")}. Use them for faces/identities.` : `No extra character references; use the storyboard people as-is.`;
-    const rules = e.rulesBoard || e.rules;
-    sys="أنت مهندس برومبتات تحريك. تحلّل لوحة ستوري بورد مرفقة وتكتب برومبت يقطّعها لفيديو متعدد المشاهد بصيغة المحرّك المطلوب. أجب JSON فقط.";
-    user=`الصورة المرفقة هي لوحة ستوري بورد فيها لقطات مرقّمة (Image 1).
+اكتب motion_prompt إنجليزي: الحركة داخل الإطار + حركة الكاميرا (منفصلة) + صوت إن دُعم. نظيف بدون أقواس [].
+أعد JSON فقط: {"motion_prompt":"...","tip":"نصيحة قصيرة بالعربي لهذا المحرّك"}`;
+        let prompt="",tip="";
+        try{ const d=stripJSON(await callLLM(sys,user,[S.images[i]])); prompt=clean(d&&d.motion_prompt); tip=(d&&d.tip)||""; }catch(err){ prompt=""; tip="⚠ "+(err.message||"تعذّر"); }
+        S.results.push({url:S.images[i].url,prompt,tip});
+        renderPairs(); document.getElementById("outCard").classList.remove("hidden");
+      }
+      document.getElementById("genState").innerHTML="";
+      document.getElementById("outCard").scrollIntoView({behavior:"smooth",block:"nearest"});
+    } else {
+      document.getElementById("genState").innerHTML='<div class="loading"><div class="spin"></div>نحلّل اللوحة ونكتب برومبت '+esc(e.name)+'...</div>';
+      const names=S.charsRef.map(c=>(c.name||"").trim()).filter(Boolean);
+      const refLine=names.length?`Character references attached as Image 2, Image 3...: ${names.join(", ")}. Use them for faces/identities.`:`No extra character references; use the storyboard people as-is.`;
+      const rules=e.rulesBoard||e.rules;
+      const sys="أنت مهندس برومبتات تحريك. تحلّل لوحة ستوري بورد مرفقة وتكتب برومبت يقطّعها لفيديو متعدد المشاهد بصيغة المحرّك. أجب JSON فقط.";
+      const user=`الصورة الأولى المرفقة = لوحة ستوري بورد فيها لقطات مرقّمة (Image 1).
 نوع الحركة العام: ${style}. ${clarify?("توضيح: "+clarify):""}
 ${refLine}
 ${rules}
 ${timeLine}
-اكتب sequence_prompt إنجليزي: يطلب من المحرّك إنتاج فيديو متتابع يمرّ على لقطات اللوحة بالترتيب كمشاهد متتالية، حركة بسيطة وكاميرا واضحة لكل لقطة، مع ثبات الشخصيات والستايل. أشر للمراجع المرقّمة إن وُجدت. نظيف بدون أقواس [].
-أعد JSON فقط: {"sequence_prompt":"...","tip":"نصيحة قصيرة بالعربي خاصة بهذا المحرّك"}`;
-  }
-  try{
-    const txt=await callLLM(sys,user,S.image); const d=stripJSON(txt);
-    const prompt=clean(board?(d&&d.sequence_prompt):(d&&d.motion_prompt));
-    if(!prompt) throw new Error("ما قدرنا نقرأ الناتج، أعد المحاولة.");
-    S.result={engine:e.name,prompt,tip:(d&&d.tip)||"",board};
-    renderOut(); saveResult();
-    document.getElementById("outCard").classList.remove("hidden");
-    document.getElementById("genState").innerHTML="";
-    document.getElementById("outCard").scrollIntoView({behavior:"smooth",block:"nearest"});
+اكتب sequence_prompt إنجليزي: فيديو متتابع يمرّ على لقطات اللوحة بالترتيب كمشاهد متتالية، حركة بسيطة وكاميرا واضحة لكل لقطة، مع ثبات الشخصيات والستايل. نظيف بدون أقواس [].
+أعد JSON فقط: {"sequence_prompt":"...","tip":"نصيحة قصيرة بالعربي لهذا المحرّك"}`;
+      const d=stripJSON(await callLLM(sys,user,S.images));
+      const prompt=clean(d&&d.sequence_prompt);
+      if(!prompt) throw new Error("ما قدرنا نقرأ الناتج، أعد المحاولة.");
+      S.results=[{url:S.images[0].url,prompt,tip:(d&&d.tip)||"",board:true}];
+      renderPairs(); document.getElementById("outCard").classList.remove("hidden");
+      document.getElementById("genState").innerHTML="";
+      document.getElementById("outCard").scrollIntoView({behavior:"smooth",block:"nearest"});
+    }
+    saveResult();
   }catch(err){ document.getElementById("genState").innerHTML='<div class="err">'+(err.message||"خطأ")+'</div>'; }
   finally{ document.getElementById("genBtn").disabled=false; }
 }
 function clean(p){ if(!p) return ""; return String(p).replace(/\[[^\]]*\]/g,"").replace(/\s{2,}/g," ").trim(); }
-function renderOut(){
-  const r=S.result;
-  document.getElementById("outTitle").textContent=(r.board?"برومبت الفيديو المتتابع · ":"برومبت التحريك · ")+r.engine;
-  document.getElementById("out").innerHTML=`<div class="prompt-en">${esc(r.prompt)}</div>
-    ${r.tip?`<div class="tip">💡 ${esc(r.tip)}</div>`:""}
-    <div class="bar"><button class="btn ghost small" onclick="copyText(S.result.prompt)">📋 نسخ البرومبت</button>
-      <button class="btn ghost small" onclick="downloadText()">⬇ تنزيل</button>
-      <span class="spacer"></span><span class="hint">محفوظ</span></div>`;
+function renderPairs(){
+  const e=ENGINES[S.target];
+  document.getElementById("outTitle").textContent=(S.mode==="board"?"برومبت الفيديو المتتابع · ":"برومبت التحريك · ")+e.name+(S.results.length>1?` (${toAr(S.results.length)})`:"");
+  document.getElementById("out").innerHTML=S.results.map((r,i)=>`<div class="pair">
+    <div class="pic"><img src="${r.url}" alt=""></div>
+    <div>
+      <div class="pn">صورة ${toAr(i+1)}</div>
+      <div class="prompt-en">${esc(r.prompt||"—")}</div>
+      ${r.tip?`<div class="tip">💡 ${esc(r.tip)}</div>`:""}
+      <div class="bar"><button class="btn ghost small" onclick="copyText(S.results[${i}].prompt)">📋 نسخ</button></div>
+    </div>
+  </div>`).join("")+(S.results.length>1?`<div class="bar"><button class="btn ghost small" onclick="copyAll()">📋 نسخ الكل</button><button class="btn ghost small" onclick="downloadAll()">⬇ تنزيل</button></div>`:"");
 }
 function copyText(t){ navigator.clipboard.writeText(t); toast("📋 تم النسخ"); }
-function downloadText(){ const b=new Blob([S.result.prompt],{type:"text/plain;charset=utf-8"}); const u=URL.createObjectURL(b);
-  const a=document.createElement("a"); a.href=u; a.download="motion-prompt.txt"; a.click(); setTimeout(()=>URL.revokeObjectURL(u),1000); }
-function saveResult(){ const s=ls(); if(!s||!S.result) return; s.setItem("kadr_motion_result",JSON.stringify({...S.result,ts:Date.now()})); }
+function allText(){ return S.results.map((r,i)=>`# ${i+1}\n${r.prompt}`).join("\n\n"); }
+function copyAll(){ navigator.clipboard.writeText(allText()); toast("📋 نسخ الكل"); }
+function downloadAll(){ const b=new Blob([allText()],{type:"text/plain;charset=utf-8"}); const u=URL.createObjectURL(b);
+  const a=document.createElement("a"); a.href=u; a.download="motion-prompts.txt"; a.click(); setTimeout(()=>URL.revokeObjectURL(u),1000); }
+function saveResult(){ const s=ls(); if(!s||!S.results) return; s.setItem("kadr_motion_result",JSON.stringify({engine:ENGINES[S.target].name,mode:S.mode,prompts:S.results.map(r=>r.prompt),ts:Date.now()})); }
 
 /* ===== engine ui ===== */
 function setEngine(e){ S.engine=e; setCfg({lastEngine:e});
@@ -416,10 +450,10 @@ document.querySelectorAll("#engSeg button").forEach(b=>b.onclick=()=>{ setEngine
 ["clarify","timing","dialogue"].forEach(id=>document.getElementById(id).addEventListener("input",saveInputs));
 const drop=document.getElementById("drop"), file=document.getElementById("file");
 drop.onclick=()=>file.click();
-file.onchange=()=>handleFile(file.files[0]);
+file.onchange=()=>{ handleFiles(file.files); file.value=""; };
 drop.addEventListener("dragover",e=>{ e.preventDefault(); drop.classList.add("over"); });
 drop.addEventListener("dragleave",()=>drop.classList.remove("over"));
-drop.addEventListener("drop",e=>{ e.preventDefault(); drop.classList.remove("over"); if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+drop.addEventListener("drop",e=>{ e.preventDefault(); drop.classList.remove("over"); if(e.dataTransfer.files&&e.dataTransfer.files.length) handleFiles(e.dataTransfer.files); });
 
 (function(){ paintMeter(); restoreInputs(); renderCharsRef();
   if(S.style) document.querySelectorAll("#styleChips .chip").forEach(c=>c.classList.toggle("on",c.dataset.en===S.style.en));
