@@ -129,6 +129,18 @@
     <p class="sub">يُحمّل تلقائياً من Ideate، أو الصق سكربتك.</p>
     <textarea id="script" placeholder="الصق السكربت هنا، أو ولّده من أداة Ideate..."></textarea>
     <div id="srcNote"></div>
+
+    <label class="f" style="margin-top:16px">عدد اللقطات المطلوبة</label>
+    <div class="chips" id="countChips">
+      <div class="chip on" data-c="auto">تلقائي</div>
+      <div class="chip mono" data-c="3">3</div>
+      <div class="chip mono" data-c="5">5</div>
+      <div class="chip mono" data-c="8">8</div>
+      <div class="chip mono" data-c="12">12</div>
+      <div class="chip" data-c="custom">مخصّص</div>
+    </div>
+    <input type="text" id="customCount" class="hidden" placeholder="اكتب العدد" style="margin-top:9px;max-width:180px" inputmode="numeric">
+    <p class="hint">«تلقائي» = نفس مقاطع Ideate. أو حدّد عدداً ويوزّع السكربت عليه.</p>
   </div>
 
   <!-- style -->
@@ -231,7 +243,7 @@ function esc(s){ return (s==null?"":String(s)).replace(/[&<>]/g,m=>({"&":"&amp;"
 function toast(m){ const t=document.createElement("div"); t.textContent=m; t.style.cssText="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#292C3A;border:1px solid #3E4356;color:#EDEDF2;padding:11px 20px;border-radius:11px;font-family:'IBM Plex Sans Arabic',sans-serif;font-size:14px;z-index:99"; document.body.appendChild(t); setTimeout(()=>t.remove(),1700); }
 
 /* ===== state ===== */
-const S={engine:"gem",style:null,look:null,aspect:"9:16",chars:[],shots:[],srcSegments:null};
+const S={engine:"gem",style:null,look:null,aspect:"9:16",chars:[],shots:[],srcSegments:null,count:"auto"};
 
 /* ===== LLM ===== */
 function stripJSON(t){ if(!t) return null; t=String(t).replace(/```json/gi,"").replace(/```/g,"").trim();
@@ -242,13 +254,13 @@ async function callLLM(system,user){
   let model=(sel&&sel.value)||c[eng+"Model"]||MODELS[eng][0][0]; if(!(PRICES[eng]||{})[model]) model=MODELS[eng][0][0];
   if(eng==="gem"){ if(!c.gemKey) throw new Error("أضف مفتاح Gemini في الإعدادات.");
     const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(c.gemKey)}`,
-      {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:[{role:"user",parts:[{text:user}]}],generationConfig:{temperature:0.7,maxOutputTokens:4000,responseMimeType:"application/json"}})});
+      {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:[{role:"user",parts:[{text:user}]}],generationConfig:{temperature:0.7,maxOutputTokens:8192,responseMimeType:"application/json"}})});
     const d=await r.json(); if(!r.ok) throw new Error(d.error?.message||("خطأ Gemini "+r.status));
     const um=d.usageMetadata||{}; addUsage("gem",model,um.promptTokenCount||0,um.candidatesTokenCount||0);
     return (d.candidates?.[0]?.content?.parts||[]).map(p=>p.text||"").join(""); }
   if(eng==="anth"){ if(!c.anthKey) throw new Error("أضف مفتاح Claude في الإعدادات.");
     const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":c.anthKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
-      body:JSON.stringify({model,max_tokens:4000,system,messages:[{role:"user",content:user}]})});
+      body:JSON.stringify({model,max_tokens:8000,system,messages:[{role:"user",content:user}]})});
     const d=await r.json(); if(!r.ok) throw new Error(d.error?.message||("خطأ Claude "+r.status));
     const u=d.usage||{}; addUsage("anth",model,u.input_tokens||0,u.output_tokens||0);
     return (d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join(""); }
@@ -291,9 +303,12 @@ async function generate(){
   const flags=[S.aspect, document.getElementById("tgNoTalk").classList.contains("on")?"no dialogue":"", document.getElementById("tgNoText").classList.contains("on")?"no on-screen text":""].filter(Boolean).join(", ");
   const charsCtx=S.chars.filter(c=>c.name.trim()).map(c=>`- ${c.name.trim()}${c.desc.trim()?": "+c.desc.trim():""}`).join("\n");
   const angleCodes=ANGLES.map(a=>a[0]).join(", ");
-  const segNote = S.srcSegments && S.srcSegments.length
+  const useSeg = (S.count==="auto") && S.srcSegments && S.srcSegments.length;
+  const segNote = useSeg
     ? "حافظ على نفس ترقيم ومدد مقاطع Ideate التالية:\n"+S.srcSegments.map(s=>`#${s.n} (${s.duration||"?"}ث): ${s.visual||""}${s.line?" | كلام: "+s.line:""}`).join("\n")
-    : "قسّم السكربت إلى لقطات مدة كل وحدة 2–5 ثوانٍ.";
+    : (S.count==="auto"
+        ? "قسّم السكربت إلى عدد مناسب من اللقطات، مدة كل وحدة 2–5 ثوانٍ، ووزّع كامل المحتوى دون حذف."
+        : `قسّم السكربت إلى ${S.count} لقطة بالضبط، مدة كل وحدة 2–5 ثوانٍ، ووزّع كامل المحتوى على هذا العدد دون حذف أي نقطة.`);
 
   const sys="أنت مدير تصوير ومهندس برومبتات لتوليد الفيديو بالذكاء الاصطناعي. لكل لقطة تكتب برومبت إنجليزي منظّم. أجب JSON فقط بدون أي نص.";
   const user=
@@ -390,7 +405,7 @@ function flashSaved(){ const e=document.getElementById("saved"); e.textContent="
 function saveInputs(){ const s=ls(); if(!s) return;
   s.setItem("kadr_pf_inputs",JSON.stringify({script:document.getElementById("script").value,style:S.style,look:S.look,aspect:S.aspect,
     noTalk:document.getElementById("tgNoTalk").classList.contains("on"),noText:document.getElementById("tgNoText").classList.contains("on"),
-    chars:S.chars,engine:S.engine})); flashSaved(); }
+    chars:S.chars,engine:S.engine,count:S.count})); flashSaved(); }
 function restoreInputs(){ const s=ls(); if(!s) return; let v={}; try{ v=JSON.parse(s.getItem("kadr_pf_inputs")||"{}"); }catch(e){}
   if(v.script) document.getElementById("script").value=v.script;
   if(v.aspect){ S.aspect=v.aspect; document.querySelectorAll("#aspectChips .chip").forEach(c=>c.classList.toggle("on",c.dataset.a===v.aspect)); }
@@ -398,6 +413,11 @@ function restoreInputs(){ const s=ls(); if(!s) return; let v={}; try{ v=JSON.par
   if(v.noText) document.getElementById("tgNoText").classList.add("on");
   if(Array.isArray(v.chars)) S.chars=v.chars;
   if(v.style){ S.style=v.style; } if(v.look){ S.look=v.look; }
+  if(v.count!==undefined && v.count!==null){ S.count=v.count;
+    const cu=document.getElementById("customCount"); let matched=false;
+    document.querySelectorAll("#countChips .chip").forEach(c=>{ const on=(c.dataset.c==String(v.count)); c.classList.toggle("on",on); if(on)matched=true; });
+    if(!matched && v.count!=="auto"){ document.querySelectorAll("#countChips .chip").forEach(c=>c.classList.toggle("on",c.dataset.c==="custom")); cu.classList.remove("hidden"); cu.value=v.count; }
+  }
 }
 function markSelected(){
   if(S.style) document.querySelectorAll("#stylePicker .tile").forEach(t=>t.classList.toggle("on",t.dataset.v===S.style.file));
@@ -420,6 +440,14 @@ function loadIdeate(){
 buildPicker("stylePicker",STYLES,"styles","pickStyle");
 buildPicker("lookPicker",LOOKS,"looks","pickLook");
 document.querySelectorAll("#aspectChips .chip").forEach(c=>c.onclick=()=>{ document.querySelectorAll("#aspectChips .chip").forEach(x=>x.classList.remove("on")); c.classList.add("on"); S.aspect=c.dataset.a; saveInputs(); });
+document.querySelectorAll("#countChips .chip").forEach(c=>c.onclick=()=>{
+  document.querySelectorAll("#countChips .chip").forEach(x=>x.classList.remove("on")); c.classList.add("on");
+  const cu=document.getElementById("customCount");
+  if(c.dataset.c==="custom"){ cu.classList.remove("hidden"); cu.focus(); const n=parseInt(cu.value); S.count=n>0?n:"custom"; }
+  else { cu.classList.add("hidden"); S.count=c.dataset.c==="auto"?"auto":parseInt(c.dataset.c); }
+  saveInputs();
+});
+document.getElementById("customCount").addEventListener("input",e=>{ const n=parseInt(e.target.value); if(n>0){ S.count=n; saveInputs(); } });
 document.querySelectorAll("#engSeg button").forEach(b=>b.onclick=()=>{ setEngine(b.dataset.e); saveInputs(); });
 document.getElementById("script").addEventListener("input",saveInputs);
 
