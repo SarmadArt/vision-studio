@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Storyboard — لوحة اللقطات · KADR Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#15161C;--bg2:#1B1D26;--surface:#21232E;--surface2:#292C3A;--line:#343847;--line2:#3E4356;
+    --ink:#EDEDF2;--muted:#9A9DB0;--muted2:#71748A;--amber:#F0A93B;--amber-soft:rgba(240,169,59,.14);
+    --teal:#58C7BE;--teal-soft:rgba(88,199,190,.13);--rose:#E5736B;--green:#5FB07A;--violet:#9B8CF0;
+    --r:14px;--mono:'IBM Plex Mono',ui-monospace,monospace;--body:'IBM Plex Sans Arabic','Tajawal',system-ui,sans-serif;--disp:'Tajawal','IBM Plex Sans Arabic',sans-serif;}
+  *{box-sizing:border-box}html,body{margin:0;padding:0}
+  body{background:radial-gradient(1100px 500px at 85% -10%, rgba(240,169,59,.06), transparent 60%),radial-gradient(900px 500px at 0% 110%, rgba(88,199,190,.05), transparent 55%),var(--bg);color:var(--ink);font-family:var(--body);line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:880px;margin:0 auto;padding:22px 20px 70px}
+  .meter{position:fixed;top:14px;left:14px;z-index:50;display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--line2);border-radius:11px;padding:8px 13px;font-family:var(--mono);font-size:12.5px;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+  .meter .bolt{color:var(--amber)}.meter .cost{color:var(--teal)}.meter .sep{color:var(--muted2)}
+  .top{display:flex;align-items:center;gap:13px;margin-bottom:6px}
+  .back{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--line2);font-size:18px;flex:none;transition:.18s}
+  .back:hover{border-color:var(--amber)}
+  .ttl h1{font-family:var(--disp);font-weight:800;font-size:22px;margin:0}.ttl p{margin:0;color:var(--muted);font-size:12.5px}
+  .saved{margin-right:auto;font-family:var(--mono);font-size:11.5px;color:var(--muted2);transition:.3s}.saved.flash{color:var(--green)}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-top:14px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--teal);text-transform:uppercase;margin-bottom:6px}
+  h2{font-family:var(--disp);font-weight:700;font-size:18px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+  label.f{display:block;font-size:13px;font-weight:600;margin:13px 0 7px}label.f span{color:var(--muted2);font-weight:400}
+  input[type=text],textarea,select{width:100%;background:var(--bg2);border:1px solid var(--line2);color:var(--ink);border-radius:10px;padding:11px 12px;font-family:var(--body);font-size:14px;transition:.2s;resize:vertical}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-soft)}
+  ::placeholder{color:var(--muted2)}
+  .note{font-size:12px;color:var(--teal);margin-top:8px}.hint{color:var(--muted2);font-size:12px;margin-top:8px}
+  .row{display:flex;gap:12px;flex-wrap:wrap}.row>*{flex:1;min-width:140px}
+  .seg{display:inline-flex;background:var(--bg2);border:1px solid var(--line2);border-radius:11px;padding:4px;gap:4px;flex-wrap:wrap}
+  .seg button{appearance:none;border:none;background:transparent;color:var(--muted);font-family:var(--disp);font-weight:700;font-size:13.5px;padding:8px 15px;border-radius:8px;cursor:pointer;transition:.16s}
+  .seg button.on{background:var(--surface2);color:var(--ink)}
+  .seg button[data-e="gem"].on{background:#4285F4;color:#fff}.seg button[data-e="anth"].on{background:#D97757;color:#fff}.seg button[data-e="oai"].on{background:#10A37F;color:#fff}
+  .btn{appearance:none;border:none;cursor:pointer;font-family:var(--disp);font-weight:700;font-size:14.5px;padding:12px 20px;border-radius:11px;display:inline-flex;align-items:center;gap:8px;transition:.2s}
+  .btn.primary{background:var(--amber);color:#1a1206}.btn.primary:hover{filter:brightness(1.07);transform:translateY(-1px)}
+  .btn.ghost{background:var(--surface2);color:var(--ink);border:1px solid var(--line2)}.btn.ghost:hover{border-color:var(--muted)}
+  .btn.small{padding:9px 14px;font-size:13px}.btn:disabled{opacity:.5;cursor:not-allowed;transform:none;filter:none}
+  .bar{display:flex;gap:10px;margin-top:16px;align-items:center;flex-wrap:wrap}.spacer{flex:1}
+  .modelpill{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:8px}.modelpill b{color:var(--green)}
+  .loading{display:flex;align-items:center;gap:11px;color:var(--muted);font-size:13.5px;padding:14px 2px}
+  .spin{width:18px;height:18px;border:2.5px solid var(--line2);border-top-color:var(--amber);border-radius:50%;animation:sp .8s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .err{background:rgba(229,115,107,.1);border:1px solid rgba(229,115,107,.4);color:#f1b3ad;border-radius:10px;padding:11px 13px;font-size:13px;margin-top:12px}
+  .warn{background:var(--amber-soft);border:1px solid rgba(240,169,59,.4);color:#f3cd8d;border-radius:10px;padding:10px 13px;font-size:12.5px;margin-top:10px}
+  .block{background:var(--surface);border:1px solid var(--line2);border-radius:12px;margin-top:12px;padding:14px 16px}
+  .block .bh{display:flex;align-items:center;gap:10px;margin-bottom:9px;flex-wrap:wrap}
+  .block .tag{font-family:var(--mono);font-size:11px;color:#1a1206;background:var(--amber);padding:3px 10px;border-radius:6px;font-weight:600}
+  .block .tag.g{background:var(--violet);color:#0e0a1f}
+  .block .grid{font-family:var(--mono);font-size:12px;color:var(--teal)}
+  .prompt-en{background:#0f1015;border:1px solid var(--line);border-radius:9px;padding:12px;font-family:var(--mono);font-size:12px;line-height:1.7;color:#cdd0dd;direction:ltr;text-align:left;white-space:pre-wrap;word-break:break-word}
+  .steps3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:6px 0 2px}
+  .s3{background:var(--bg2);border:1px solid var(--line2);border-radius:10px;padding:12px}
+  .s3 .n{font-family:var(--mono);font-size:12px;color:var(--violet)}
+  .s3 p{margin:5px 0 0;font-size:12px;color:var(--muted);line-height:1.55}
+  .hidden{display:none!important}
+  @media(max-width:560px){.steps3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="meter" onclick="location.href='index.html#settings'">
+  <span class="bolt">⚡</span><span id="mTok">٠ توكن</span><span class="sep">·</span><span class="cost" id="mCost">$0.000</span>
+</div>
+
+<div class="wrap">
+  <div class="top">
+    <a class="back" href="index.html">→</a>
+    <div class="ttl"><h1>Storyboard</h1><p>لوحة لقطات واحدة + برومبتات استخراج بالمجموعات</p></div>
+    <span class="saved" id="saved">⟳ يُحفظ تلقائياً</span>
+  </div>
+
+  <!-- how it works -->
+  <div class="card">
+    <div class="eyebrow">طريقة العمل</div>
+    <div class="steps3">
+      <div class="s3"><div class="n">٠١</div><p>برومبت لوحة شامل ← يولّد كل اللقطات بصورة وحدة (شبكة مرقّمة واقعية).</p></div>
+      <div class="s3"><div class="n">٠٢</div><p>تخلي اللوحة + صورة الشخصيات كمراجع في مولّدك.</p></div>
+      <div class="s3"><div class="n">٠٣</div><p>برومبتات مجموعات (١–٦، ٧–١٢…) تستخرج اللقطات من اللوحة بنفس الستايل.</p></div>
+    </div>
+  </div>
+
+  <!-- source -->
+  <div class="card">
+    <div class="eyebrow">المصدر</div>
+    <h2>اللقطات والإعدادات</h2>
+    <p class="sub">تُحمّل من Prompt Forge تلقائياً (الستايل واللوك والجو العام والأبعاد).</p>
+    <div id="srcNote"></div>
+    <textarea id="shotsText" style="min-height:150px" placeholder="تُحمّل اللقطات هنا من Prompt Forge، أو الصق وصف اللقطات (سطر لكل لقطة)..."></textarea>
+
+    <div class="row" style="margin-top:6px">
+      <div>
+        <label class="f">عدد اللقطات الكلي</label>
+        <input type="text" id="total" inputmode="numeric" placeholder="12">
+      </div>
+      <div>
+        <label class="f">حجم المجموعة <span>(كم لقطة لكل برومبت)</span></label>
+        <input type="text" id="group" inputmode="numeric" placeholder="6">
+      </div>
+    </div>
+    <p class="hint">مثال: ١٢ كلي و ٦ مجموعة ← برومبتان للمجموعات (١–٦ و ٧–١٢) + برومبت اللوحة الشامل.</p>
+  </div>
+
+  <!-- engine -->
+  <div class="card">
+    <div class="eyebrow">المحرّك</div>
+    <h2>محرّك التوليد</h2>
+    <div class="seg" id="engSeg"><button data-e="gem">Gemini</button><button data-e="anth">Claude</button><button data-e="oai">GPT</button></div>
+    <div style="margin-top:12px;max-width:340px">
+      <label class="f">الموديل</label>
+      <select id="modelSel" onchange="saveModel()"></select>
+      <div class="modelpill" id="modelPrice"></div>
+    </div>
+    <div id="engNote"></div>
+    <div class="bar"><button class="btn primary" id="genBtn" onclick="generate()">🎞️ ولّد البرومبتات</button></div>
+    <div id="genState"></div>
+  </div>
+
+  <!-- output -->
+  <div class="card hidden" id="outCard">
+    <div class="eyebrow">المخرجات</div>
+    <h2>برومبت اللوحة + المجموعات</h2>
+    <div id="out"></div>
+    <div class="bar">
+      <button class="btn ghost small" onclick="copyAll()">📋 نسخ الكل</button>
+      <button class="btn ghost small" onclick="downloadAll()">⬇ تنزيل</button>
+      <span class="spacer"></span><span class="hint">محفوظ</span>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== shared ===== */
+const PRICES={oai:{"gpt-5.4-mini":[0.75,4.5],"gpt-5.4-nano":[0.20,1.25],"gpt-5.4":[2.5,15],"gpt-5.5":[5,30]},
+  anth:{"claude-sonnet-4-6":[3,15],"claude-haiku-4-5":[1,5],"claude-opus-4-8":[5,25]},
+  gem:{"gemini-3.1-flash-lite":[0.25,1.5],"gemini-3.5-flash":[1.5,9],"gemini-3-flash-preview":[0.5,3],"gemini-3.1-pro-preview":[2,12]}};
+const MODELS={gem:[["gemini-3.1-flash-lite","أفضل قيمة ✓"],["gemini-3.5-flash","الأذكى · مستقر"],["gemini-3-flash-preview","متوازن"],["gemini-3.1-pro-preview","الأقوى"]],
+  anth:[["claude-sonnet-4-6","أفضل قيمة ✓"],["claude-haiku-4-5","الأرخص"],["claude-opus-4-8","الأقوى"]],
+  oai:[["gpt-5.4-mini","أفضل قيمة ✓"],["gpt-5.4-nano","الأرخص"],["gpt-5.4","متوازن"],["gpt-5.5","الأقوى"]]};
+function ls(){ try{ return window.localStorage; }catch(e){ return null; } }
+function getCfg(){ const s=ls(); if(!s) return {}; try{ return JSON.parse(s.getItem("kadr_cfg")||"{}"); }catch(e){ return {}; } }
+function setCfg(o){ const s=ls(); if(s) s.setItem("kadr_cfg",JSON.stringify({...getCfg(),...o})); }
+function getUsage(){ const s=ls(); if(!s) return {tokens:0,cost:0}; try{ return JSON.parse(s.getItem("kadr_usage")||'{"tokens":0,"cost":0}'); }catch(e){ return {tokens:0,cost:0}; } }
+function addUsage(eng,model,i,o){ const p=(PRICES[eng]||{})[model]||[0,0]; const cost=(i/1e6)*p[0]+(o/1e6)*p[1];
+  const u=getUsage(); u.tokens=(u.tokens||0)+i+o; u.cost=(u.cost||0)+cost; const s=ls(); if(s)s.setItem("kadr_usage",JSON.stringify(u)); paintMeter(); }
+function toAr(n){ return String(n).replace(/[0-9]/g,d=>"٠١٢٣٤٥٦٧٨٩"[d]); }
+function fmtTok(n){ return n>=1000?toAr((n/1000).toFixed(1))+"k":toAr(n); }
+function paintMeter(){ const u=getUsage(); document.getElementById("mTok").textContent=fmtTok(u.tokens||0)+" توكن"; document.getElementById("mCost").textContent="$"+(u.cost||0).toFixed(3); }
+function esc(s){ return (s==null?"":String(s)).replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m])); }
+function toast(m){ const t=document.createElement("div"); t.textContent=m; t.style.cssText="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#292C3A;border:1px solid #3E4356;color:#EDEDF2;padding:11px 20px;border-radius:11px;font-family:'IBM Plex Sans Arabic',sans-serif;font-size:14px;z-index:99"; document.body.appendChild(t); setTimeout(()=>t.remove(),1700); }
+function stripJSON(t){ if(!t) return null; t=String(t).replace(/```json/gi,"").replace(/```/g,"").trim();
+  try{ return JSON.parse(t); }catch(e){} for(const [o,c] of [["{","}"],["[","]"]]){ const i=t.indexOf(o); if(i<0)continue; let d=0;
+    for(let j=i;j<t.length;j++){ if(t[j]===o)d++; else if(t[j]===c){ d--; if(!d){ try{ return JSON.parse(t.slice(i,j+1)); }catch(e){} } } } } return null; }
+async function callLLM(system,user){
+  const eng=S.engine,c=getCfg(); const sel=document.getElementById("modelSel");
+  let model=(sel&&sel.value)||c[eng+"Model"]||MODELS[eng][0][0]; if(!(PRICES[eng]||{})[model]) model=MODELS[eng][0][0];
+  if(eng==="gem"){ if(!c.gemKey) throw new Error("أضف مفتاح Gemini في الإعدادات.");
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(c.gemKey)}`,
+      {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:[{role:"user",parts:[{text:user}]}],generationConfig:{temperature:0.6,maxOutputTokens:8192,responseMimeType:"application/json"}})});
+    const d=await r.json(); if(!r.ok) throw new Error(d.error?.message||("خطأ Gemini "+r.status));
+    const um=d.usageMetadata||{}; addUsage("gem",model,um.promptTokenCount||0,um.candidatesTokenCount||0);
+    return (d.candidates?.[0]?.content?.parts||[]).map(p=>p.text||"").join(""); }
+  if(eng==="anth"){ if(!c.anthKey) throw new Error("أضف مفتاح Claude في الإعدادات.");
+    const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":c.anthKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+      body:JSON.stringify({model,max_tokens:8000,system,messages:[{role:"user",content:user}]})});
+    const d=await r.json(); if(!r.ok) throw new Error(d.error?.message||("خطأ Claude "+r.status));
+    const u=d.usage||{}; addUsage("anth",model,u.input_tokens||0,u.output_tokens||0);
+    return (d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join(""); }
+  if(eng==="oai"){ if(!c.oaiKey) throw new Error("أضف مفتاح GPT في الإعدادات.");
+    const r=await fetch("/api/openai",{method:"POST",headers:{"Content-Type":"application/json","x-openai-key":c.oaiKey},
+      body:JSON.stringify({model,messages:[{role:"system",content:system},{role:"user",content:user}],response_format:{type:"json_object"}})});
+    let d; try{ d=await r.json(); }catch(e){ throw new Error("ملف الوسيط /api غير موجود — ارفع مجلد api على Vercel."); }
+    if(!r.ok) throw new Error(d.error?.message||("خطأ GPT "+r.status));
+    const u=d.usage||{}; addUsage("oai",model,u.prompt_tokens||0,u.completion_tokens||0);
+    return d.choices?.[0]?.message?.content||""; }
+}
+
+/* ===== state ===== */
+const S={engine:"gem",style:"cinematic",look:"natural grade",aspect:"vertical 9:16",ambiance:"",board:null,groups:[]};
+
+/* ===== grid helper ===== */
+function gridFor(n){ const c=Math.ceil(Math.sqrt(n)); const r=Math.ceil(n/c); return c+"x"+r; }
+
+/* ===== generate ===== */
+async function generate(){
+  const shotsText=document.getElementById("shotsText").value.trim();
+  if(!shotsText){ document.getElementById("genState").innerHTML='<div class="err">أضف لقطات أو ولّدها من Prompt Forge.</div>'; return; }
+  const total=parseInt(document.getElementById("total").value)||0;
+  const group=parseInt(document.getElementById("group").value)||0;
+  if(!total||!group){ document.getElementById("genState").innerHTML='<div class="warn">حدّد العدد الكلي وحجم المجموعة.</div>'; return; }
+  document.getElementById("genBtn").disabled=true;
+  document.getElementById("genState").innerHTML='<div class="loading"><div class="spin"></div>نبني برومبت اللوحة والمجموعات...</div>';
+
+  // group ranges
+  const ranges=[]; for(let a=1;a<=total;a+=group){ ranges.push([a,Math.min(a+group-1,total)]); }
+  const styleLine=`${S.style} style, ${S.look}, ${S.ambiance?S.ambiance+", ":""}consistent characters, lighting and color across all frames`;
+
+  const sys="أنت مدير فني ومهندس برومبتات لتوليد الصور. تكتب برومبتات إنجليزية نظيفة. أجب JSON فقط بدون أي نص.";
+  const user=`اللقطات (مرقّمة):
+${shotsText}
+
+السياق العام: ${styleLine}
+عدد اللقطات الكلي: ${total} · حجم الشبكة المقترح للوحة: ${gridFor(total)}
+مجموعات الاستخراج: ${ranges.map(r=>r[0]+"–"+r[1]).join("، ")}
+
+اكتب:
+1) board_prompt: برومبت إنجليزي واحد يولّد لوحة ستوري بورد واحدة فيها كل اللقطات الـ${total} كصور مصغّرة واقعية في شبكة (${gridFor(total)})، كل خانة مرقّمة بالترتيب بزاوية صغيرة، بنفس الستايل والشخصيات والإضاءة في كل الخانات. اذكر "numbered grid of realistic thumbnails, consistent style and characters".
+2) group_prompts: لكل مجموعة برومبت إنجليزي يطلب من المولّد استخراج/إعادة رسم اللقطات ضمن المدى المحدد من اللوحة المرجعية كصور منفصلة كاملة الإطار، بنفس الستايل والشخصيات تماماً (using the attached storyboard and character reference images, recreate shots N–M as separate full-frame images, identical style, characters, lighting). كل لقطة لحظة واحدة بدون تقسيم.
+
+كل البرومبتات إنجليزية فقط، بدون أقواس [] ولا علامات اقتباس ولا كلام منطوق ولا نص على الشاشة.
+
+أعد JSON فقط:
+{"board_prompt":"...","groups":[{"range":"1-6","prompt":"..."}]}`;
+
+  try{
+    const txt=await callLLM(sys,user); const d=stripJSON(txt);
+    if(!d||!d.board_prompt) throw new Error("ما قدرنا نقرأ المخرجات، أعد المحاولة.");
+    S.board=clean(d.board_prompt);
+    S.groups=(d.groups||ranges.map(r=>({range:r[0]+"-"+r[1],prompt:""}))).map(g=>({range:g.range,prompt:clean(g.prompt||"")}));
+    renderOut(); saveResult();
+    document.getElementById("outCard").classList.remove("hidden");
+    document.getElementById("genState").innerHTML="";
+    document.getElementById("outCard").scrollIntoView({behavior:"smooth",block:"nearest"});
+  }catch(e){ document.getElementById("genState").innerHTML='<div class="err">'+(e.message||"خطأ")+'</div>'; }
+  finally{ document.getElementById("genBtn").disabled=false; }
+}
+function clean(p){ return String(p).replace(/\[[^\]]*\]/g,"").replace(/["“”]/g,"").replace(/\s{2,}/g," ").trim(); }
+function renderOut(){
+  const total=parseInt(document.getElementById("total").value)||S.groups.reduce((a,g)=>a,0);
+  let html=`<div class="block">
+    <div class="bh"><span class="tag">اللوحة الشاملة</span><span class="grid">شبكة ${esc(gridFor(parseInt(document.getElementById("total").value)||4))}</span></div>
+    <div class="prompt-en">${esc(S.board)}</div>
+    <div class="bar"><button class="btn ghost small" onclick="copyText(S.board)">📋 نسخ برومبت اللوحة</button></div>
+  </div>`;
+  html+=S.groups.map((g,i)=>`<div class="block">
+    <div class="bh"><span class="tag g">مجموعة ${esc(g.range)}</span></div>
+    <div class="prompt-en">${esc(g.prompt)}</div>
+    <div class="bar"><button class="btn ghost small" onclick="copyText(S.groups[${i}].prompt)">📋 نسخ هذه المجموعة</button></div>
+  </div>`).join("");
+  document.getElementById("out").innerHTML=html;
+}
+
+/* ===== copy / save ===== */
+function copyText(t){ navigator.clipboard.writeText(t); toast("📋 تم النسخ"); }
+function allText(){ let o="=== BOARD PROMPT ===\n"+S.board+"\n\n"; S.groups.forEach(g=>{ o+=`=== GROUP ${g.range} ===\n${g.prompt}\n\n`; }); return o; }
+function copyAll(){ navigator.clipboard.writeText(allText()); toast("📋 تم نسخ الكل"); }
+function downloadAll(){ const b=new Blob([allText()],{type:"text/plain;charset=utf-8"}); const u=URL.createObjectURL(b);
+  const a=document.createElement("a"); a.href=u; a.download="storyboard-prompts.txt"; a.click(); setTimeout(()=>URL.revokeObjectURL(u),1000); }
+function saveResult(){ const s=ls(); if(!s) return; s.setItem("kadr_storyboard_result",JSON.stringify({board:S.board,groups:S.groups,ts:Date.now()})); }
+
+/* ===== engine ui ===== */
+function setEngine(e){ S.engine=e; setCfg({lastEngine:e});
+  document.querySelectorAll("#engSeg button").forEach(b=>b.classList.toggle("on",b.dataset.e===e));
+  const sel=document.getElementById("modelSel"); sel.innerHTML=MODELS[e].map(([v,l])=>`<option value="${v}">${v} — ${l}</option>`).join("");
+  const c=getCfg(); if(c[e+"Model"]) sel.value=c[e+"Model"];
+  if(!MODELS[e].some(m=>m[0]===sel.value)){ sel.value=MODELS[e][0][0]; setCfg({[e+"Model"]:sel.value}); }
+  updateModelPrice();
+  document.getElementById("engNote").innerHTML=(e==="oai")?'<div class="warn">GPT يشتغل عبر /api على موقعك. Gemini و Claude مباشرة.</div>':"";
+}
+function saveModel(){ setCfg({[S.engine+"Model"]:document.getElementById("modelSel").value}); updateModelPrice(); flashSaved(); }
+function updateModelPrice(){ const m=document.getElementById("modelSel").value; const p=(PRICES[S.engine]||{})[m];
+  document.getElementById("modelPrice").innerHTML=p?`<b>$${p[0]}</b> إدخال · <b>$${p[1]}</b> إخراج / مليون توكن`:""; }
+
+/* ===== autosave ===== */
+function flashSaved(){ const e=document.getElementById("saved"); e.textContent="✓ محفوظ"; e.classList.add("flash");
+  clearTimeout(window._st); window._st=setTimeout(()=>{ e.textContent="⟳ يُحفظ تلقائياً"; e.classList.remove("flash"); },1300); }
+function saveInputs(){ const s=ls(); if(!s) return; s.setItem("kadr_sb_inputs",JSON.stringify({
+  shotsText:document.getElementById("shotsText").value,total:document.getElementById("total").value,group:document.getElementById("group").value,engine:S.engine})); flashSaved(); }
+function restoreInputs(){ const s=ls(); if(!s) return; let v={}; try{ v=JSON.parse(s.getItem("kadr_sb_inputs")||"{}"); }catch(e){}
+  if(v.shotsText) document.getElementById("shotsText").value=v.shotsText;
+  if(v.total) document.getElementById("total").value=v.total;
+  if(v.group) document.getElementById("group").value=v.group;
+}
+
+/* ===== load from Prompt Forge ===== */
+function loadPF(){
+  const s=ls(); if(!s) return; let r=null; try{ r=JSON.parse(s.getItem("kadr_promptforge_result")||"null"); }catch(e){}
+  // pull style/look/ambiance from pf inputs
+  let pf={}; try{ pf=JSON.parse(s.getItem("kadr_pf_inputs")||"{}"); }catch(e){}
+  if(pf.style&&pf.style.en) S.style=pf.style.en;
+  if(pf.look&&pf.look.en) S.look=pf.look.en;
+  if(pf.ambiance) S.ambiance=pf.ambiance;
+  if(pf.aspect){ S.aspect={"9:16":"vertical 9:16","16:9":"horizontal 16:9","1:1":"square 1:1"}[pf.aspect]||pf.aspect; }
+  if(r&&r.shots&&r.shots.length){
+    if(r.style&&r.style.en) S.style=r.style.en; if(r.look&&r.look.en) S.look=r.look.en;
+    if(!document.getElementById("shotsText").value.trim()){
+      document.getElementById("shotsText").value=r.shots.map(sh=>`${sh.n}. ${sh.scene_ar||sh.prompt_en||""}`).join("\n");
+    }
+    if(!document.getElementById("total").value) document.getElementById("total").value=r.shots.length;
+    if(!document.getElementById("group").value) document.getElementById("group").value=Math.min(6,r.shots.length);
+    document.getElementById("srcNote").innerHTML='<div class="note">✓ محمّل من Prompt Forge ('+toAr(r.shots.length)+' لقطة) — بالستايل واللوك والجو العام.</div>';
+  }
+}
+
+/* ===== wire ===== */
+["shotsText","total","group"].forEach(id=>document.getElementById(id).addEventListener("input",saveInputs));
+document.querySelectorAll("#engSeg button").forEach(b=>b.onclick=()=>{ setEngine(b.dataset.e); saveInputs(); });
+(function(){ paintMeter(); restoreInputs();
+  const c=getCfg(); setEngine(c.lastEngine||(c.gemKey?"gem":c.anthKey?"anth":c.oaiKey?"oai":"gem"));
+  loadPF();
+})();
+</script>
+</body>
+</html>
